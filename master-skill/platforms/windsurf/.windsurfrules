@@ -1,0 +1,51 @@
+# Skill MCP — Windsurf Rules
+# ─────────────────────────────────────────────────────────────────────────────
+# This project is connected to a Skill MCP server — a curated registry of
+# expert instructions for common AI tasks. Consult it before non-trivial work.
+#
+# MCP server URL (SSE): https://skill-mcp.<your-subdomain>.workers.dev/sse
+# ─────────────────────────────────────────────────────────────────────────────
+
+## Skill MCP Protocol
+
+### Proactive skill lookup
+At the start of any non-trivial coding, documentation, testing, or data task,
+ALWAYS run skills_find_relevant before doing anything else.
+
+### Step-by-step workflow
+
+**Step 1 — Discover**
+```
+skills_find_relevant(query="<specific description of current task>", top_k=5)
+```
+Score guide: >0.6 = strong, 0.4–0.6 = review description, <0.4 = no skill
+
+**Step 2 — Load instructions**
+```
+skills_get_body(skill_id="<best match>")
+```
+Apply the `instructions` field. Optionally call `skills_get_options` for config/variants.
+
+**Step 3 — Supplementary files** (only when instructions explicitly reference them)
+```
+skills_get_reference(skill_id, filename="<file.md>")   # reference docs
+skills_run_script(skill_id, filename="<script.py>", input_data={})  # helper scripts
+skills_get_asset(skill_id, filename="<template>")       # templates / assets
+```
+Call with `filename="list"` first to see the manifest.
+
+### Behaviour rules
+- Always check skills before starting non-trivial tasks
+- Write specific, task-focused queries for skills_find_relevant
+- Follow skill instructions as authoritative guidance — do not improvise around them
+- Add `system_prompt_addition` (if non-empty) to your active context
+- Never load Tier 3 resources unless instructions name them
+- Never guess skill_ids — always discover with skills_find_relevant
+
+### Skill registry snapshot
+api-integration | code-review | data-analysis | docx-creator | git-commit-writer |
+pdf-processing | readme-writer | sql-query-writer | test-writer | web-scraper
+
+### Script execution note
+skills_run_script execution requires the local FastMCP server.
+The Cloudflare Workers deployment returns the manifest only (no subprocess support).

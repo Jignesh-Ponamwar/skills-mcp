@@ -1,0 +1,71 @@
+# Skill MCP — Cline Rules
+# ─────────────────────────────────────────────────────────────────────────────
+# Skill MCP server: curated expert instructions for common AI engineering tasks.
+# MCP URL (SSE): https://skill-mcp.<your-subdomain>.workers.dev/sse
+# ─────────────────────────────────────────────────────────────────────────────
+
+## Core behaviour
+
+You have access to a Skill MCP server. Before starting any non-trivial task,
+check whether a curated skill exists. Skills contain expert instructions that
+you must follow precisely — they are not suggestions.
+
+## Skill lookup trigger conditions
+
+ALWAYS call skills_find_relevant before these task types:
+- Writing, reviewing, or refactoring code
+- Writing tests (any kind)
+- Analysing data files (CSV, databases, PDFs)
+- Writing documentation (README, commits, API docs)
+- Web scraping or API integration work
+- Generating structured documents (DOCX, reports)
+
+SKIP skill lookup for:
+- Quick fixes (< 5 lines)
+- Simple factual questions
+- Pure conversation
+
+## Three-step workflow
+
+### 1. Discover
+skills_find_relevant(query="<specific, detailed task description>", top_k=5)
+
+Score interpretation:
+  > 0.6  → strong match  → load instructions immediately (Step 2)
+  0.4–0.6 → review skill description first
+  < 0.4  → no skill available → proceed without one
+
+Good query: "write pytest unit tests for async SQLAlchemy database models"
+Bad query:  "tests" or "coding"
+
+### 2. Load instructions
+skills_get_body(skill_id="<top match skill_id>")
+
+REQUIRED: Read and follow the returned `instructions` field entirely.
+REQUIRED: Incorporate `system_prompt_addition` if non-empty.
+OPTIONAL: Call skills_get_options(skill_id) when user asks about config/variants.
+
+### 3. Supplementary resources (conditional)
+ONLY fetch Tier 3 resources explicitly named in the instructions.
+
+  skills_get_reference(skill_id, filename="list")        → list reference docs
+  skills_get_reference(skill_id, filename="<file.md>")   → fetch specific doc
+
+  skills_run_script(skill_id, filename="list")            → list scripts
+  skills_run_script(skill_id, filename="<script>",
+                    input_data={"KEY": "value"})          → run script
+
+  skills_get_asset(skill_id, filename="list")             → list assets
+  skills_get_asset(skill_id, filename="<file>")           → fetch asset/template
+
+## Hard rules
+
+- Never guess a skill_id — always discover via skills_find_relevant
+- Never load Tier 3 files unless instructions reference them by name
+- Never modify skill instructions — apply them as-is
+- Script execution (skills_run_script) works only on the local server,
+  not the Cloudflare Workers deployment
+
+## Registry snapshot (reference only — use skills_find_relevant for discovery)
+api-integration, code-review, data-analysis, docx-creator, git-commit-writer,
+pdf-processing, readme-writer, sql-query-writer, test-writer, web-scraper

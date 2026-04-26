@@ -1,0 +1,46 @@
+{
+    // skill-mcp — Cloudflare Workers Python MCP server
+    // Docs: https://developers.cloudflare.com/workers/languages/python/
+    //
+    // Secrets (set via CLI, never committed):
+    //   wrangler secret put QDRANT_URL
+    //   wrangler secret put QDRANT_API_KEY
+    //
+    // NOTE: Durable Objects require a Cloudflare Workers Paid plan ($5/month).
+
+    "name": "skill-mcp",
+    "main": "src/worker.py",
+    "compatibility_flags": [
+        "python_workers"
+    ],
+    "compatibility_date": "2025-04-10",
+
+    // Workers AI binding — provides @cf/baai/bge-small-en-v1.5 (384-dim embeddings)
+    "ai": {
+        "binding": "AI"
+    },
+
+    // Durable Object — holds the FastMCP ASGI app instance
+    "durable_objects": {
+        "bindings": [
+            {
+                "name": "MCP_OBJECT",
+                "class_name": "SkillMCPServer"
+            }
+        ]
+    },
+
+    // Migration required to register the Durable Object class
+    "migrations": [
+        {
+            "tag": "v1",
+            "new_sqlite_classes": [
+                "SkillMCPServer"
+            ]
+        }
+    ],
+
+    "observability": {
+        "enabled": true
+    }
+}

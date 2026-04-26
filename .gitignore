@@ -1,0 +1,137 @@
+# =============================================================================
+# SECRETS — NEVER COMMIT
+# =============================================================================
+.env
+.env.local
+.env.*.local
+.env.production
+.env.staging
+.env.development
+
+# API keys, certificates, private keys
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+*.secret
+
+# Wrangler puts secrets + auth tokens here — never commit
+.wrangler/
+
+# =============================================================================
+# PYTHON
+# =============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+venv/
+env/
+ENV/
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Testing & coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+*.log
+
+# Type checking
+.mypy_cache/
+.dmypy.json
+.pytype/
+
+# =============================================================================
+# NODE / JAVASCRIPT
+# =============================================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.yarn/cache
+.yarn/unplugged
+.pnpm-store/
+
+# Build output
+.next/
+.nuxt/
+.svelte-kit/
+dist/
+out/
+.output/
+
+# =============================================================================
+# CLOUDFLARE / WRANGLER
+# =============================================================================
+# Already covered by .wrangler/ above — additional safety
+*.wrangler.toml.bak
+
+# =============================================================================
+# TERRAFORM
+# =============================================================================
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+*.tfvars
+!*.tfvars.example
+crash.log
+override.tf
+override.tf.json
+
+# =============================================================================
+# IDE / EDITORS
+# =============================================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-workspace
+.fleet/
+
+# =============================================================================
+# OS ARTIFACTS
+# =============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# =============================================================================
+# CLAUDE CODE SESSION FILES
+# =============================================================================
+.claude/
+
+# =============================================================================
+# MISC
+# =============================================================================
+*.bak
+*.tmp
+*.temp
+*.orig
+.cache/
+tmp/
+temp/

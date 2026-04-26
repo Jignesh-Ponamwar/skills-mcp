@@ -1,0 +1,5 @@
+# No third-party packages — Worker uses Python stdlib only.
+# starlette and mcp cannot be installed in Cloudflare's Pyodide runtime
+# because their dependency trees include compiled extensions (pydantic-core,
+# httptools, uvloop) that are not available as Pyodide-compatible wheels.
+# The MCP SSE protocol is implemented directly as a bare ASGI callable.
