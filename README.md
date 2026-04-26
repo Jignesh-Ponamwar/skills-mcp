@@ -4,7 +4,7 @@
 
 ![Skills-MCP Logo](./Skills-MCP%20Minimal%20Logo.png)
 
-**A self-hostable, open-source Skills registry for AI agents — delivered over MCP.**  
+**A self-hostable, open-source Skills registry for AI agents delivered over MCP.**  
 Semantic discovery · Progressive disclosure · 30 production-ready skills · Runs on Cloudflare Workers
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
@@ -20,15 +20,15 @@ Semantic discovery · Progressive disclosure · 30 production-ready skills · Ru
 
 AI agents are great at *knowing things* but often inconsistent at *doing specific tasks well*.
 
-Ask Claude or GPT to "write a Stripe integration" and you get something functional — but maybe it doesn't verify webhook signatures, uses a deprecated API, or misses idempotency keys. Ask it to "containerize this app" and it might skip non-root users, ignore layer caching, or forget `.dockerignore`.
+Ask Claude or GPT to "write a Stripe integration" and you get something functional  but maybe it doesn't verify webhook signatures, uses a deprecated API, or misses idempotency keys. Ask it to "containerize this app" and it might skip non-root users, ignore layer caching, or forget `.dockerignore`.
 
 **The knowledge is there. The reliable procedural workflow isn't.**
 
 The deeper problem: every time you start a new chat, a new project, or switch tools, the agent starts from scratch. There's no shared, versioned, searchable library of *how to do X correctly* that agents can pull from on demand.
 
-## The Solution — skill-mcp
+## The Solution  skill-mcp
 
-**skill-mcp** is a self-hostable registry of Skills — expert step-by-step procedures, domain heuristics, output formats, and bundled reference material — that AI agents discover and load at the moment they need them, over MCP.
+**skill-mcp** is a self-hostable registry of Skills  expert step-by-step procedures, domain heuristics, output formats, and bundled reference material  that AI agents discover and load at the moment they need them, over MCP.
 
 ```
 You:   "Set up Stripe subscriptions with webhooks"
@@ -43,7 +43,7 @@ Agent: → skills_find_relevant("set up Stripe subscriptions webhooks")
        → Executes task correctly, first time, every time
 ```
 
-The agent doesn't guess. It retrieves authoritative, versioned instructions — the same way a senior engineer would consult a runbook.
+The agent doesn't guess. It retrieves authoritative, versioned instructions  the same way a senior engineer would consult a runbook.
 
 ---
 
@@ -64,7 +64,7 @@ The agent doesn't guess. It retrieves authoritative, versioned instructions — 
 
 ### 1. Skills are stored in Qdrant with semantic vectors
 
-Each skill is a `SKILL.md` file with YAML frontmatter. Only the description and trigger phrases (~100 tokens) are embedded — keeping the search space semantically clean. The full instructions stay in payload-only collections and are fetched on demand.
+Each skill is a `SKILL.md` file with YAML frontmatter. Only the description and trigger phrases (~100 tokens) are embedded  keeping the search space semantically clean. The full instructions stay in payload-only collections and are fetched on demand.
 
 ### 2. Agents discover skills with natural language
 
@@ -76,13 +76,13 @@ skills_find_relevant("write pytest tests for a FastAPI endpoint")
 
 Score thresholds: **> 0.6** strong match · **0.4–0.6** review description · **< 0.4** no match
 
-### 3. Progressive disclosure — load only what you need
+### 3. Progressive disclosure  load only what you need
 
 ```
-Tier 1 — Discovery   skills_find_relevant()         ← always call first
-Tier 2 — Load        skills_get_body()              ← full instructions + manifest
-Tier 2 — Options     skills_get_options()           ← config, variants (optional)
-Tier 3 — Supplement  skills_get_reference()         ← only if instructions reference it
+Tier 1  Discovery   skills_find_relevant()         ← always call first
+Tier 2  Load        skills_get_body()              ← full instructions + manifest
+Tier 2  Options     skills_get_options()           ← config, variants (optional)
+Tier 3  Supplement  skills_get_reference()         ← only if instructions reference it
                      skills_run_script()            ← only if instructions reference it
                      skills_get_asset()             ← only if instructions reference it
 ```
@@ -91,41 +91,41 @@ Nothing is loaded speculatively. The agent reads `tier3_manifest` (a list of ava
 
 ### 4. The server runs as a single Cloudflare Python Worker
 
-No separate backend. No database server to manage. No GPU. Cloudflare Workers AI handles embeddings at query time using the same model the seed script uses — vectors are always comparable.
+No separate backend. No database server to manage. No GPU. Cloudflare Workers AI handles embeddings at query time using the same model the seed script uses  vectors are always comparable.
 
 ---
 
 ## Architecture
 
-### Six Qdrant collections — one purpose each
+### Six Qdrant collections  one purpose each
 
 | Collection | Vector | Contents |
 |-----------|--------|----------|
-| `skill_frontmatter` | ✅ 384-dim | Name, description, tags, trigger phrases — the discovery layer |
+| `skill_frontmatter` | ✅ 384-dim | Name, description, tags, trigger phrases  the discovery layer |
 | `skill_body` | payload only | Full markdown instructions + system prompt addition |
 | `skill_options` | payload only | Config schema, variants, dependencies, limitations |
 | `skill_references` | payload only | Markdown reference docs bundled with the skill |
 | `skill_scripts` | payload only | Executable scripts (source stored server-side; never sent to agents) |
 | `skill_assets` | payload only | Templates and static output format resources |
 
-### Six MCP tools — 3-tier progressive disclosure
+### Six MCP tools  3-tier progressive disclosure
 
 | Tier | Tool | When to call |
 |------|------|-------------|
-| 1 | `skills_find_relevant(query, top_k)` | **Always first** — semantic search, returns ranked skills with scores |
-| 2 | `skills_get_body(skill_id)` | After finding a match — full instructions + `tier3_manifest` |
-| 2 | `skills_get_options(skill_id)` | Optional — config schema, variants, dependencies, limitations |
+| 1 | `skills_find_relevant(query, top_k)` | **Always first**  semantic search, returns ranked skills with scores |
+| 2 | `skills_get_body(skill_id)` | After finding a match  full instructions + `tier3_manifest` |
+| 2 | `skills_get_options(skill_id)` | Optional  config schema, variants, dependencies, limitations |
 | 3 | `skills_get_reference(skill_id, filename)` | Only when instructions reference a specific doc |
 | 3 | `skills_run_script(skill_id, filename, input_data)` | Only when instructions direct script execution |
 | 3 | `skills_get_asset(skill_id, filename)` | Only when instructions reference a specific template |
 
 ### Why embed only the frontmatter?
 
-Embedding the full SKILL.md as a single vector pollutes the search space with instruction prose — text that was never meant to be searched. skill-mcp embeds only `description + trigger_phrases` (~100 tokens), keeping the vector space semantically clean and search results relevant.
+Embedding the full SKILL.md as a single vector pollutes the search space with instruction prose  text that was never meant to be searched. skill-mcp embeds only `description + trigger_phrases` (~100 tokens), keeping the vector space semantically clean and search results relevant.
 
-### Embeddings — no model version drift
+### Embeddings  no model version drift
 
-The Worker uses **Cloudflare Workers AI** (`@cf/baai/bge-small-en-v1.5`, 384-dim) for query-time embedding. The seed script calls the same model via the REST API. Seed-time and query-time vectors are directly comparable — no local GPU, no embedding server, no drift.
+The Worker uses **Cloudflare Workers AI** (`@cf/baai/bge-small-en-v1.5`, 384-dim) for query-time embedding. The seed script calls the same model via the REST API. Seed-time and query-time vectors are directly comparable  no local GPU, no embedding server, no drift.
 
 ---
 
@@ -139,19 +139,19 @@ Production-ready skills sourced from official repositories (Anthropic, Google Ge
 | `api-integration` | REST/GraphQL clients with auth, pagination, retries, error handling, and OpenAPI alignment |
 | `code-review` | Structured security + quality review with CRITICAL/HIGH/MEDIUM/LOW severity ratings and fix snippets |
 | `data-analysis` | EDA, cleaning, statistics, visualizations, and actionable insights from CSV/tabular data |
-| `git-commit-writer` | Conventional Commits from diffs — type, scope, breaking changes, and co-authors |
+| `git-commit-writer` | Conventional Commits from diffs  type, scope, breaking changes, and co-authors |
 | `readme-writer` | Professional README.md with badges, usage, API docs, and contributing guide |
-| `sql-query-writer` | Optimized SQL — window functions, CTEs, indexes, explain plans, and common anti-patterns |
+| `sql-query-writer` | Optimized SQL  window functions, CTEs, indexes, explain plans, and common anti-patterns |
 | `test-writer` | pytest, Jest, and Go test suites with full edge case coverage and mocking patterns |
 | `web-scraper` | Structured data extraction with rate limiting, pagination, and anti-bot handling |
 
 ### 📄 Documents and Office
 | Skill | What it does |
 |-------|-------------|
-| `docx-creator` | Create and edit Word documents with python-docx — tables, styles, headers, tracked changes |
-| `pdf-processing` | Extract text/tables, fill forms, merge/split PDFs — full Tier 3 scripts and references |
-| `pptx-creator` | Build PowerPoint presentations with pptxgenjs — charts, images, design principles |
-| `xlsx-creator` | Excel spreadsheets with openpyxl — formulas, formatting, charts, financial model conventions |
+| `docx-creator` | Create and edit Word documents with python-docx  tables, styles, headers, tracked changes |
+| `pdf-processing` | Extract text/tables, fill forms, merge/split PDFs  full Tier 3 scripts and references |
+| `pptx-creator` | Build PowerPoint presentations with pptxgenjs  charts, images, design principles |
+| `xlsx-creator` | Excel spreadsheets with openpyxl  formulas, formatting, charts, financial model conventions |
 
 ### 🤖 AI and LLM Platforms
 | Skill | What it does |
@@ -160,7 +160,7 @@ Production-ready skills sourced from official repositories (Anthropic, Google Ge
 | `gemini-api` | Google Gemini API: multimodal, function calling, structured output, current models/SDKs |
 | `openai-api` | OpenAI: GPT-4o, tool use, structured output, DALL-E, Whisper, TTS, batch processing |
 | `llm-prompt-engineering` | Chain-of-thought, few-shot, structured output, agent system prompt design, anti-patterns |
-| `mcp-server-builder` | Build MCP servers with FastMCP (Python) or TypeScript SDK — tools, resources, prompts |
+| `mcp-server-builder` | Build MCP servers with FastMCP (Python) or TypeScript SDK  tools, resources, prompts |
 
 ### ☁️ Cloud Platforms and Infrastructure
 | Skill | What it does |
@@ -168,14 +168,14 @@ Production-ready skills sourced from official repositories (Anthropic, Google Ge
 | `cloudflare-workers` | Workers, Pages, KV, D1, R2, Workers AI, Vectorize, Durable Objects, Wrangler |
 | `docker-containerization` | Production Dockerfiles, multi-stage builds, Docker Compose, security hardening |
 | `github-actions` | CI/CD workflows, matrix builds, caching, Docker publishing, release automation |
-| `terraform` | IaC for AWS/GCP/Azure — modules, remote state, workspaces, CI/CD integration |
+| `terraform` | IaC for AWS/GCP/Azure  modules, remote state, workspaces, CI/CD integration |
 
 ### 🌐 Web and Fullstack Frameworks
 | Skill | What it does |
 |-------|-------------|
-| `nextjs-best-practices` | App Router — RSC, async params, data fetching, image/font optimization, self-hosting |
+| `nextjs-best-practices` | App Router  RSC, async params, data fetching, image/font optimization, self-hosting |
 | `react-best-practices` | Hooks patterns, state management, memoization, virtualization, error boundaries |
-| `fastapi` | Python REST APIs — Pydantic v2, dependency injection, JWT auth, async SQLAlchemy, testing |
+| `fastapi` | Python REST APIs  Pydantic v2, dependency injection, JWT auth, async SQLAlchemy, testing |
 | `graphql-api` | Schema design, resolvers, DataLoader (N+1 prevention), Apollo Client, Strawberry |
 | `typescript-patterns` | Generics, discriminated unions, branded types, conditional types, strict tsconfig |
 
@@ -206,7 +206,7 @@ Production-ready skills sourced from official repositories (Anthropic, Google Ge
 
 > **Cloudflare is free.** skill-mcp uses SQLite-backed Durable Objects (`new_sqlite_classes` in `wrangler.jsonc`), which are available on the Cloudflare Workers **Free** plan (100k requests/day). You only need the $5/mo paid plan if you outgrow that limit or need KV-backed Durable Objects.
 
-### Option A — One Command (recommended)
+### Option A  One Command (recommended)
 
 **Windows (PowerShell):**
 ```powershell
@@ -225,7 +225,7 @@ make setup
 
 The wizard checks prerequisites → creates `.env` → installs Python deps → seeds Qdrant with all 30 skills → pushes Wrangler secrets → deploys the Worker. Done.
 
-### Option B — Manual (step by step)
+### Option B  Manual (step by step)
 
 ```bash
 # 1. Clone
@@ -316,7 +316,7 @@ make docker-seed   # Re-seed after adding new skills
 
 ## Connecting Your AI Agent
 
-### Step 1 — Add the MCP server
+### Step 1  Add the MCP server
 
 Add to your MCP client config (`.mcp.json`, Claude Code settings, Cursor settings, etc.):
 
@@ -344,7 +344,7 @@ Add to your MCP client config (`.mcp.json`, Claude Code settings, Cursor setting
 }
 ```
 
-**Local Python server** (needed for `skills_run_script` — Cloudflare Workers cannot run subprocesses):
+**Local Python server** (needed for `skills_run_script`  Cloudflare Workers cannot run subprocesses):
 ```json
 {
   "mcpServers": {
@@ -357,9 +357,9 @@ Add to your MCP client config (`.mcp.json`, Claude Code settings, Cursor setting
 }
 ```
 
-### Step 2 — Install the master skill for your platform
+### Step 2  Install the master skill for your platform
 
-Drop the right file into any project root and the agent will automatically follow the 3-tier skill workflow — when to search, how to interpret scores, and when to load supplementary files.
+Drop the right file into any project root and the agent will automatically follow the 3-tier skill workflow  when to search, how to interpret scores, and when to load supplementary files.
 
 | Platform | File to copy | Where |
 |----------|-------------|-------|
@@ -426,9 +426,9 @@ Reference tier-3 files explicitly so the agent knows to load them:
 
 **Two critical rules:**
 
-1. **Description and triggers are what get embedded** — write them to match how an agent would phrase the need, not how you'd name the skill. `"extract tables from a PDF"` beats `"pdf-skill"`.
+1. **Description and triggers are what get embedded**  write them to match how an agent would phrase the need, not how you'd name the skill. `"extract tables from a PDF"` beats `"pdf-skill"`.
 
-2. **Reference tier-3 files by name in the body** — the agent receives a `tier3_manifest` listing available files and fetches only what the instructions explicitly mention. Nothing is loaded speculatively.
+2. **Reference tier-3 files by name in the body**  the agent receives a `tier3_manifest` listing available files and fetches only what the instructions explicitly mention. Nothing is loaded speculatively.
 
 ### Re-seed after adding
 
@@ -438,7 +438,7 @@ python -X utf8 -m skill_mcp.seed.seed_skills
 make seed
 ```
 
-The seed script is idempotent — re-running updates existing skills without creating duplicates.
+The seed script is idempotent  re-running updates existing skills without creating duplicates.
 
 ---
 
@@ -483,7 +483,7 @@ Script execution (`skills_run_script`, local server only):
 - Script source **never returned to the agent** — only `stdout / stderr / exit_code`
 - Output truncated at 10,000 characters per stream
 
-In the deployed Cloudflare Worker, `skills_run_script` returns the script manifest only — the Pyodide runtime cannot run subprocesses.
+In the deployed Cloudflare Worker, `skills_run_script` returns the script manifest only  the Pyodide runtime cannot run subprocesses.
 
 ---
 
@@ -522,7 +522,7 @@ skill-mcp/
 │   │   └── prompt_injection.py    # 9-category injection scanner (seed + CI)
 │   ├── db/
 │   │   ├── embedder.py            # Workers AI REST client with TTL cache
-│   │   ├── qdrant_manager.py      # All 6 collections — upsert, query, tier3_manifest
+│   │   ├── qdrant_manager.py      # All 6 collections  upsert, query, tier3_manifest
 │   │   ├── qdrant_client.py       # QdrantClient factory
 │   │   └── cache.py               # Thread-safe TTL cache (no external deps)
 │   ├── models/
@@ -549,7 +549,7 @@ skill-mcp/
 │   └── test_tools_integration.py
 ├── pyproject.toml                  # Package config + optional local-server extras
 ├── requirements.txt                # Seed script deps (no PyTorch, no GPU)
-├── .env.example                    # Credential template — copy to .env
+├── .env.example                    # Credential template  copy to .env
 ├── SETUP.md                        # Full credential walkthrough
 ├── CONTRIBUTING.md                 # Skill submission workflow + security policy
 ├── THREAT_MODEL.md                 # 7 threat categories with mitigations
@@ -576,8 +576,8 @@ python scripts/validate_skills.py skill_mcp/skills_data/my-skill/SKILL.md
 
 **The two invariants that must never be broken:**
 
-1. **Never embed the full body** — only `description + triggers` go into the vector collection
-2. **Never return script source** — `skills_run_script` returns `stdout / stderr / exit_code` only
+1. **Never embed the full body**  only `description + triggers` go into the vector collection
+2. **Never return script source**  `skills_run_script` returns `stdout / stderr / exit_code` only
 
 CI validates every PR that touches `skills_data/`: YAML syntax, schema, duplicate slug check, and prompt-injection scan. A failing scan blocks merge.
 
@@ -585,7 +585,7 @@ CI validates every PR that touches `skills_data/`: YAML syntax, schema, duplicat
 
 ## License
 
-Apache 2.0 — see [LICENSE](LICENSE).
+Apache 2.0  see [LICENSE](LICENSE).
 
 ---
 
@@ -594,5 +594,4 @@ Apache 2.0 — see [LICENSE](LICENSE).
 Built with [Cloudflare Workers](https://workers.cloudflare.com) · [Qdrant](https://qdrant.tech) · [FastMCP](https://github.com/jlowin/fastmcp) · [MCP](https://modelcontextprotocol.io)
 
 </div>
-#   s k i l l s - m c p  
- 
+#
