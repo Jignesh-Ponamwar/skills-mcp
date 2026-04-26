@@ -2,18 +2,20 @@
 
 ## What you need
 
-| Requirement | Notes |
-|------------|-------|
-| **Qdrant Cloud** account | Free tier — no credit card. Sign up at [cloud.qdrant.io](https://cloud.qdrant.io) |
-| **Cloudflare** account | Workers **Paid plan** ($5/month) — required for Durable Objects |
-| **Python 3.11+** | For the one-time seed script and optional local server |
-| **Node.js 18+** | For the `wrangler` CLI |
+| Requirement | Cost | Notes |
+|------------|------|-------|
+| **Qdrant Cloud** account | Free | 1 GB free cluster, no credit card. Sign up at [cloud.qdrant.io](https://cloud.qdrant.io) |
+| **Cloudflare** account | **Free** | Workers Free plan supports SQLite Durable Objects — no paid plan needed |
+| **Python 3.11+** | Free | For the one-time seed script and optional local server |
+| **Node.js 18+** | Free | For the `wrangler` CLI |
 
-> Durable Objects are used to hold the FastMCP ASGI app instance in the Worker. They are not available on the Cloudflare Workers free tier.
+> **Everything is free.** skill-mcp uses SQLite-backed Durable Objects (`new_sqlite_classes` in `wrangler.jsonc`), which are fully supported on the Cloudflare Workers **Free** plan. The free tier allows 100,000 requests/day — more than enough for personal and team use. You only need the $5/month Workers Paid plan if you exceed that limit.
+>
+> **Prefer Docker?** Skip Cloudflare entirely and run locally — see [Option C: Docker](#option-c--docker-fully-local).
 
 ---
 
-## Automated setup (recommended)
+## Option A — Automated setup (Cloudflare, recommended)
 
 A single command does everything: checks prerequisites, initialises `.env`, installs dependencies, seeds Qdrant, pushes Wrangler secrets, and deploys the Worker.
 
@@ -36,7 +38,55 @@ The wizard will prompt you for credentials at the right moment and explain where
 
 ---
 
-## Manual setup
+## Option C — Docker (fully local)
+
+No Cloudflare account required. Runs Qdrant in a container alongside the MCP server. Useful for local-only use, air-gapped environments, or testing before deploying to Cloudflare.
+
+**Prerequisites:** Docker Desktop or Docker Engine + Compose plugin, and `.env` with just `WORKERS_AI_ACCOUNT_ID` + `WORKERS_AI_API_TOKEN` (needed for embedding generation).
+
+```bash
+# Copy env template and fill in Cloudflare credentials only
+cp .env.example .env
+# Edit .env: set WORKERS_AI_ACCOUNT_ID and WORKERS_AI_API_TOKEN
+# QDRANT_URL and QDRANT_API_KEY are not needed — Qdrant runs locally
+
+# Start everything: Qdrant → seed → MCP server
+docker compose up
+
+# Or in background
+docker compose up -d
+docker compose logs -f server
+```
+
+Your MCP server is live at `http://localhost:8000/sse`.
+
+After adding or updating skills:
+```bash
+docker compose run --rm seed
+# or: make docker-seed
+```
+
+To stop (Qdrant data is preserved in a named volume):
+```bash
+docker compose down
+# Full reset including data: docker compose down -v
+```
+
+MCP client config for Docker mode:
+```json
+{
+  "mcpServers": {
+    "skill-mcp": {
+      "transport": "sse",
+      "url": "http://localhost:8000/sse"
+    }
+  }
+}
+```
+
+---
+
+## Option B — Manual setup (Cloudflare)
 
 ### Step 1 — Get your credentials
 
@@ -67,34 +117,35 @@ pip install -r requirements.txt
 cp .env.example .env
 # Edit .env: QDRANT_URL, QDRANT_API_KEY, WORKERS_AI_ACCOUNT_ID, WORKERS_AI_API_TOKEN
 
-# Seed all 10 bundled skills into Qdrant (idempotent — safe to re-run)
-python -m skill_mcp.seed.seed_skills
+# Seed all 30 bundled skills into Qdrant (idempotent — safe to re-run)
+python -X utf8 -m skill_mcp.seed.seed_skills
 # or: make seed
 ```
 
-The seed script embeds skill descriptions via **Cloudflare Workers AI** (`@cf/baai/bge-small-en-v1.5`, 384-dim). The same model is used by the deployed Worker at query time, so vectors are directly comparable — no model version mismatch, no local GPU required.
+The seed script runs a **prompt-injection scan** on every skill before ingesting it. Blocked skills are skipped with a clear error. Then it embeds skill descriptions via **Cloudflare Workers AI** (`@cf/baai/bge-small-en-v1.5`, 384-dim) — the same model the deployed Worker uses at query time. Vectors are always directly comparable. No local GPU required.
 
 Expected output:
 ```
-[seed] Found 10 SKILL.md files
-  [parsed] pdf-processing: PDF Processing
+[seed] Found 30 SKILL.md files
+  [parsed] api-integration: API Integration
+  [parsed] claude-api: Claude API
   ...
 [seed] Connecting to Qdrant…
 [seed] Collections ready (6 total — tiers 1, 2, and 3)
 
-[seed] Embedding 10 skill descriptors via Cloudflare Workers AI…
-  [embed] sending 10 texts to Workers AI…
-  [embed] 10/10 done
-[seed] Upserted 10 frontmatter points (with vectors)
-[seed] Upserted 10 body points
-[seed] Upserted 10 options points
+[seed] Embedding 30 skill descriptors via Cloudflare Workers AI…
+  [embed] sending 30 texts to Workers AI…
+  [embed] 30/30 done
+[seed] Upserted 30 frontmatter points (with vectors)
+[seed] Upserted 30 body points
+[seed] Upserted 30 options points
 
 [seed] Seeding tier-3 assets (references, scripts, assets)…
   ↳ reference: pdf-processing/FORMS.md
   ...
-[seed] Tier-3 complete — 9 references, 6 scripts, 7 assets
+[seed] Tier-3 complete — 12 references, 8 scripts, 9 assets
 [seed] Done — all six collections populated successfully
-[seed] Skills loaded: pdf-processing, code-review, ...
+[seed] Skills loaded: api-integration, claude-api, ...
 ```
 
 ---
@@ -259,12 +310,16 @@ make help        # Show all available targets
 make env         # Copy .env.example → .env (skips if .env exists)
 make check       # Verify all required .env values are present
 make install     # pip install -r requirements.txt
-make seed        # Seed Qdrant with all skills (idempotent)
+make seed        # Seed Qdrant with all skills — runs injection scan first (idempotent)
 make secrets     # Auto-push QDRANT_URL + QDRANT_API_KEY from .env to Worker
 make deploy      # npx wrangler deploy
 make dev         # Run local FastMCP server (stdio mode)
 make dev-http    # Run local FastMCP server (HTTP on :8000)
 make setup       # Full first-time setup: env + install + seed + secrets + deploy
+make validate    # Validate all SKILL.md files — schema + prompt-injection scan
+make docker-up   # Start Qdrant + seed + MCP server via Docker Compose
+make docker-down # Stop Docker stack (data preserved)
+make docker-seed # Re-seed Qdrant in the running Docker stack
 ```
 
 ---
@@ -273,18 +328,18 @@ make setup       # Full first-time setup: env + install + seed + secrets + deplo
 
 ### `.env` (used by seed script and local server)
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `QDRANT_URL` | **Yes** | Qdrant Cloud cluster URL |
-| `QDRANT_API_KEY` | **Yes** | Qdrant Cloud API key |
-| `WORKERS_AI_ACCOUNT_ID` | **Yes** | Cloudflare account ID (for seed embeddings) |
-| `WORKERS_AI_API_TOKEN` | **Yes** | Cloudflare API token with "Workers AI Run" permission |
-| `FRONTMATTER_COLLECTION` | No | Override collection name (default: `skill_frontmatter`) |
-| `BODY_COLLECTION` | No | Override collection name (default: `skill_body`) |
-| `OPTIONS_COLLECTION` | No | Override collection name (default: `skill_options`) |
-| `MCP_TRANSPORT` | No | Local server transport: `stdio` (default) or `streamable-http` |
-| `MCP_HOST` | No | Local server host (default: `127.0.0.1`) |
-| `MCP_PORT` | No | Local server port (default: `8000`) |
+| Variable | Cloudflare deploy | Docker local | Description |
+|----------|:-----------------:|:------------:|-------------|
+| `QDRANT_URL` | **Required** | Not needed | Qdrant Cloud cluster URL (Docker uses its own local Qdrant) |
+| `QDRANT_API_KEY` | **Required** | Not needed | Qdrant Cloud API key |
+| `WORKERS_AI_ACCOUNT_ID` | **Required** | **Required** | Cloudflare account ID (for embedding generation) |
+| `WORKERS_AI_API_TOKEN` | **Required** | **Required** | Cloudflare API token with "Workers AI Run" permission |
+| `FRONTMATTER_COLLECTION` | No | No | Override collection name (default: `skill_frontmatter`) |
+| `BODY_COLLECTION` | No | No | Override collection name (default: `skill_body`) |
+| `OPTIONS_COLLECTION` | No | No | Override collection name (default: `skill_options`) |
+| `MCP_TRANSPORT` | No | No | Local server transport: `stdio` (default) or `streamable-http` |
+| `MCP_HOST` | No | No | Local server host (default: `127.0.0.1`) |
+| `MCP_PORT` | No | No | Local server port (default: `8000`) |
 
 ### Wrangler secrets (set via `wrangler secret put` or `make secrets`)
 
@@ -330,6 +385,38 @@ The local server uses the same Cloudflare Workers AI REST API for embeddings as 
 
 ---
 
+## Validating skills
+
+Before seeding or submitting a PR, validate your SKILL.md files locally:
+
+```bash
+# Validate all skills (schema + prompt-injection scan)
+python scripts/validate_skills.py
+
+# Validate a single skill
+python scripts/validate_skills.py skill_mcp/skills_data/my-skill/SKILL.md
+
+# Run the injection scanner directly on a file
+python -m skill_mcp.security.prompt_injection skill_mcp/skills_data/my-skill/SKILL.md
+
+# Make shortcut
+make validate
+```
+
+The validator checks:
+- YAML frontmatter parses without errors
+- Required fields present: `name`, `description`, `license`, `metadata.triggers`
+- `name` matches the directory slug
+- Triggers are natural-language strings, ≤120 chars each
+- License is a recognised SPDX identifier
+- Body is non-empty
+- Tier-3 file references in the body exist on disk
+- 9 categories of prompt-injection patterns (CRITICAL/HIGH = blocked, MEDIUM/LOW = warned)
+
+The seed script runs the same scan automatically. Skills that fail with CRITICAL or HIGH findings are skipped — they will not be written to Qdrant.
+
+---
+
 ## Troubleshooting
 
 **`WORKERS_AI_ACCOUNT_ID and WORKERS_AI_API_TOKEN must be set`**
@@ -342,13 +429,16 @@ The local server uses the same Cloudflare Workers AI REST API for embeddings as 
 → Your `QDRANT_API_KEY` is wrong or missing in `.env`.
 
 **`qdrant_client UnexpectedResponse 404`**
-→ Collections don't exist yet. Run `python -m skill_mcp.seed.seed_skills` (or `make seed`) first.
+→ Collections don't exist yet. Run `python -X utf8 -m skill_mcp.seed.seed_skills` (or `make seed`) first.
 
 **`[seed] ERROR: no SKILL.md files found`**
 → The seed script expects `skill_mcp/skills_data/*/SKILL.md`. Skill folders must be exactly one level deep.
 
-**`Durable Objects not available`**
-→ Durable Objects require the Cloudflare Workers Paid plan ($5/month). Upgrade at dash.cloudflare.com → Workers & Pages → Plans.
+**`[seed] BLOCKED: prompt-injection scan failed`**
+→ A skill file contains content that triggered the injection scanner. Review the finding details printed above the error. If it's a false positive (e.g., legitimate code containing flagged patterns), open an issue — do not disable the scanner.
+
+**`Durable Objects not available` / `Durable Objects require a paid plan`**
+→ skill-mcp uses SQLite-backed Durable Objects (`new_sqlite_classes` in `wrangler.jsonc`), which are available on the **free** Workers plan. If you see this error, ensure `wrangler.jsonc` contains `"new_sqlite_classes"` in the migrations block (not `"new_classes"` which is KV-backed and paid-only).
 
 **`wrangler deploy` fails with Python Workers error**
 → Ensure `compatibility_date` in `wrangler.jsonc` is `2025-04-10` or later and `"python_workers"` is in `compatibility_flags`.

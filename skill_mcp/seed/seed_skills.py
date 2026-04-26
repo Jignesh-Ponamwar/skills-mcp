@@ -315,17 +315,48 @@ def seed(skills_dir: Path = _DEFAULT_SKILLS_DIR) -> None:
 
     print(f"[seed] Found {len(skill_paths)} SKILL.md files in {skills_dir}")
 
-    # ── Pass 1: Parse and seed Tier-1/2 ──────────────────────────────────────
+    # ── Pass 1: Parse, security-scan, and seed Tier-1/2 ─────────────────────
+
+    from ..security.prompt_injection import scan_skill
 
     skills = []
+    blocked_slugs: list[str] = []
+    warned_slugs: list[str] = []
+
     for skill_path in skill_paths:
         slug = skill_path.parent.name
         parsed = _parse_skill_md(skill_path)
         if parsed is None:
             continue
         fields = _extract_skill_fields(slug, parsed)
+
+        # ── Prompt-injection scan ─────────────────────────────────────────────
+        scan = scan_skill(
+            skill_id=slug,
+            name=fields["name"],
+            description=fields["description"],
+            body=fields["instructions"],
+            triggers=fields["trigger_phrases"],
+        )
+        if scan.blocked:
+            print(f"  [BLOCKED] {slug}: prompt-injection scan failed — skill will NOT be seeded")
+            print(scan.summary())
+            blocked_slugs.append(slug)
+            continue
+        if scan.warnings:
+            print(f"  [WARN] {slug}: prompt-injection scan raised {len(scan.warnings)} warning(s)")
+            print(scan.summary())
+            warned_slugs.append(slug)
+
         skills.append(fields)
         print(f"  [parsed] {slug}: {fields['name']}")
+
+    if blocked_slugs:
+        print(
+            f"\n[seed] WARNING: {len(blocked_slugs)} skill(s) BLOCKED by security scan: "
+            + ", ".join(blocked_slugs),
+            file=sys.stderr,
+        )
 
     if not skills:
         print("[seed] ERROR: no skills parsed successfully", file=sys.stderr)

@@ -1,0 +1,127 @@
+# ── skill-mcp docker compose ──────────────────────────────────────────────────
+#
+# Full local stack: Qdrant + seed + skill-mcp server
+#
+# ONE COMMAND to start everything:
+#   docker compose up
+#
+# What this does:
+#   1. qdrant   — starts a local Qdrant instance (no API key needed locally)
+#   2. seed     — runs the seed script once to populate Qdrant with all 30 skills
+#   3. server   — starts the FastMCP HTTP server on :8000
+#
+# Prerequisites:
+#   - Docker Desktop or Docker Engine + Compose plugin
+#   - .env file with WORKERS_AI_ACCOUNT_ID and WORKERS_AI_API_TOKEN
+#     (needed by the seed script to generate embeddings via Cloudflare Workers AI)
+#
+# MCP client config for local Docker stack:
+#   {
+#     "mcpServers": {
+#       "skill-mcp": {
+#         "transport": "sse",
+#         "url": "http://localhost:8000/sse"
+#       }
+#     }
+#   }
+#
+# To re-seed (add new skills, update existing):
+#   docker compose run --rm seed
+#
+# To run in background:
+#   docker compose up -d
+#   docker compose logs -f server
+#
+# To stop:
+#   docker compose down
+#
+# To stop and remove Qdrant data (full reset):
+#   docker compose down -v
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Qdrant — local vector database ─────────────────────────────────────────
+  qdrant:
+    image: qdrant/qdrant:v1.9.2
+    container_name: skill-mcp-qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"   # REST API (also used by the seed script)
+      - "6334:6334"   # gRPC (optional)
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      QDRANT__SERVICE__HTTP_PORT: 6333
+      QDRANT__SERVICE__GRPC_PORT: 6334
+      # No API key for local development — easier to iterate
+      # For production, set: QDRANT__SERVICE__API_KEY=your-key
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:6333/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ── Seed — one-shot: populate Qdrant with all skills ───────────────────────
+  seed:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: final
+    container_name: skill-mcp-seed
+    depends_on:
+      qdrant:
+        condition: service_healthy
+    environment:
+      # Local Qdrant — no API key
+      QDRANT_URL: http://qdrant:6333
+      QDRANT_API_KEY: ""
+      # Cloudflare Workers AI — required for embedding generation
+      # These come from your .env file (never commit .env)
+      WORKERS_AI_ACCOUNT_ID: ${WORKERS_AI_ACCOUNT_ID}
+      WORKERS_AI_API_TOKEN: ${WORKERS_AI_API_TOKEN}
+    volumes:
+      # Mount skills_data read-only so seed sees local SKILL.md changes
+      - ./skill_mcp/skills_data:/app/skill_mcp/skills_data:ro
+    command: ["python", "-X", "utf8", "-m", "skill_mcp.seed.seed_skills"]
+    # Seed runs once and exits — compose won't restart it
+    restart: "no"
+
+  # ── Server — FastMCP HTTP server ────────────────────────────────────────────
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: final
+    container_name: skill-mcp-server
+    depends_on:
+      qdrant:
+        condition: service_healthy
+      seed:
+        condition: service_completed_successfully
+    ports:
+      - "8000:8000"
+    environment:
+      QDRANT_URL: http://qdrant:6333
+      QDRANT_API_KEY: ""
+      WORKERS_AI_ACCOUNT_ID: ${WORKERS_AI_ACCOUNT_ID}
+      WORKERS_AI_API_TOKEN: ${WORKERS_AI_API_TOKEN}
+      MCP_TRANSPORT: streamable-http
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: "8000"
+    volumes:
+      # Mount skills_data so the server can serve tier-3 scripts and assets
+      # from the local filesystem (needed for skills_run_script)
+      - ./skill_mcp/skills_data:/app/skill_mcp/skills_data:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  qdrant_data:
+    driver: local

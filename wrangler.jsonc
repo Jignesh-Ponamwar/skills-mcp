@@ -6,7 +6,8 @@
     //   wrangler secret put QDRANT_URL
     //   wrangler secret put QDRANT_API_KEY
     //
-    // NOTE: Durable Objects require a Cloudflare Workers Paid plan ($5/month).
+    // NOTE: Uses SQLite-backed Durable Objects (new_sqlite_classes) — available on Workers FREE plan.
+    //       Free tier: 100k requests/day. Upgrade to Paid ($5/mo) only if you exceed that limit.
 
     "name": "skill-mcp",
     "main": "src/worker.py",

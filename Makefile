@@ -23,21 +23,33 @@ endif
 
 # ── Targets ───────────────────────────────────────────────────────────────────
 
-.PHONY: help env check install seed deploy secrets dev dev-http setup
+.PHONY: help env check install seed deploy secrets dev dev-http setup \
+        validate scan docker-up docker-down docker-seed docker-logs docker-build
 
 help:
 	@echo ""
 	@echo "  skill-mcp — available make targets"
 	@echo "  ─────────────────────────────────────────────────────────"
-	@echo "  make env        Copy .env.example → .env  (skips if .env exists)"
-	@echo "  make check      Verify all required .env values are present"
-	@echo "  make install    pip install -r requirements.txt"
-	@echo "  make seed       Populate Qdrant with skills (requires .env)"
-	@echo "  make secrets    Push QDRANT_URL + QDRANT_API_KEY to Cloudflare Worker"
-	@echo "  make deploy     npx wrangler deploy"
-	@echo "  make dev        Run local FastMCP server  (stdio transport)"
-	@echo "  make dev-http   Run local FastMCP server  (HTTP on :8000)"
-	@echo "  make setup      Full first-time setup: env → install → seed → secrets → deploy"
+	@echo "  make env          Copy .env.example → .env  (skips if .env exists)"
+	@echo "  make check        Verify all required .env values are present"
+	@echo "  make install      pip install -r requirements.txt"
+	@echo "  make seed         Populate Qdrant with skills (requires .env)"
+	@echo "  make secrets      Push QDRANT_URL + QDRANT_API_KEY to Cloudflare Worker"
+	@echo "  make deploy       npx wrangler deploy"
+	@echo "  make dev          Run local FastMCP server  (stdio transport)"
+	@echo "  make dev-http     Run local FastMCP server  (HTTP on :8000)"
+	@echo "  make setup        Full first-time setup: env → install → seed → secrets → deploy"
+	@echo ""
+	@echo "  ── Security & Validation ────────────────────────────────"
+	@echo "  make validate     Validate all SKILL.md files (schema + prompt-injection)"
+	@echo "  make scan         Alias for validate"
+	@echo ""
+	@echo "  ── Docker (one-command local stack) ─────────────────────"
+	@echo "  make docker-up    Start full stack: Qdrant + seed + MCP server"
+	@echo "  make docker-down  Stop and remove containers (keeps Qdrant data)"
+	@echo "  make docker-seed  Re-seed Qdrant in the running stack"
+	@echo "  make docker-logs  Follow server logs"
+	@echo "  make docker-build Rebuild Docker image after code changes"
 	@echo ""
 
 env:
@@ -84,6 +96,30 @@ dev:
 
 dev-http:
 	MCP_TRANSPORT=streamable-http MCP_HOST=127.0.0.1 MCP_PORT=8000 $(PYTHON) -m skill_mcp.server
+
+validate:
+	$(PYTHON) scripts/validate_skills.py
+
+scan: validate
+
+# ── Docker targets ─────────────────────────────────────────────────────────────
+
+docker-up:
+	@echo "[docker] Starting skill-mcp full stack (Qdrant + seed + server)..."
+	docker compose up --build
+
+docker-down:
+	docker compose down
+
+docker-seed:
+	@echo "[docker] Re-seeding Qdrant with all skills..."
+	docker compose run --rm seed
+
+docker-logs:
+	docker compose logs -f server
+
+docker-build:
+	docker compose build --no-cache server
 
 # Full first-time setup pipeline
 setup: env install seed secrets deploy

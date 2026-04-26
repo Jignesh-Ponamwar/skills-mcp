@@ -1,0 +1,72 @@
+# ── secrets — NEVER in the image ─────────────────────────────────────────────
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.secret
+
+# ── wrangler / cloudflare ─────────────────────────────────────────────────────
+.wrangler/
+wrangler.jsonc
+
+# ── Python build artifacts ────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+venv/
+env/
+.Python
+
+# ── Test / coverage ───────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+tests/
+pytest.ini
+
+# ── Node (not needed in Python image) ────────────────────────────────────────
+node_modules/
+npm-debug.log*
+package.json
+package-lock.json
+
+# ── Git ───────────────────────────────────────────────────────────────────────
+.git/
+.gitignore
+.github/
+
+# ── IDE ───────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.fleet/
+
+# ── OS ───────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Docs (not needed at runtime) ─────────────────────────────────────────────
+README.md
+SETUP.md
+CONTRIBUTING.md
+THREAT_MODEL.md
+*.png
+*.jpg
+master-skill/
+scripts/setup.ps1
+scripts/setup.sh
+
+# ── Claude Code session ───────────────────────────────────────────────────────
+.claude/

@@ -1,0 +1,274 @@
+name: Validate Skills
+
+on:
+  pull_request:
+    paths:
+      - "skill_mcp/skills_data/**"
+      - "scripts/validate_skills.py"
+      - "skill_mcp/security/**"
+  push:
+    branches:
+      - main
+    paths:
+      - "skill_mcp/skills_data/**"
+
+permissions:
+  contents: read
+  pull-requests: write   # needed to post inline PR comments
+
+jobs:
+  # ── Job 1: Validate SKILL.md frontmatter + prompt-injection scan ─────────────
+  validate-skills:
+    name: Validate SKILL.md files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history needed for git diff
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install validation dependencies
+        run: pip install PyYAML python-frontmatter
+
+      - name: Find changed SKILL.md files
+        id: changed
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+            HEAD="${{ github.event.pull_request.head.sha }}"
+            CHANGED=$(git diff --name-only "$BASE" "$HEAD" -- "skill_mcp/skills_data/**" | grep "SKILL\.md$" || true)
+          else
+            CHANGED=$(git diff --name-only HEAD~1 HEAD -- "skill_mcp/skills_data/**" | grep "SKILL\.md$" || true)
+          fi
+
+          echo "changed_files<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$CHANGED" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+          if [ -n "$CHANGED" ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "Changed SKILL.md files:"
+            echo "$CHANGED"
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "No SKILL.md files changed — validating all skills as full suite check."
+          fi
+
+      - name: Validate changed skills (PR)
+        if: github.event_name == 'pull_request' && steps.changed.outputs.has_changes == 'true'
+        id: validate-pr
+        run: |
+          echo "${{ steps.changed.outputs.changed_files }}" | \
+            python scripts/validate_skills.py --changed-only --json > /tmp/validation-results.json
+          cat /tmp/validation-results.json
+        continue-on-error: true
+
+      - name: Validate all skills (push to main)
+        if: github.event_name == 'push' || steps.changed.outputs.has_changes == 'false'
+        id: validate-full
+        run: |
+          python scripts/validate_skills.py --json > /tmp/validation-results.json
+          cat /tmp/validation-results.json
+        continue-on-error: true
+
+      - name: Validate changed skills (human-readable, for logs)
+        if: github.event_name == 'pull_request' && steps.changed.outputs.has_changes == 'true'
+        run: |
+          echo "${{ steps.changed.outputs.changed_files }}" | \
+            python scripts/validate_skills.py --changed-only
+
+      - name: Validate all skills (human-readable, for logs)
+        if: github.event_name == 'push' || steps.changed.outputs.has_changes == 'false'
+        run: python scripts/validate_skills.py
+
+      - name: Post validation summary as PR comment
+        if: github.event_name == 'pull_request' && steps.changed.outputs.has_changes == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let results;
+            try {
+              results = JSON.parse(fs.readFileSync('/tmp/validation-results.json', 'utf8'));
+            } catch (e) {
+              console.log('No validation results to post');
+              return;
+            }
+
+            const failed  = results.filter(r => r.status === 'failed');
+            const warned  = results.filter(r => r.status === 'warned');
+            const clean   = results.filter(r => r.status === 'clean');
+
+            const statusEmoji = { failed: '❌', warned: '⚠️', clean: '✅' };
+            const statusLabel = { failed: 'BLOCKED', warned: 'WARNING', clean: 'PASSED' };
+
+            let body = `## 🔍 SKILL.md Validation Results\n\n`;
+            body += `| Status | Count |\n|--------|-------|\n`;
+            body += `| ✅ Passed | ${clean.length} |\n`;
+            body += `| ⚠️ Warnings | ${warned.length} |\n`;
+            body += `| ❌ Failed | ${failed.length} |\n\n`;
+
+            if (failed.length === 0 && warned.length === 0) {
+              body += `All changed skills passed validation. ✅\n`;
+            }
+
+            for (const r of [...failed, ...warned]) {
+              const emoji = statusEmoji[r.status];
+              body += `### ${emoji} \`${r.skill_id}\` — ${statusLabel[r.status]}\n\n`;
+              if (r.errors.length > 0) {
+                body += `**Errors (must fix before merging):**\n`;
+                for (const e of r.errors) {
+                  body += `- ${e}\n`;
+                }
+                body += '\n';
+              }
+              if (r.warnings.length > 0) {
+                body += `**Warnings (review recommended):**\n`;
+                for (const w of r.warnings) {
+                  body += `- ${w}\n`;
+                }
+                body += '\n';
+              }
+            }
+
+            body += `\n---\n*Validated by [skill-mcp CI](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})*`;
+
+            // Find and update existing comment, or create new
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes('SKILL.md Validation Results')
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner:      context.repo.owner,
+                repo:       context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner:       context.repo.owner,
+                repo:        context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      - name: Fail if any skill is blocked
+        run: |
+          if [ -f /tmp/validation-results.json ]; then
+            FAILED=$(python3 -c "
+            import json, sys
+            results = json.load(open('/tmp/validation-results.json'))
+            failed = [r['skill_id'] for r in results if r['status'] == 'failed']
+            if failed:
+                print('FAILED: ' + ', '.join(failed))
+                sys.exit(1)
+            ")
+          fi
+
+  # ── Job 2: YAML syntax check on ALL frontmatter (fast, no Python deps) ───────
+  yaml-lint:
+    name: YAML frontmatter syntax
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check all SKILL.md files parse as valid YAML
+        run: |
+          python3 - <<'EOF'
+          import sys
+          from pathlib import Path
+          import yaml
+
+          skill_files = sorted(Path("skill_mcp/skills_data").glob("*/SKILL.md"))
+          errors = []
+          for path in skill_files:
+              text = path.read_text(encoding="utf-8")
+              parts = text.split("---", 2)
+              if len(parts) < 3:
+                  errors.append(f"{path}: missing frontmatter delimiters")
+                  continue
+              try:
+                  yaml.safe_load(parts[1])
+              except yaml.YAMLError as e:
+                  errors.append(f"{path}: {e}")
+
+          if errors:
+              print(f"[yaml-lint] {len(errors)} YAML error(s):")
+              for e in errors:
+                  print(f"  ✗ {e}")
+              sys.exit(1)
+
+          print(f"[yaml-lint] All {len(skill_files)} SKILL.md files have valid YAML frontmatter ✓")
+          EOF
+
+  # ── Job 3: Detect duplicate skill names / slugs ───────────────────────────────
+  check-duplicates:
+    name: Check for duplicate skill slugs
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect duplicate slugs
+        run: |
+          python3 - <<'EOF'
+          import sys
+          from pathlib import Path
+          import yaml
+
+          skill_files = sorted(Path("skill_mcp/skills_data").glob("*/SKILL.md"))
+          slugs = {}
+          names = {}
+          errors = []
+
+          for path in skill_files:
+              slug = path.parent.name
+              if slug in slugs:
+                  errors.append(f"Duplicate slug: '{slug}' appears in {slugs[slug]} and {path}")
+              slugs[slug] = path
+
+              try:
+                  text = path.read_text(encoding="utf-8")
+                  parts = text.split("---", 2)
+                  if len(parts) >= 3:
+                      fm = yaml.safe_load(parts[1]) or {}
+                      name = str(fm.get("name") or "")
+                      if name and name in names:
+                          errors.append(
+                              f"Duplicate skill name: '{name}' in {names[name]} and {path}"
+                          )
+                      if name:
+                          names[name] = path
+              except Exception:
+                  pass
+
+          if errors:
+              for e in errors:
+                  print(f"  ✗ {e}")
+              sys.exit(1)
+
+          print(f"[duplicates] No duplicate slugs or names found across {len(skill_files)} skills ✓")
+          EOF
