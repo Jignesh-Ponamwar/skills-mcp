@@ -1,4 +1,4 @@
-# skill-mcp
+# skills-mcp
 
 <div align="center">
 
