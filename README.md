@@ -501,3 +501,5 @@ Apache 2.0 — see [LICENSE](LICENSE).
 Built with [Cloudflare Workers](https://workers.cloudflare.com) · [Qdrant](https://qdrant.tech) · [FastMCP](https://github.com/jlowin/fastmcp) · [MCP](https://modelcontextprotocol.io)
 
 </div>
+#   s k i l l s - m c p  
+ 
