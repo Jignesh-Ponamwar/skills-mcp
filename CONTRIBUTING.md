@@ -78,13 +78,34 @@ The current 6 tools (find, get_body, get_options, get_reference, run_script, get
 
 **`skills_list_all()`** — returns all skill IDs with their one-line descriptions. Semantic search is the right entrypoint for most tasks, but agents sometimes benefit from knowing the full catalogue — especially when the task is ambiguous or when they suspect a skill exists but their query isn't matching. This is a cheap Qdrant scroll, not an embedding call.
 
-**`skills_suggest_workflow(task)`** — given a multi-step task description, returns an ordered list of skills that together cover the full workflow. Example: "build and deploy a FastAPI app with auth" might suggest `[fastapi, docker-containerization, github-actions]` in sequence. This requires either LLM reasoning in the Worker (possible via a CF AI text model) or a simpler graph of skill dependencies declared in the options collection.
+**`skills_suggest_workflow(task)`** — given a multi-step task description, returns an ordered list of skills with the role each one plays in completing the full workflow. The goal is not to return the single most relevant skill but to show how several skills compose into a coherent execution plan.
 
-**`skills_get_manifest(skill_id)`** — returns the tier3_manifest without loading the full body. Useful when an agent has already loaded the body in a previous turn and only needs to know what supplementary files are available.
+Example: `skills_suggest_workflow("build and deploy a FastAPI app with auth and CI")` might return:
 
-**`skills_find_batch(queries)`** — submit multiple queries in a single call and get back results for all of them. Agents working on compound tasks often know upfront that they need several skills. Today they make N round trips; this collapses it to one.
+```json
+{
+  "task": "build and deploy a FastAPI app with auth and CI",
+  "workflow": [
+    {
+      "step": 1,
+      "skill_id": "fastapi",
+      "role": "Scaffold the API — routes, Pydantic models, dependency injection, JWT auth middleware"
+    },
+    {
+      "step": 2,
+      "skill_id": "docker-containerization",
+      "role": "Package the app — multi-stage Dockerfile, non-root user, health check, .dockerignore"
+    },
+    {
+      "step": 3,
+      "skill_id": "github-actions",
+      "role": "Automate the pipeline — lint, test, build image, push to registry, deploy on merge"
+    }
+  ]
+}
+```
 
-**`skills_refresh_hint(skill_id)`** — given that a skill body was loaded N turns ago, return a short refresher (the first section or a summary) without reloading the full body. Helps agents that have scrolled past the instructions in long conversations.
+This requires either LLM reasoning in the Worker (possible via a CF AI text model) or a skill dependency graph declared in the options collection. Either approach is worth exploring — the design question is which produces more reliable ordering without hallucinated skills.
 
 ### Tool design principles
 

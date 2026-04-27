@@ -2,15 +2,19 @@
 
 <div align="center">
 
-![Skills-MCP Logo](./Skills-MCP%20Minimal%20Logo.png)
+<a href="https://skills-mcp-jignesh.vercel.app/">
+  <img src="./Skills-MCP%20Minimal%20Logo.png" alt="Skills-MCP Logo" />
+</a>
 
 **A self-hostable, open-source Skills registry for AI agents delivered over MCP.**  
 Semantic discovery · Progressive disclosure · 30 production-ready skills · Runs on Cloudflare Workers
 
+[![Website](https://img.shields.io/badge/website-skills--mcp-black.svg)](https://skills-mcp-jignesh.vercel.app/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020.svg)](https://workers.cloudflare.com)
 [![Skills](https://img.shields.io/badge/bundled%20skills-30-brightgreen.svg)](skill_mcp/skills_data/)
+[![Tests](https://github.com/Jignesh-Ponamwar/skills-mcp/actions/workflows/tests.yml/badge.svg)](https://github.com/Jignesh-Ponamwar/skills-mcp/actions/workflows/tests.yml)
 
 </div>
 
@@ -44,19 +48,6 @@ Agent: → skills_find_relevant("set up Stripe subscriptions webhooks")
 ```
 
 The agent doesn't guess. It retrieves authoritative, versioned instructions  the same way a senior engineer would consult a runbook.
-
----
-
-## What Makes It Different
-
-| | skill-mcp | System prompt stuffing | Per-project CLAUDE.md | Prompt libraries |
-|---|---|---|---|---|
-| **Searchable** | ✅ Semantic search across 30+ skills | ❌ Everything loaded always | ❌ Static per project | ❌ Manual lookup |
-| **On-demand** | ✅ Load only what's needed | ❌ Burns context window | ❌ Burns context window | ❌ Copy-paste |
-| **Versioned** | ✅ Seed once, update centrally | ❌ Must update every file | ❌ Must update every project | ❌ No source of truth |
-| **Bundled assets** | ✅ References, scripts, templates | ❌ | ❌ | ❌ |
-| **Self-hostable** | ✅ Your infra, your data | ❌ | ✅ | ✅ |
-| **8 AI platforms** | ✅ Claude Code, Cursor, Windsurf... | varies | varies | varies |
 
 ---
 
@@ -489,72 +480,67 @@ In the deployed Cloudflare Worker, `skills_run_script` returns the script manife
 
 ## Project Structure
 
+Three top-level directories own three distinct concerns:
+
+- **`skill_mcp/`** — the Python package. Everything the server needs at runtime lives here: Pydantic models (`models/`), Qdrant integration (`db/`), MCP tool implementations (`tools/`), the prompt-injection scanner (`security/`), the seed script (`seed/`), the local FastMCP entry point (`server.py`), and the skill registry itself (`skills_data/`). If you are adding a skill, editing a tool, or touching the data layer, you are working here.
+
+- **`src/`** — the Cloudflare Workers deployment target. Contains a single file, `worker.py`, which re-implements all six MCP tools as a self-contained Cloudflare Python Worker (no external packages, Pyodide-compatible). `wrangler.jsonc` at the repo root points here. Edit this only when changing the deployed Worker behaviour.
+
+- **`scripts/`** — developer and CI utilities that are not part of the importable package. `setup.sh` / `setup.ps1` are one-shot interactive wizards; `validate_skills.py` is the SKILL.md schema + prompt-injection validator invoked by both `make validate` and the GitHub Actions skill-validation workflow.
+
 ```
 skill-mcp/
+├── skill_mcp/                     # Installable Python package (pip install -e ".[seed]")
+│   ├── db/                        # Qdrant client, embedder, TTL cache
+│   ├── models/skill.py            # Pydantic models for all 6 collection types
+│   ├── security/prompt_injection.py  # 9-category injection scanner
+│   ├── seed/seed_skills.py        # Walks skills_data/, scans, embeds, upserts Qdrant
+│   ├── tools/                     # MCP tool implementations (local server)
+│   ├── skills_data/               # 30 skill folders — one SKILL.md each
+│   └── server.py                  # Local FastMCP entry point (stdio / HTTP)
 ├── src/
-│   └── worker.py                  # Cloudflare Python Worker — MCP SSE server, all 6 tools
+│   └── worker.py                  # Cloudflare Python Worker — all 6 tools, SSE transport
+├── scripts/
+│   ├── setup.sh / setup.ps1       # One-shot setup wizards (Linux/macOS + Windows)
+│   └── validate_skills.py         # SKILL.md validator — schema + injection scan
+├── master-skill/                  # Drop-in agent instruction files (8 platforms)
+│   └── platforms/
+│       ├── claude-code/CLAUDE.md
+│       ├── cursor/.cursorrules
+│       ├── windsurf/.windsurfrules
+│       ├── codex/AGENTS.md
+│       ├── cline/.clinerules
+│       ├── copilot/.github/copilot-instructions.md
+│       └── aider/CONVENTIONS.md
+├── tests/                         # pytest unit + integration tests
+├── .github/workflows/
+│   ├── tests.yml                  # pytest on every push (unit tests, no external deps)
+│   └── validate-skills.yml        # SKILL.md lint + injection scan on PRs
 ├── wrangler.jsonc                  # Workers AI binding + SQLite Durable Objects config
 ├── Makefile                        # Automation: setup, seed, deploy, dev, docker, validate
-├── Dockerfile                      # Local FastMCP server image (non-root, health check)
-├── docker-compose.yml              # One-command stack: Qdrant + seed + MCP server
-├── .dockerignore                   # Excludes secrets, .env, .wrangler, git history
-├── scripts/
-│   ├── setup.ps1                  # Windows one-shot setup wizard
-│   ├── setup.sh                   # Linux/macOS one-shot setup script
-│   └── validate_skills.py         # SKILL.md schema + prompt-injection validator (used by CI)
-├── .github/
-│   └── workflows/
-│       └── validate-skills.yml    # CI: YAML lint + duplicate check + injection scan on PRs
-├── master-skill/                  # Drop-in agent instruction files (8 platforms)
-│   ├── SKILL.md                   # Universal skill definition for MCP-aware agents
-│   ├── README.md                  # Per-platform install commands
-│   └── platforms/
-│       ├── antigravity/           # .agents/rules/GEMINI.md + AGENTS.md
-│       ├── claude-code/           # CLAUDE.md
-│       ├── cursor/                # .cursorrules
-│       ├── windsurf/              # .windsurfrules
-│       ├── codex/                 # AGENTS.md
-│       ├── cline/                 # .clinerules
-│       ├── copilot/               # .github/copilot-instructions.md
-│       └── aider/                 # CONVENTIONS.md
-├── skill_mcp/
-│   ├── security/
-│   │   └── prompt_injection.py    # 9-category injection scanner (seed + CI)
-│   ├── db/
-│   │   ├── embedder.py            # Workers AI REST client with TTL cache
-│   │   ├── qdrant_manager.py      # All 6 collections  upsert, query, tier3_manifest
-│   │   ├── qdrant_client.py       # QdrantClient factory
-│   │   └── cache.py               # Thread-safe TTL cache (no external deps)
-│   ├── models/
-│   │   └── skill.py               # Pydantic models for all 6 collection types
-│   ├── seed/
-│   │   └── seed_skills.py         # Walks skills_data/, scans, embeds, seeds Qdrant
-│   ├── tools/                     # Tool implementations for the local Python server
-│   │   ├── find_skills.py
-│   │   ├── get_skill_body.py
-│   │   ├── get_skill_options.py
-│   │   ├── get_skill_reference.py
-│   │   ├── run_skill_script.py    # Secure subprocess execution
-│   │   └── get_skill_asset.py
-│   ├── skills_data/               # 30 skill folders (one per skill)
-│   │   ├── api-integration/
-│   │   ├── claude-api/
-│   │   ├── cloudflare-workers/
-│   │   └── ... (27 more)
-│   └── server.py                  # Local FastMCP server (optional, for script execution)
-├── tests/
-│   ├── test_prompt_injection.py   # 40 scanner tests (CRITICAL/HIGH/MEDIUM/legitimate content)
-│   ├── test_cache.py
-│   ├── test_models.py
-│   └── test_tools_integration.py
-├── pyproject.toml                  # Package config + optional local-server extras
-├── requirements.txt                # Seed script deps (no PyTorch, no GPU)
-├── .env.example                    # Credential template  copy to .env
+├── Dockerfile / docker-compose.yml # One-command local stack: Qdrant + seed + server
+├── pyproject.toml                  # Package metadata + optional dependency groups
+├── .env.example                    # Credential template — copy to .env
 ├── SETUP.md                        # Full credential walkthrough
 ├── CONTRIBUTING.md                 # Skill submission workflow + security policy
-├── THREAT_MODEL.md                 # 7 threat categories with mitigations
-└── LICENSE                         # Apache 2.0
+└── THREAT_MODEL.md                 # 7 threat categories with mitigations
 ```
+
+---
+
+## Known Limitations
+
+- **Master skill required for reliable agent behavior** — The 3-tier workflow (discover → load → supplement) only fires consistently when the master skill file is installed in the agent's project root (see [Step 2](#step-2--install-the-master-skill-for-your-platform) above). Without it, agents may skip score thresholds, load skill bodies speculatively, or ignore the `tier3_manifest` entirely — wasting context window tokens and producing inconsistent results.
+
+- **Token usage scales with collection size** — `skills_find_relevant` returns `top_k` result descriptors (each ~100–200 tokens). At 30 skills this is negligible. At 300+ skills with higher `top_k` values, a single discovery call can consume a meaningful share of the context window. Keep `top_k` low (3–5) and write precise, distinct trigger phrases per skill to preserve relevance at scale.
+
+- **Script execution is local-only** — `skills_run_script` requires the local Python server. The Cloudflare Worker returns the script manifest but cannot execute subprocesses — the Pyodide runtime does not support `subprocess`. Any skill workflow that calls `skills_run_script` must point the MCP client at `python -m skill_mcp.server` instead of the Worker URL.
+
+- **No built-in skill versioning** — Skills are stored as Qdrant point payloads keyed by `skill_id`. Re-seeding overwrites the previous payload with no diff or rollback. If you need to recover a prior skill state, re-seed from git history.
+
+- **Embedding model is pinned at seed time** — Vectors are generated with `@cf/baai/bge-small-en-v1.5` (384-dim) at both seed time and query time. If Cloudflare Workers AI retires or changes this model, all vectors become incomparable and the entire skill collection must be re-seeded.
+
+- **Search quality depends on trigger phrase quality** — Semantic search is only as good as the `triggers` written in each `SKILL.md`. Skills with vague or overlapping trigger phrases will surface for unrelated queries and dilute results. One skill with poorly-written triggers degrades the entire registry.
 
 ---
 
