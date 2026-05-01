@@ -2,8 +2,10 @@
 
 This document describes the attack surface of the skill-mcp system, known threats, mitigations in place, and residual risks. It is kept as a living document alongside the codebase.
 
-**Last reviewed:** 2026-04-26  
+**Last reviewed:** 2026-05-01  
 **Architecture version:** 1.0 (Cloudflare Worker + Qdrant Cloud + Workers AI)
+
+> Related: [TRANSPARENCY.md](TRANSPARENCY.md) describes the hosted instance trust model, service guarantees, and deployment boundaries in plain language for end users.
 
 ---
 
@@ -228,9 +230,9 @@ Both the `.env` file (contains credentials) and `.wrangler/` directory (contains
 
 The Worker never returns the Qdrant URL, API key, or raw Qdrant error messages to MCP clients. All upstream errors are caught and replaced with a generic message + digest.
 
-**M-04d: Collection scope limitation** *(planned)*
+**M-04d: Collection scope limitation** *(recommended — not yet enforced by default)*
 
-Qdrant API keys can be scoped to specific collections with read-only access. The Worker only needs read access; only the seed script needs write access. Separate keys should be used.
+Qdrant API keys can be scoped to specific collections with read-only access. The Worker only needs read access; only the seed script needs write access. **Operators should use separate keys**: a read-only key in the Worker (`wrangler secret put QDRANT_API_KEY`) and a write key only for the local seed script (`.env` file). This is not enforced by default; operators must configure it manually in Qdrant Cloud.
 
 ### Residual Risk
 
@@ -309,9 +311,9 @@ A compromised package version could affect either the seed pipeline or the deplo
 
 The Cloudflare Worker depends only on `mcp>=1.5.0`. All outbound HTTP uses `js.fetch` (no `requests` or `urllib` in the Worker — those don't work in Pyodide anyway).
 
-**M-06b: No requirements pinning** *(risk)*
+**M-06b: No requirements pinning** *(known risk — unresolved)*
 
-`requirements.txt` uses `>=` version specifiers. This is a known risk. **Planned:** pin to exact versions with `pip-compile` and use Dependabot for automated updates.
+`requirements.txt` uses `>=` version specifiers. This is a known risk. Pinning to exact versions with `pip-compile` and using Dependabot for automated updates would reduce this risk. Not yet implemented.
 
 **M-06c: Pyodide sandbox**
 
@@ -334,6 +336,35 @@ The seed script loads files from `references/`, `scripts/`, and `assets/` subdir
 **M-07a: `_safe_path()` check in seed script**
 
 Every file path is resolved with `Path.resolve()` and checked that the resolved path is a descendant of the expected base directory using `Path.parents`. Symlinks that point outside the skill folder are silently skipped with a warning.
+
+---
+
+---
+
+## Architectural Clarifications
+
+### Durable Object usage
+
+The Worker uses a single Durable Object (`SkillMCPServer`) as a singleton that routes all requests. What it stores:
+
+- **The ASGI app closure** — instantiated once at Worker startup, shared across requests
+- **In-memory `asyncio.Queue` per SSE session** — created on `GET /sse`, destroyed when the connection closes
+
+What it does **not** store:
+
+- No SQLite data. The migration tag `new_sqlite_classes` is required by Cloudflare to register the Durable Object class, but the SQLite storage API is never called. No skill data, session metadata, or user data is written to DO storage.
+- No user data of any kind persists between deployments or Worker restarts.
+
+The DO is necessary because Cloudflare Workers are stateless by default — each request may land on a different isolate. The singleton DO ensures all SSE connections share the same session map, so `POST /messages/?sessionId=X` can route a response to the correct open SSE stream.
+
+### Transport status
+
+| Deployment | Transport | MCP spec revision |
+|------------|-----------|------------------|
+| Cloudflare Worker | SSE (`GET /sse` + `POST /messages/`) | `2024-11-05` |
+| Local Python server | `streamable-http` or `stdio` | `2024-11-05` |
+
+The MCP specification now defines `streamable-http` as the preferred transport, superseding the SSE transport. The Worker's SSE transport is functional but represents technical debt. Migration is tracked in [CONTRIBUTING.md](CONTRIBUTING.md#4-priority-4--protocol-and-infrastructure).
 
 ---
 
@@ -368,3 +399,4 @@ Maintainers will acknowledge within 48 hours and aim to fix critical issues with
 | Date | Version | Change |
 |------|---------|--------|
 | 2026-04-26 | 1.0 | Initial threat model |
+| 2026-05-01 | 1.1 | Added Architectural Clarifications section (DO usage, transport status); updated M-04d to reflect that read/write key separation is recommended but not default; added link to TRANSPARENCY.md; corrected M-06b wording from "planned" to "known risk — unresolved" |

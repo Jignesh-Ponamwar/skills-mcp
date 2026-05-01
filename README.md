@@ -7,7 +7,7 @@
 </a>
 
 **A self-hostable, open-source Skills registry for AI agents delivered over MCP.**  
-Semantic discovery · Progressive disclosure · 30 production-ready skills · Runs on Cloudflare Workers
+Semantic discovery · Progressive disclosure · 30 bundled skills · Self-host on Cloudflare Workers
 
 [![Website](https://img.shields.io/badge/website-skills--mcp-black.svg)](https://skills-mcp-jignesh.vercel.app/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
@@ -65,7 +65,7 @@ skills_find_relevant("write pytest tests for a FastAPI endpoint")
 → fastapi     (score: 0.71)
 ```
 
-Score thresholds: **> 0.6** strong match · **0.4–0.6** review description · **< 0.4** no match
+Score thresholds (judgment-based starting points): **> 0.6** strong match · **0.4–0.6** review description · **< 0.4** no match
 
 ### 3. Progressive disclosure  load only what you need
 
@@ -122,7 +122,7 @@ The Worker uses **Cloudflare Workers AI** (`@cf/baai/bge-small-en-v1.5`, 384-dim
 
 ## Bundled Skills (30)
 
-Production-ready skills sourced from official repositories (Anthropic, Google Gemini, Vercel, Cloudflare, Stripe) and community engineering best practices.
+Bundled skills covering common engineering domains. Sourced from official documentation (Anthropic, Google Gemini, Vercel, Cloudflare, Stripe) and established engineering best practices. Quality and currency vary by skill — check the individual `SKILL.md` files for author and version metadata.
 
 ### 🔧 Core Development
 | Skill | What it does |
@@ -307,6 +307,8 @@ make docker-seed   # Re-seed after adding new skills
 
 ## Connecting Your AI Agent
 
+> **Before connecting to any hosted skill-mcp instance you do not control:** read [TRANSPARENCY.md](TRANSPARENCY.md). Skill bodies load directly into your agent's context window from a third-party server. The hosted instance offered by this repo is a personal deployment with no SLA, no authentication, and no rate limiting. For production use or sensitive workloads, self-host.
+
 ### Step 1  Add the MCP server
 
 Add to your MCP client config (`.mcp.json`, Claude Code settings, Cursor settings, etc.):
@@ -437,9 +439,9 @@ The seed script is idempotent  re-running updates existing skills without creati
 
 ### Prompt-injection defence (ingestion pipeline)
 
-A malicious `SKILL.md` with embedded instruction overrides could alter how agents behave after loading the skill body — turning the registry into a prompt-injection delivery mechanism. skill-mcp is the first open-source skills registry to explicitly address this.
+A malicious `SKILL.md` with embedded instruction overrides could alter how agents behave after loading the skill body — turning the registry into a prompt-injection delivery mechanism.
 
-Every skill is scanned by `skill_mcp/security/prompt_injection.py` **before** it enters Qdrant — at seed time and in CI on every PR. Skills with CRITICAL or HIGH findings are blocked.
+Every skill is scanned by `skill_mcp/security/prompt_injection.py` **before** it enters Qdrant — at seed time and in CI on every PR. Skills with CRITICAL or HIGH findings are blocked. The scanner uses pattern matching; semantic attacks that evade patterns are a known residual risk (see [THREAT_MODEL.md](THREAT_MODEL.md)).
 
 | Attack category | Severity | Example |
 |----------------|----------|---------|
@@ -454,7 +456,7 @@ Every skill is scanned by `skill_mcp/security/prompt_injection.py` **before** it
 
 Code blocks are stripped before structural checks — TypeScript generics (`Promise<User>`) and `<script>` tags in code examples never false-positive.
 
-Full threat model: [`THREAT_MODEL.md`](THREAT_MODEL.md)
+Full threat model: [`THREAT_MODEL.md`](THREAT_MODEL.md) · Hosted instance trust model: [`TRANSPARENCY.md`](TRANSPARENCY.md)
 
 ### Runtime hardening (Worker + local server)
 
@@ -523,7 +525,9 @@ skill-mcp/
 ├── .env.example                    # Credential template — copy to .env
 ├── SETUP.md                        # Full credential walkthrough
 ├── CONTRIBUTING.md                 # Skill submission workflow + security policy
-└── THREAT_MODEL.md                 # 7 threat categories with mitigations
+├── THREAT_MODEL.md                 # 7 threat categories with mitigations
+├── TRANSPARENCY.md                 # Hosted instance trust model, SLA status, deployment boundaries
+└── docs/                           # Architecture, versioning, calibration, and federation design
 ```
 
 ---

@@ -1,0 +1,108 @@
+name: Skill Submission
+description: Propose a new skill for the registry
+title: "[Skill] <slug>"
+labels: ["skill-proposal"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filling out this form, check that your proposed skill does not duplicate an existing one.
+        Run `skills_find_relevant("<your proposed description>")` against the live registry or your local server.
+        If any result scores above 0.7, read that skill first — you may be adding a duplicate.
+
+  - type: input
+    id: slug
+    attributes:
+      label: Proposed skill slug
+      description: Lowercase, hyphen-separated. This becomes the directory name and `skill_id`.
+      placeholder: "my-skill-slug"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: One-sentence description (this goes into the embedding)
+      description: |
+        Write from the agent's perspective: "Use when the user asks to [task]. Covers [scope]."
+        This is the exact text that will be embedded for semantic search — write it to match how an agent phrases the need.
+      placeholder: "Use when the user asks to extract structured data from PDF documents, fill PDF forms, or parse tables from scanned files."
+    validations:
+      required: true
+
+  - type: textarea
+    id: trigger_phrases
+    attributes:
+      label: Trigger phrases (3–10 examples)
+      description: Natural-language phrases an agent would use when searching for this skill. One per line.
+      placeholder: |
+        extract text from a PDF
+        parse tables from a PDF document
+        fill a PDF form programmatically
+        read structured data from scanned documents
+    validations:
+      required: true
+
+  - type: textarea
+    id: failure_mode
+    attributes:
+      label: What failure mode does this skill prevent?
+      description: |
+        Describe a specific example of an agent doing this task wrong without the skill.
+        "Writes generic code" is not specific enough. "Skips webhook signature verification" or "uses deprecated API version X" are.
+      placeholder: "Without this skill, agents typically omit signature verification when implementing Stripe webhooks, making the endpoint spoofable."
+    validations:
+      required: true
+
+  - type: textarea
+    id: existing_overlap
+    attributes:
+      label: Existing skills checked for overlap
+      description: List any existing skills you checked, and why this skill is distinct.
+      placeholder: |
+        Checked: pdf-processing (covers extraction but not form filling or form schema introspection)
+        This skill adds: form field enumeration, field type detection, and programmatic form filling workflow
+    validations:
+      required: true
+
+  - type: dropdown
+    id: tier3_needed
+    attributes:
+      label: Does this skill need Tier 3 files?
+      description: Tier 3 = references/, scripts/, or assets/ subdirectory files
+      options:
+        - "No — the body instructions are self-contained"
+        - "Yes — reference docs (markdown files with spec/patterns)"
+        - "Yes — executable scripts (.py / .js / .sh)"
+        - "Yes — asset templates (markdown or other output templates)"
+        - "Yes — multiple of the above"
+    validations:
+      required: true
+
+  - type: textarea
+    id: platforms
+    attributes:
+      label: Platform coverage
+      description: Which AI agent platforms have you tested this with?
+      placeholder: |
+        Claude Code — tested
+        Cursor — not tested
+        any — should work on any platform
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: pre_submit_checklist
+    attributes:
+      label: Pre-submission checklist
+      options:
+        - label: I ran `skills_find_relevant` with my description and verified no existing skill scores above 0.7
+          required: true
+        - label: The description is written from the agent's perspective (not a feature list)
+          required: true
+        - label: I have at least 3 trigger phrases that cover different phrasings of the same intent
+          required: true
+        - label: The body contains procedural value beyond what an agent could derive from training alone
+          required: true
+        - label: I have not included any personally identifiable information, proprietary code, or content that requires a license incompatible with Apache 2.0
+          required: true

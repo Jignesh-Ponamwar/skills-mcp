@@ -21,10 +21,13 @@ That convergence is the real goal. The bundled SKILL.md files are a demo of the 
 3. [Priority 3 — Agent efficiency](#3-priority-3--agent-efficiency)
 4. [Priority 4 — Protocol and infrastructure](#4-priority-4--protocol-and-infrastructure)
 5. [Skill format reference](#5-skill-format-reference)
-6. [Validation and CI](#6-validation-and-ci)
-7. [Security policy](#7-security-policy)
-8. [Review process](#8-review-process)
-9. [The two invariants](#9-the-two-invariants)
+6. [Submitting a new skill](#6-submitting-a-new-skill)
+7. [Contributor credit](#7-contributor-credit)
+8. [Duplicate and near-duplicate skills](#8-duplicate-and-near-duplicate-skills)
+9. [Validation and CI](#9-validation-and-ci)
+10. [Security policy](#10-security-policy)
+11. [Review process](#11-review-process)
+12. [The two invariants](#12-the-two-invariants)
 
 ---
 
@@ -240,7 +243,88 @@ python scripts/validate_skills.py
 
 ---
 
-## 6. Validation and CI
+## 6. Submitting a new skill
+
+Use the GitHub issue template to propose a skill before writing it — this catches duplicates and scope questions early.
+
+**Step-by-step:**
+
+1. **Open an issue** using the [Skill Submission template](https://github.com/Jignesh-Ponamwar/skills-mcp/issues/new?template=skill-submission.yml). Describe the skill, the failure mode it prevents, and your trigger phrase design.
+2. **Wait for acknowledgement** (usually 1–3 business days). Reviewers may ask you to adjust scope or check for overlaps with existing skills before you write any code.
+3. **Create the skill folder** under `skill_mcp/skills_data/<slug>/`:
+   - Write `SKILL.md` following the format in [section 5](#5-skill-format-reference)
+   - Add `references/`, `scripts/`, and `assets/` only if the instructions explicitly reference them
+4. **Run local validation:**
+   ```bash
+   python scripts/validate_skills.py skill_mcp/skills_data/my-skill/SKILL.md
+   ```
+5. **Open a PR** referencing the issue number. CI runs automatically.
+6. **Review** — a maintainer will evaluate the skill against [docs/REVIEWER_CHECKLIST.md](docs/REVIEWER_CHECKLIST.md).
+
+**What makes a skill worth adding:**
+
+- It prevents a specific, documented failure mode (not just "documents how to use X")
+- The trigger phrases are distinct from existing skills — no significant overlap
+- The instructions contain procedural value that a model could not derive from training alone
+- The body is correct and current at the time of submission
+
+---
+
+## 7. Contributor credit
+
+Contributor attribution is stored in the `metadata.author` field of each `SKILL.md`:
+
+```yaml
+metadata:
+  author: your-github-username
+```
+
+This field is stored in Qdrant and returned by `skills_find_relevant` as part of the frontmatter payload. When building UIs or dashboards on top of the registry, the `author` field is the canonical credit signal.
+
+**For infrastructure and tooling contributions** (not skill additions), the standard GitHub contribution graph and commit history is the canonical record.
+
+---
+
+## 8. Duplicate and near-duplicate skills
+
+The CI `check-duplicates` job catches exact slug and name collisions. It does **not** catch near-duplicates — two skills that cover overlapping domains with different slugs.
+
+### Policy
+
+- **Exact duplicates** (same slug or name): blocked by CI. Do not submit.
+- **Near-duplicates** (overlapping trigger phrases and scope): reviewers check these manually. If two skills have >3 trigger phrases in common and similar descriptions, one of them needs to be narrowed or the two should be merged.
+- **Complementary skills** (related domain, distinct procedures): allowed. For example, `fastapi` and `graphql-api` both involve backend APIs but cover distinct procedures.
+
+### How to self-check before submitting
+
+Before writing a skill, run a semantic similarity check against the existing registry:
+
+```bash
+# Seed your local Qdrant, then query it for your proposed description
+# Replace the query with your skill's intended description
+curl -X POST http://localhost:6333/collections/skill_frontmatter/points/search \
+  -H 'Content-Type: application/json' \
+  -d '{"vector": [...], "limit": 5, "with_payload": true}'
+```
+
+Or, more practically: connect the local server to your AI agent and run:
+```
+skills_find_relevant("your proposed trigger phrase here", top_k=5)
+```
+
+If any result scores above 0.7 with your proposed description, examine the existing skill before submitting. You may be adding a duplicate.
+
+### Conflict resolution
+
+If two similar skills exist in the registry (e.g., contributed separately), the resolution order is:
+
+1. Narrow one to remove overlap (preferred)
+2. Merge into one skill with expanded coverage
+3. Deprecate one (mark `deprecated: true` in frontmatter) pointing to the replacement
+
+---
+
+## 9. Validation and CI
 
 Every PR that touches `skills_data/` runs three CI jobs automatically:
 
@@ -261,7 +345,7 @@ For code contributions (not skills), CI runs `pytest`. All 40 prompt-injection s
 
 ---
 
-## 7. Security policy
+## 10. Security policy
 
 Skills load directly into agent context windows. All submitted skills are scanned before merge. See [`THREAT_MODEL.md`](THREAT_MODEL.md) for the full threat model.
 
@@ -273,23 +357,26 @@ Skills load directly into agent context windows. All submitted skills are scanne
 
 ---
 
-## 8. Review process
+## 11. Review process
+
+Reviewers use the checklist in [docs/REVIEWER_CHECKLIST.md](docs/REVIEWER_CHECKLIST.md). Read it before submitting — a PR that pre-addresses every checklist item merges faster.
 
 **Response time:** 3–5 business days.
 
 **What shifts a PR from good to great:**
 - For tool/protocol changes: evidence that the change improves agent behavior, not just that it's technically correct
 - For infrastructure changes: benchmarks or measurements that justify the tradeoff
-- For skill additions: demonstration of a specific failure mode the skill prevents
+- For skill additions: demonstration of a specific failure mode the skill prevents, with an example query that retrieves it and an example that does not
 
 **What will get a PR closed without merge:**
 - Skills that are documentation paraphrases without added procedural value
+- Skills with trigger phrases that substantially overlap existing skills without resolving the overlap
 - Tool additions that don't come with a clear agent behavior story
 - Changes that break the two invariants
 
 ---
 
-## 9. The two invariants
+## 12. The two invariants
 
 These two rules must never be broken regardless of the change:
 
