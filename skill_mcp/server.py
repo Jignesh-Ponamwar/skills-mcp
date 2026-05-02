@@ -31,12 +31,19 @@ import os
 from contextlib import asynccontextmanager
 from typing import AsyncIterator, Optional
 
-from dotenv import load_dotenv
 from fastmcp import FastMCP
 
 # load_dotenv() MUST run before the relative imports below.
 # Those modules read os.getenv() at import time (module-level TTLCache, timeouts, etc.).
-load_dotenv()
+# Conditional import: python-dotenv may be absent in Docker / production environments
+# where env vars are injected directly, and on Python 3.14 preview builds where
+# python-dotenv 1.2.2 has a namespace resolution issue.  Missing dotenv is harmless
+# when env vars are already set; the server will still start correctly.
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 # pylint: disable=wrong-import-position
 from .db.qdrant_manager import qdrant_manager
