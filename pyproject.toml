@@ -10,7 +10,8 @@ requires-python = ">=3.11"
 
 # Runtime deps for the Cloudflare Worker (installed by wrangler into the Worker bundle)
 dependencies = [
-    "mcp>=1.5.0",       # FastMCP via mcp.server.fastmcp — the official Anthropic MCP SDK
+    "mcp>=1.5.0",           # FastMCP via mcp.server.fastmcp — the official Anthropic MCP SDK
+    "python-dotenv>=1.0.0", # .env loading — used by server.py, seed script, and tools at import time
 ]
 
 [project.optional-dependencies]
