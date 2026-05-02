@@ -1,18 +1,26 @@
 """
 Cloudflare Workers entry point for skill-mcp.
 
-MCP SSE protocol implemented as a bare ASGI callable — zero third-party
-dependencies, works in Cloudflare's Pyodide runtime without a requirements.txt.
+Two MCP transports — both active simultaneously:
 
-Transport: SSE (MCP spec 2024-11-05)
-  GET  /sse          — open SSE stream; server sends messages endpoint URL
-  POST /messages/    — receive JSON-RPC message; response sent via SSE stream
+  Legacy SSE (MCP spec 2024-11-05) — Claude Desktop, Claude.ai, Cursor, etc.
+    GET  /sse          — open SSE stream; server sends messages endpoint URL
+    POST /messages/    — receive JSON-RPC message; response sent via SSE stream
+
+  Streamable HTTP (MCP spec 2025-03-26) — Glama, new SDK clients
+    POST /mcp          — stateless JSON-RPC request→response
+    OPTIONS *          — CORS preflight (204 + CORS headers)
+
+CORS headers are included on every response so browser-based testers work.
 
 Bindings (wrangler.jsonc + `wrangler secret put`):
   AI             — Workers AI (@cf/baai/bge-small-en-v1.5, 384-dim)
   QDRANT_URL     — secret: Qdrant Cloud cluster URL
   QDRANT_API_KEY — secret: Qdrant Cloud API key
   MCP_OBJECT     — Durable Object (holds ASGI app + SSE session state)
+
+Optional env vars:
+  RATE_LIMIT_RPM — per-IP rate limit in requests/min (default: 60)
 """
 
 from __future__ import annotations
@@ -20,6 +28,7 @@ from __future__ import annotations
 import asyncio
 import js  # Pyodide JS bridge — always available in Cloudflare Python Workers
 import json
+import time
 import urllib.parse
 import uuid
 from typing import Any
@@ -121,6 +130,11 @@ def _by_skill_file(skill_id: str, filename: str) -> dict:
     }
 
 
+def _by_version_key(version_key: str) -> dict:
+    """Filter for a specific versioned body point, e.g. 'stripe-integration@1.2'."""
+    return {"must": [{"key": "version_key", "match": {"value": version_key}}]}
+
+
 # ── MCP tool schemas (returned by tools/list) ─────────────────────────────────
 
 _MCP_TOOLS: list[dict] = [
@@ -169,14 +183,25 @@ _MCP_TOOLS: list[dict] = [
             "After loading: apply the instructions. "
             "If tier3_manifest lists files that the instructions explicitly reference, "
             "fetch them with skills_get_reference, skills_run_script, or skills_get_asset. "
-            "Most tasks are fully served by the instructions alone — do not load Tier 3 speculatively."
+            "Most tasks are fully served by the instructions alone — do not load Tier 3 speculatively.\n\n"
+            "Version pinning: pass version='1.2' to pin to a specific skill version, or use the "
+            "inline form skill_id='stripe-integration@1.2'. If the requested version is not found, "
+            "the latest version is returned with a version_note explaining the fallback. "
+            "Deprecated skills include a deprecation_notice field naming the replacement."
         ),
         "inputSchema": {
             "type": "object",
             "properties": {
                 "skill_id": {
                     "type": "string",
-                    "description": "skill_id from the top-scoring skills_find_relevant result",
+                    "description": (
+                        "skill_id from skills_find_relevant. "
+                        "May include an inline version suffix: 'stripe-integration@1.2'"
+                    ),
+                },
+                "version": {
+                    "type": "string",
+                    "description": "Optional version string (e.g. '1.2') to pin to a specific skill version.",
                 },
             },
             "required": ["skill_id"],
@@ -296,17 +321,49 @@ _MCP_TOOLS: list[dict] = [
 
 def _build_server(env: Any):
     """
-    Return a bare ASGI callable implementing the MCP SSE transport.
+    Return a bare ASGI callable implementing both MCP transports.
     No third-party packages required — pure stdlib.
 
     Routes:
-      GET  /sse        — open SSE stream, send endpoint event
-      POST /messages/  — receive JSON-RPC, put response on SSE queue
+      OPTIONS *        — CORS preflight (204)
+      GET  /sse        — legacy SSE transport: open stream, send endpoint event
+      POST /messages/  — legacy SSE transport: receive JSON-RPC, route to stream
+      POST /mcp        — Streamable HTTP: stateless JSON-RPC request→response
     """
 
     # Active SSE sessions: session_id → asyncio.Queue of outbound JSON-RPC dicts.
     # Lives in this closure, which is held by the DO instance.
     _sessions: dict[str, asyncio.Queue] = {}
+
+    # ── Per-IP rate limiting ───────────────────────────────────────────────────
+    _RATE_LIMIT: int = int(getattr(env, "RATE_LIMIT_RPM", None) or 60)
+    _RATE_WINDOW: float = 60.0
+    _rate_store: dict[str, list[float]] = {}
+
+    def _check_rate_limit(ip: str) -> bool:
+        now = time.time()
+        cutoff = now - _RATE_WINDOW
+        timestamps = _rate_store.get(ip, [])
+        timestamps = [t for t in timestamps if t > cutoff]
+        if len(timestamps) >= _RATE_LIMIT:
+            _rate_store[ip] = timestamps
+            return False
+        timestamps.append(now)
+        _rate_store[ip] = timestamps
+        # Evict stale IPs when store grows beyond 10k entries
+        if len(_rate_store) > 10_000:
+            stale_cutoff = now - _RATE_WINDOW * 2
+            stale = [k for k, v in _rate_store.items() if not v or max(v) < stale_cutoff]
+            for k in stale:
+                del _rate_store[k]
+        return True
+
+    def _client_ip(scope: dict) -> str:
+        headers = dict(scope.get("headers", []))
+        return (
+            headers.get(b"cf-connecting-ip", b"").decode()
+            or headers.get(b"x-forwarded-for", b"unknown").decode().split(",")[0].strip()
+        )
 
     C_FM = "skill_frontmatter"
     C_BODY = "skill_body"
@@ -419,14 +476,48 @@ def _build_server(env: Any):
             {"query": query, "total_found": len(skills), "results": skills}, indent=2
         )
 
-    async def _skills_get_body(skill_id: str) -> str:
+    async def _skills_get_body(skill_id: str, version: str | None = None) -> str:
         QU, QK = _creds()
-        payloads = await _scroll(QU, QK, C_BODY, _by_skill(skill_id), 1)
+
+        # Parse inline version suffix: "stripe-integration@1.2"
+        if "@" in skill_id and version is None:
+            skill_id, version = skill_id.rsplit("@", 1)
+
+        version_note: str | None = None
+
+        if version:
+            # Try pinned version point first
+            ver_key = f"{skill_id}@{version}"
+            payloads = await _scroll(QU, QK, C_BODY, _by_version_key(ver_key), 1)
+            if not payloads:
+                # Fall back to latest with a note
+                payloads = await _scroll(QU, QK, C_BODY, _by_skill(skill_id), 1)
+                if payloads:
+                    version_note = (
+                        f"Requested version {version!r} not found in registry; "
+                        f"returning latest version."
+                    )
+        else:
+            payloads = await _scroll(QU, QK, C_BODY, _by_skill(skill_id), 1)
+
         if not payloads:
             return json.dumps(
                 {"error": f"skill_id '{skill_id}' not found in body collection"}
             )
         body = payloads[0]
+
+        # Attach version_note if version was requested but not found
+        if version_note:
+            body = {**body, "version_note": version_note}
+
+        # Attach deprecation notice from frontmatter if deprecated
+        fm_payloads = await _scroll(QU, QK, C_FM, _by_skill(skill_id), 1)
+        if fm_payloads and fm_payloads[0].get("deprecated"):
+            replaced_by = fm_payloads[0].get("replaced_by", "")
+            msg = "This skill is deprecated."
+            if replaced_by:
+                msg += f" Use '{replaced_by}' instead."
+            body = {**body, "deprecation_notice": msg}
         refs = sorted(
             p.get("filename", "")
             for p in await _scroll(QU, QK, C_REFS, _by_skill(skill_id))
@@ -646,7 +737,10 @@ def _build_server(env: Any):
                 top_k=top_k,
             )
         elif name == "skills_get_body":
-            return await _skills_get_body(skill_id=str(args.get("skill_id", "")))
+            return await _skills_get_body(
+                skill_id=str(args.get("skill_id", "")),
+                version=args.get("version") or None,
+            )
         elif name == "skills_get_options":
             return await _skills_get_options(skill_id=str(args.get("skill_id", "")))
         elif name == "skills_get_reference":
@@ -748,12 +842,20 @@ def _build_server(env: Any):
 
     # ── Bare ASGI helpers ──────────────────────────────────────────────────────
 
-    # Security headers added to every non-SSE HTTP response
+    # Security headers added to every HTTP response
     _SECURITY_HEADERS: list[tuple[bytes, bytes]] = [
         (b"x-content-type-options", b"nosniff"),
         (b"x-frame-options", b"DENY"),
         (b"cache-control", b"no-store"),
         (b"referrer-policy", b"no-referrer"),
+    ]
+
+    # CORS headers — required for browser-based MCP testers (Glama, etc.)
+    _CORS_HEADERS: list[tuple[bytes, bytes]] = [
+        (b"access-control-allow-origin", b"*"),
+        (b"access-control-allow-methods", b"GET, POST, OPTIONS"),
+        (b"access-control-allow-headers", b"content-type, authorization, mcp-session-id, last-event-id"),
+        (b"access-control-max-age", b"86400"),
     ]
 
     async def _send_response(
@@ -763,7 +865,11 @@ def _build_server(env: Any):
         content_type: bytes = b"application/json",
         extra_headers: list | None = None,
     ) -> None:
-        headers = [(b"content-type", content_type), *_SECURITY_HEADERS]
+        headers = [
+            (b"content-type", content_type),
+            *_SECURITY_HEADERS,
+            *_CORS_HEADERS,
+        ]
         if extra_headers:
             headers.extend(extra_headers)
         await send({"type": "http.response.start", "status": status, "headers": headers})
@@ -799,6 +905,13 @@ def _build_server(env: Any):
 
     async def _handle_sse(scope: dict, receive: Any, send: Any) -> None:
         """GET /sse — open SSE stream, send endpoint event, relay responses."""
+        # Rate limit
+        ip = _client_ip(scope)
+        if not _check_rate_limit(ip):
+            body = json.dumps({"error": "Too Many Requests"}).encode()
+            await _send_response(send, 429, body)
+            return
+
         session_id = str(uuid.uuid4())
         queue: asyncio.Queue = asyncio.Queue()
         _sessions[session_id] = queue
@@ -815,6 +928,8 @@ def _build_server(env: Any):
                     (b"cache-control", b"no-cache"),
                     (b"connection", b"keep-alive"),
                     (b"x-accel-buffering", b"no"),
+                    # CORS — needed for browser clients
+                    *_CORS_HEADERS,
                 ],
             }
         )
@@ -836,8 +951,49 @@ def _build_server(env: Any):
 
         await send({"type": "http.response.body", "body": b"", "more_body": False})
 
+    async def _handle_mcp_post(scope: dict, receive: Any, send: Any) -> None:
+        """POST /mcp — stateless Streamable HTTP transport (MCP spec 2025-03-26).
+
+        Parses a JSON-RPC request, dispatches it synchronously, and returns
+        the response as application/json. This is the mode used by Glama's
+        inspector and any client built against the 2025-03-26 MCP spec.
+        Sessions and server-push are not supported in stateless mode.
+        """
+        ip = _client_ip(scope)
+        if not _check_rate_limit(ip):
+            body = json.dumps({"error": "Too Many Requests"}).encode()
+            await _send_response(send, 429, body)
+            return
+
+        try:
+            raw = await _read_body(receive)
+        except RuntimeError:
+            body = json.dumps({"jsonrpc": "2.0", "id": None, "error": {"code": -32700, "message": "Request body too large"}}).encode()
+            await _send_response(send, 413, body)
+            return
+        try:
+            message = json.loads(raw)
+        except Exception:
+            body = json.dumps({"jsonrpc": "2.0", "id": None, "error": {"code": -32700, "message": "Parse error"}}).encode()
+            await _send_response(send, 400, body)
+            return
+
+        response = await _handle_message(message)
+        if response is None:
+            # Notification — no body expected
+            await _send_response(send, 204, b"", content_type=b"application/json")
+            return
+
+        await _send_response(send, 200, json.dumps(response).encode())
+
     async def _handle_messages(scope: dict, receive: Any, send: Any) -> None:
         """POST /messages/ — receive JSON-RPC, route response to SSE stream."""
+        ip = _client_ip(scope)
+        if not _check_rate_limit(ip):
+            body = json.dumps({"error": "Too Many Requests"}).encode()
+            await _send_response(send, 429, body)
+            return
+
         qs = scope.get("query_string", b"").decode()
         params = _parse_qs(qs)
         session_id = params.get("sessionId", "")
@@ -886,10 +1042,18 @@ def _build_server(env: Any):
             path = scope.get("path", "")
             method = scope.get("method", "").upper()
 
+            # ── CORS preflight — must be first so browsers can reach any route ──
+            if method == "OPTIONS":
+                await _send_response(send, 204, b"", content_type=b"text/plain")
+                return
+
             if path == "/sse" and method == "GET":
                 await _handle_sse(scope, receive, send)
             elif path in ("/messages/", "/messages") and method == "POST":
                 await _handle_messages(scope, receive, send)
+            elif path == "/mcp" and method == "POST":
+                # Streamable HTTP transport (MCP spec 2025-03-26)
+                await _handle_mcp_post(scope, receive, send)
             else:
                 body = json.dumps({"error": "Not found"}).encode()
                 await _send_response(send, 404, body)

@@ -104,7 +104,7 @@ No separate backend. No database server to manage. No GPU. Cloudflare Workers AI
 | Tier | Tool | When to call |
 |------|------|-------------|
 | 1 | `skills_find_relevant(query, top_k)` | **Always first**  semantic search, returns ranked skills with scores |
-| 2 | `skills_get_body(skill_id)` | After finding a match  full instructions + `tier3_manifest` |
+| 2 | `skills_get_body(skill_id, version?)` | After finding a match  full instructions + `tier3_manifest`; `version` pins to a specific release |
 | 2 | `skills_get_options(skill_id)` | Optional  config schema, variants, dependencies, limitations |
 | 3 | `skills_get_reference(skill_id, filename)` | Only when instructions reference a specific doc |
 | 3 | `skills_run_script(skill_id, filename, input_data)` | Only when instructions direct script execution |
@@ -260,7 +260,9 @@ make dev-http   # Run local FastMCP server on HTTP :8000
 make setup      # Full first-run: env + install + seed + secrets + deploy
 
 # Security & validation
-make validate   # Validate all SKILL.md files — schema + prompt-injection scan
+make validate          # Validate all SKILL.md files — schema + prompt-injection scan
+make calibrate         # Sweep (t_high, t_low) pairs; report precision/recall/F1
+make check-qdrant-keys # Warn if read/write Qdrant keys are identical
 
 # Docker (one-command local stack)
 make docker-up    # Start Qdrant + seed + MCP server
@@ -307,7 +309,7 @@ make docker-seed   # Re-seed after adding new skills
 
 ## Connecting Your AI Agent
 
-> **Before connecting to any hosted skill-mcp instance you do not control:** read [TRANSPARENCY.md](TRANSPARENCY.md). Skill bodies load directly into your agent's context window from a third-party server. The hosted instance offered by this repo is a personal deployment with no SLA, no authentication, and no rate limiting. For production use or sensitive workloads, self-host.
+> **Before connecting to any hosted skill-mcp instance you do not control:** read [TRANSPARENCY.md](TRANSPARENCY.md). Skill bodies load directly into your agent's context window from a third-party server. The hosted instance offered by this repo is a personal deployment with no SLA and no authentication. For production use or sensitive workloads, self-host.
 
 ### Step 1  Add the MCP server
 
@@ -460,6 +462,8 @@ Full threat model: [`THREAT_MODEL.md`](THREAT_MODEL.md) · Hosted instance trust
 
 ### Runtime hardening (Worker + local server)
 
+- **Per-IP rate limiting** — 60 requests/minute sliding window (configurable via `RATE_LIMIT_RPM`); returns HTTP 429 when exceeded; stale entry eviction at 10k IPs; Worker-only
+- **CORS headers** — `Access-Control-Allow-Origin: *` on all Worker responses; supports browser-based MCP clients and testers (Glama, MCP Inspector)
 - **1 MB request body limit** — POST bodies over 1 MB rejected with HTTP 413 before parsing
 - **Sanitized error messages** — upstream URLs, Qdrant responses, and stack traces never reach MCP clients
 - **Security response headers** — `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Cache-Control: no-store`, `Referrer-Policy: no-referrer`
@@ -494,6 +498,7 @@ Three top-level directories own three distinct concerns:
 skill-mcp/
 ├── skill_mcp/                     # Installable Python package (pip install -e ".[seed]")
 │   ├── db/                        # Qdrant client, embedder, TTL cache
+│   ├── eval/calibrate.py          # Threshold calibration runner (precision/recall sweep)
 │   ├── models/skill.py            # Pydantic models for all 6 collection types
 │   ├── security/prompt_injection.py  # 9-category injection scanner
 │   ├── seed/seed_skills.py        # Walks skills_data/, scans, embeds, upserts Qdrant
@@ -501,7 +506,7 @@ skill-mcp/
 │   ├── skills_data/               # 30 skill folders — one SKILL.md each
 │   └── server.py                  # Local FastMCP entry point (stdio / HTTP)
 ├── src/
-│   └── worker.py                  # Cloudflare Python Worker — all 6 tools, SSE transport
+│   └── worker.py                  # Cloudflare Python Worker — all 6 tools, SSE + Streamable HTTP, rate limiting, CORS
 ├── scripts/
 │   ├── setup.sh / setup.ps1       # One-shot setup wizards (Linux/macOS + Windows)
 │   └── validate_skills.py         # SKILL.md validator — schema + injection scan
@@ -514,7 +519,8 @@ skill-mcp/
 │       ├── cline/.clinerules
 │       ├── copilot/.github/copilot-instructions.md
 │       └── aider/CONVENTIONS.md
-├── tests/                         # pytest unit + integration tests
+├── tests/
+│   └── eval/threshold_calibration.json  # 120 eval triples for threshold calibration
 ├── .github/workflows/
 │   ├── tests.yml                  # pytest on every push (unit tests, no external deps)
 │   └── validate-skills.yml        # SKILL.md lint + injection scan on PRs
@@ -539,8 +545,6 @@ skill-mcp/
 - **Token usage scales with collection size** — `skills_find_relevant` returns `top_k` result descriptors (each ~100–200 tokens). At 30 skills this is negligible. At 300+ skills with higher `top_k` values, a single discovery call can consume a meaningful share of the context window. Keep `top_k` low (3–5) and write precise, distinct trigger phrases per skill to preserve relevance at scale.
 
 - **Script execution is local-only** — `skills_run_script` requires the local Python server. The Cloudflare Worker returns the script manifest but cannot execute subprocesses — the Pyodide runtime does not support `subprocess`. Any skill workflow that calls `skills_run_script` must point the MCP client at `python -m skill_mcp.server` instead of the Worker URL.
-
-- **No built-in skill versioning** — Skills are stored as Qdrant point payloads keyed by `skill_id`. Re-seeding overwrites the previous payload with no diff or rollback. If you need to recover a prior skill state, re-seed from git history.
 
 - **Embedding model is pinned at seed time** — Vectors are generated with `@cf/baai/bge-small-en-v1.5` (384-dim) at both seed time and query time. If Cloudflare Workers AI retires or changes this model, all vectors become incomparable and the entire skill collection must be re-seeded.
 

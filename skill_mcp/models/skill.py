@@ -25,6 +25,9 @@ class SkillFrontMatter(BaseModel):
     # skill:// URI for MCP SkillsProvider compatibility
     skill_uri: str = ""
     score: Optional[float] = None  # populated after vector search
+    # Deprecation — set in SKILL.md frontmatter when a skill is superseded
+    deprecated: bool = False
+    replaced_by: str = ""  # skill_id of the replacement, or "" if none
 
 
 # ── Tier-2: Body + Options ────────────────────────────────────────────────────
@@ -124,6 +127,8 @@ class SkillRecord(BaseModel):
     variants: list[dict[str, Any]] = Field(default_factory=list)
     dependencies: list[str] = Field(default_factory=list)
     limitations: list[str] = Field(default_factory=list)
+    deprecated: bool = False
+    replaced_by: str = ""
 
     def to_frontmatter(self) -> SkillFrontMatter:
         return SkillFrontMatter(
@@ -137,6 +142,8 @@ class SkillRecord(BaseModel):
             author=self.author,
             license=self.license,
             skill_uri=f"skill://{self.skill_id}/SKILL.md",
+            deprecated=self.deprecated,
+            replaced_by=self.replaced_by,
         )
 
     def to_body(self) -> SkillBody:

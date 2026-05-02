@@ -108,6 +108,16 @@ class QdrantManager:
                     field_schema=PayloadSchemaType.KEYWORD,
                 )
 
+        # Ensure version_key index exists on body collection (idempotent — safe to run on existing collections)
+        try:
+            self.client.create_payload_index(
+                collection_name=BODY_COLLECTION,
+                field_name="version_key",
+                field_schema=PayloadSchemaType.KEYWORD,
+            )
+        except Exception:
+            pass  # Already exists — ignore
+
         # ── Tier-3: references, scripts, assets (payload-only, skill_id+filename lookup) ──
 
         for col in (REFERENCES_COLLECTION, SCRIPTS_COLLECTION, ASSETS_COLLECTION):
@@ -159,25 +169,47 @@ class QdrantManager:
     def upsert_many_frontmatter(
         self, pairs: list[tuple[SkillFrontMatter, list[float]]]
     ) -> None:
-        points = [
-            PointStruct(
+        points = []
+        for fm, vec in pairs:
+            payload = fm.model_dump(exclude={"score"})
+            # Latest alias point — always overwritten by re-seeding
+            points.append(PointStruct(
                 id=_skill_uuid(fm.skill_id),
                 vector=vec,
-                payload=fm.model_dump(exclude={"score"}),
-            )
-            for fm, vec in pairs
-        ]
+                payload=payload,
+            ))
+            # Versioned point — kept alongside the latest alias
+            if fm.version:
+                ver_key = f"{fm.skill_id}@{fm.version}"
+                points.append(PointStruct(
+                    id=_skill_uuid(ver_key),
+                    vector=vec,
+                    payload={**payload, "version_key": ver_key},
+                ))
         self.client.upsert(collection_name=FRONTMATTER_COLLECTION, points=points)
 
-    def upsert_many_body(self, bodies: list[SkillBody]) -> None:
-        points = [
-            PointStruct(
+    def upsert_many_body(
+        self, bodies: list[SkillBody], versions: list[str] | None = None
+    ) -> None:
+        """Upsert body payloads. If *versions* is provided (same length as *bodies*),
+        also writes a versioned point keyed by 'skill_id@version'."""
+        points = []
+        for i, b in enumerate(bodies):
+            payload = b.model_dump()
+            # Latest alias
+            points.append(PointStruct(
                 id=_skill_uuid(f"body:{b.skill_id}"),
                 vector=_DUMMY_VEC,
-                payload=b.model_dump(),
-            )
-            for b in bodies
-        ]
+                payload=payload,
+            ))
+            # Versioned point
+            if versions and i < len(versions) and versions[i]:
+                ver_key = f"{b.skill_id}@{versions[i]}"
+                points.append(PointStruct(
+                    id=_skill_uuid(f"body:{ver_key}"),
+                    vector=_DUMMY_VEC,
+                    payload={**payload, "version_key": ver_key},
+                ))
         self.client.upsert(collection_name=BODY_COLLECTION, points=points)
 
     def upsert_many_options(self, options_list: list[SkillOptions]) -> None:
@@ -260,7 +292,30 @@ class QdrantManager:
 
     def get_body(self, skill_id: str) -> Optional[SkillBody]:
         payload = self._payload_lookup(BODY_COLLECTION, skill_id)
-        return SkillBody(**payload) if payload else None
+        if payload is None:
+            return None
+        # Filter to only known SkillBody fields — extra keys (e.g. version_key) cause Pydantic errors
+        return SkillBody(**{k: v for k, v in payload.items() if k in SkillBody.model_fields})
+
+    def get_body_versioned(self, skill_id: str, version: str) -> Optional[SkillBody]:
+        """Fetch a specific pinned version of a skill body by 'skill_id@version' key."""
+        ver_key = f"{skill_id}@{version}"
+        points, _ = self.client.scroll(
+            collection_name=BODY_COLLECTION,
+            scroll_filter=Filter(
+                must=[FieldCondition(key="version_key", match=MatchValue(value=ver_key))]
+            ),
+            with_payload=True,
+            limit=1,
+        )
+        if not points or not points[0].payload:
+            return None
+        payload = points[0].payload
+        return SkillBody(**{k: v for k, v in payload.items() if k in SkillBody.model_fields})
+
+    def get_frontmatter_payload(self, skill_id: str) -> Optional[dict]:
+        """Return raw frontmatter payload dict for a skill (for deprecation checks)."""
+        return self._payload_lookup(FRONTMATTER_COLLECTION, skill_id)
 
     def get_options(self, skill_id: str) -> Optional[SkillOptions]:
         payload = self._payload_lookup(OPTIONS_COLLECTION, skill_id)

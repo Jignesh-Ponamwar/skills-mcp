@@ -24,7 +24,8 @@ endif
 # ── Targets ───────────────────────────────────────────────────────────────────
 
 .PHONY: help env check install seed deploy secrets dev dev-http setup \
-        validate scan docker-up docker-down docker-seed docker-logs docker-build
+        validate scan calibrate check-qdrant-keys \
+        docker-up docker-down docker-seed docker-logs docker-build
 
 help:
 	@echo ""
@@ -41,8 +42,10 @@ help:
 	@echo "  make setup        Full first-time setup: env → install → seed → secrets → deploy"
 	@echo ""
 	@echo "  ── Security & Validation ────────────────────────────────"
-	@echo "  make validate     Validate all SKILL.md files (schema + prompt-injection)"
-	@echo "  make scan         Alias for validate"
+	@echo "  make validate          Validate all SKILL.md files (schema + prompt-injection)"
+	@echo "  make scan              Alias for validate"
+	@echo "  make calibrate         Sweep (t_high, t_low) pairs; report precision/recall"
+	@echo "  make check-qdrant-keys Warn if read/write Qdrant keys are the same"
 	@echo ""
 	@echo "  ── Docker (one-command local stack) ─────────────────────"
 	@echo "  make docker-up    Start full stack: Qdrant + seed + MCP server"
@@ -101,6 +104,32 @@ validate:
 	$(PYTHON) scripts/validate_skills.py
 
 scan: validate
+
+calibrate: check
+	$(PYTHON) -m skill_mcp.eval.calibrate --dataset tests/eval/threshold_calibration.json
+
+check-qdrant-keys:
+	@$(PYTHON) - <<'EOF'
+import os, sys
+from dotenv import load_dotenv
+load_dotenv()
+key = os.getenv("QDRANT_API_KEY", "").strip()
+ro_key = os.getenv("QDRANT_RO_API_KEY", "").strip()
+if not key:
+    print("[check-qdrant-keys] QDRANT_API_KEY is not set — nothing to check.")
+    sys.exit(0)
+if key == ro_key:
+    print("[check-qdrant-keys] WARN  QDRANT_API_KEY and QDRANT_RO_API_KEY are identical.")
+    print("                   The Worker should use a read-only key for runtime queries.")
+    print("                   Set QDRANT_RO_API_KEY in .env and push it as a Worker secret.")
+    sys.exit(1)
+if not ro_key:
+    print("[check-qdrant-keys] NOTE  QDRANT_RO_API_KEY is not set.")
+    print("                   Recommended: create a read-only Qdrant key for the Worker.")
+    print("                   See docs/ARCHITECTURE.md for details.")
+    sys.exit(0)
+print("[check-qdrant-keys] OK  QDRANT_API_KEY != QDRANT_RO_API_KEY — keys are separated.")
+EOF
 
 # ── Docker targets ─────────────────────────────────────────────────────────────
 
