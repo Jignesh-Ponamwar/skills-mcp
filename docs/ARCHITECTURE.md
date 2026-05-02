@@ -16,13 +16,16 @@ AI Agent / MCP Client
       │  HTTPS
       ▼
 Cloudflare Worker (Python/Pyodide)
-  ├── Transport: SSE  (GET /sse + POST /messages/)
+  ├── Transport A: SSE  (GET /sse + POST /messages/)     ← Claude Desktop / Claude.ai
+  ├── Transport B: Streamable HTTP  (POST /mcp, stateless) ← Glama / MCP Inspector / new SDKs
+  ├── CORS: Access-Control-Allow-Origin: * on all responses
+  ├── Rate limit: 60 req/min per IP (configurable via RATE_LIMIT_RPM)
   ├── Embedding: Workers AI binding (bge-small-en-v1.5, 384-dim)
   ├── State: Durable Object (in-memory asyncio.Queue per SSE session)
   └── Storage: Qdrant Cloud (read-only at runtime)
 ```
 
-**What works:** all six MCP tools — `skills_find_relevant`, `skills_get_body`, `skills_get_options`, `skills_get_reference`, `skills_run_script` (list mode only), `skills_get_asset`
+**What works:** all six MCP tools — `skills_find_relevant`, `skills_get_body` (with optional `version` parameter), `skills_get_options`, `skills_get_reference`, `skills_run_script` (list mode only), `skills_get_asset`
 
 **What does not work:** `skills_run_script` execution mode — returns a manifest with a note explaining why. The Pyodide runtime does not support `subprocess`.
 
@@ -101,11 +104,17 @@ FastMCP server (Python, skill_mcp/server.py)
 |---------|:-----------------:|:----------:|:-----------:|:------:|
 | `skills_find_relevant` | ✅ | ✅ | ✅ | ✅ |
 | `skills_get_body` | ✅ | ✅ | ✅ | ✅ |
+| `skills_get_body` (version pinning) | ✅ | ✅ | ✅ | ✅ |
 | `skills_get_options` | ✅ | ✅ | ✅ | ✅ |
 | `skills_get_reference` | ✅ | ✅ | ✅ | ✅ |
 | `skills_run_script` (list) | ✅ manifest only | ✅ | ✅ | ✅ |
 | `skills_run_script` (execute) | ❌ Pyodide limit | ✅ | ✅ | ✅ |
 | `skills_get_asset` | ✅ | ✅ | ✅ | ✅ |
+| SSE transport | ✅ | ❌ | ❌ | ❌ |
+| Streamable HTTP transport | ✅ | ✅ | ❌ | ✅ |
+| stdio transport | ❌ | ❌ | ✅ | ❌ |
+| Per-IP rate limiting | ✅ 60 req/min | ❌ | ❌ | ❌ |
+| CORS headers | ✅ | ✅ | n/a | ✅ |
 | Subprocess execution | ❌ | ✅ | ✅ | ✅ |
 | No Qdrant Cloud account | ❌ | ❌ | ❌ | ✅ |
 | No Cloudflare account | ❌ | ✅ | ✅ | ✅* |
@@ -140,10 +149,11 @@ Cloudflare Workers are stateless by default — each request may run in a differ
 
 ### Current
 
-| Deployment | Transport | Status |
-|------------|-----------|--------|
-| Cloudflare Worker | SSE (`GET /sse` + `POST /messages/`) | MCP spec `2024-11-05` — functional, deprecated in favor of streamable-http |
-| Local Python server | `streamable-http` or `stdio` | MCP spec `2024-11-05` — current preferred transports |
+| Deployment | Transport | MCP Spec | Status |
+|------------|-----------|----------|--------|
+| Cloudflare Worker | SSE (`GET /sse` + `POST /messages/`) | `2024-11-05` | Functional — used by Claude Desktop and Claude.ai |
+| Cloudflare Worker | Streamable HTTP (`POST /mcp`, stateless) | `2025-03-26` | Implemented — used by Glama, MCP Inspector, newer SDK clients |
+| Local Python server | `streamable-http` or `stdio` | `2025-03-26` | Current preferred transports |
 
 ### What SSE transport means
 
@@ -154,16 +164,16 @@ The SSE transport works as follows:
 3. Agent sends JSON-RPC requests via `POST /messages/?sessionId=<uuid>` (separate HTTP request)
 4. Worker routes the POST to the matching open SSE session via the DO's `_sessions` dict
 
-This is more complex than `streamable-http` (which uses a single HTTP request-response cycle with streaming response). Migration to `streamable-http` in the Worker would eliminate the DO session routing complexity, but requires Cloudflare Workers to support streaming HTTP responses in Python — check current Cloudflare documentation for status.
+### What Streamable HTTP transport means (Worker)
 
-### Migration path to streamable-http
+The `POST /mcp` endpoint is a stateless JSON-RPC handler:
 
-1. Verify Cloudflare Python Workers support streaming HTTP responses (ASGI response streaming)
-2. Implement `streamable-http` handler in `src/worker.py` alongside existing SSE handler
-3. Test with MCP clients that prefer `streamable-http`
-4. Update `wrangler.jsonc` with any new configuration needed
-5. Update all docs, master-skill files, and README connection snippets
-6. Keep SSE handler alive for a grace period, then remove
+1. Client sends a single JSON-RPC message (e.g., `{"method": "tools/list", ...}`) as the POST body
+2. Worker dispatches the message through the same tool dispatch logic as SSE
+3. Worker returns a single JSON-RPC response directly in the HTTP response body
+4. No session is created — each request is independent
+
+This is simpler than SSE (no session routing, no DO session dict involvement) and required for browser-based testers that cannot establish persistent connections or lack SSE support. CORS preflight (`OPTIONS`) requests return 204 with CORS headers.
 
 ---
 
@@ -208,3 +218,19 @@ This alignment ensures vectors are always comparable: seed-time embeddings and q
 6. Validates file paths with `Path.resolve()` to prevent path traversal
 
 The seed script is run locally by operators, not by the deployed Worker. The Worker is read-only at runtime.
+
+Versioning: the seed script writes two points per skill — a **latest alias** (deterministic ID from `skill_id`) and a **versioned point** (ID from `skill_id@version`). The latest alias is always overwritten; versioned points accumulate until pruned. See [VERSIONING.md](VERSIONING.md).
+
+---
+
+## Threshold Calibration
+
+`skill_mcp/eval/calibrate.py` is a standalone calibration runner. It:
+
+1. Loads `tests/eval/threshold_calibration.json` (120 eval triples — 90 strong-match + 30 true-negative)
+2. Calls `skills_find_relevant` for each query
+3. Sweeps `(t_high, t_low)` pairs in the range `[0.50–0.70] × [0.30–0.45]`
+4. Reports precision, recall, F1, and specificity for each pair
+5. Exits 0 if any pair meets the targets (precision ≥ 0.90, recall ≥ 0.85), exits 1 if not
+
+Run with `make calibrate`. Requires live Qdrant access and a seeded registry. See [THRESHOLD_CALIBRATION.md](THRESHOLD_CALIBRATION.md) for full documentation.

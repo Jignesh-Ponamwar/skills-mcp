@@ -83,12 +83,14 @@ For production environments handling sensitive tasks, self-hosting with your own
 ```
 Your AI agent (MCP client)
         │
-        │  MCP over SSE (HTTPS)
+        │  MCP over SSE or Streamable HTTP (HTTPS)
         ▼
 Cloudflare Worker (Python/Pyodide)
   — single Durable Object instance
   — holds SSE session state (in-memory, not persisted)
-  — no authentication on the /sse endpoint
+  — no authentication on any endpoint
+  — per-IP rate limiting: 60 req/min (configurable via RATE_LIMIT_RPM)
+  — CORS headers on all responses (supports browser-based MCP clients)
         │                │
         │ HTTPS REST     │ Workers AI binding
         ▼                ▼
@@ -96,9 +98,13 @@ Cloudflare Worker (Python/Pyodide)
   (6 collections)   (bge-small-en-v1.5)
 ```
 
-**There is no authentication on the `/sse` endpoint.** Anyone who knows the Worker URL can connect and call all six MCP tools. There is no per-user rate limiting beyond Cloudflare's platform-level protections.
+**There is no authentication on the `/sse` or `/mcp` endpoints.** Anyone who knows the Worker URL can connect and call all six MCP tools. A per-IP sliding-window rate limit (60 requests/minute by default, configurable via `RATE_LIMIT_RPM`) is enforced at the application level.
 
-**Transport:** The Worker uses the MCP SSE transport (`GET /sse` + `POST /messages/`). This is the MCP spec revision `2024-11-05`. Migration to `streamable-http` (the current preferred MCP transport) is tracked in [CONTRIBUTING.md](CONTRIBUTING.md#4-priority-4--protocol-and-infrastructure).
+**Transports:** The Worker supports two MCP transports:
+- **SSE** (`GET /sse` + `POST /messages/`) — MCP spec revision `2024-11-05`; used by Claude Desktop and Claude.ai
+- **Streamable HTTP** (`POST /mcp`, stateless) — MCP spec revision `2025-03-26`; used by browser-based testers (Glama, MCP Inspector) and newer SDK clients
+
+CORS headers (`Access-Control-Allow-Origin: *`) are included on all responses to support browser-based clients.
 
 ---
 
@@ -117,11 +123,13 @@ Connecting an AI agent to any external MCP server — including this one — mea
 
 ## Rate Limiting and Abuse Prevention
 
-The hosted instance has **no application-level rate limiting**. Platform-level protections from Cloudflare (DDoS mitigation, automated bot scoring) are active, but there is no per-IP or per-session request throttle in the Worker code.
+The hosted instance enforces a **per-IP sliding-window rate limit of 60 requests/minute** at the application level. The limit is configurable via the `RATE_LIMIT_RPM` environment variable for self-hosted deployments. When the limit is exceeded, the Worker returns HTTP 429. The rate state is held in the Durable Object closure and is not persisted — it resets on Worker restart.
 
-If abuse causes the free-tier Cloudflare limits (100k requests/day) to be exceeded, the instance will stop responding until the next day's quota resets.
+Cloudflare platform-level protections (DDoS mitigation, automated bot scoring) are also active.
 
-For teams or high-frequency workflows, self-host to avoid shared quota exhaustion.
+If sustained abuse causes the free-tier Cloudflare limits (100k requests/day) to be exceeded, the instance will stop responding until the next day's quota resets.
+
+For teams or high-frequency workflows, self-host to avoid shared quota exhaustion and to set your own rate limit.
 
 ---
 
@@ -129,12 +137,12 @@ For teams or high-frequency workflows, self-host to avoid shared quota exhaustio
 
 When skills in this repository are updated and the seed script is re-run:
 
-- The Qdrant payloads for updated skills are **overwritten** with no diff or rollback
-- There is no version history in Qdrant — the previous skill body is gone
+- The **latest-alias** Qdrant point for each skill is overwritten with the new content
+- A **versioned point** (`skill_id@version`) is also written and retained — old versions are kept until explicitly pruned via `make seed-prune` (planned target)
 - Active agent sessions that already loaded a skill body are not affected (the body was copied into context)
-- Future `skills_get_body` calls return the new version
+- Future `skills_get_body` calls return the latest version by default; specific versions can be requested with the `version` parameter or inline `skill_id@version` notation
 
-Skill versioning (pinning to a specific version at query time) is a planned feature. See [docs/VERSIONING.md](docs/VERSIONING.md) for the design.
+Skill versioning is implemented. See [docs/VERSIONING.md](docs/VERSIONING.md) for details including pinning, fallback behavior, and deprecation notices.
 
 ---
 
@@ -148,4 +156,4 @@ See [THREAT_MODEL.md](THREAT_MODEL.md) for the full security model and residual 
 
 ---
 
-*Last reviewed: 2026-05-01*
+*Last reviewed: 2026-05-02*

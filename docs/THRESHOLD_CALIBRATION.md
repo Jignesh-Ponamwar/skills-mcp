@@ -1,7 +1,7 @@
 # Threshold Calibration Framework
 
-**Status:** Framework defined — evaluation dataset not yet built  
-**Relevant code:** `skill_mcp/tools/find_skills.py`, `src/worker.py` (`_skills_find_relevant`)
+**Status:** Implemented — dataset and calibration runner both exist  
+**Relevant code:** `skill_mcp/tools/find_skills.py`, `src/worker.py` (`_skills_find_relevant`), `skill_mcp/eval/calibrate.py`, `tests/eval/threshold_calibration.json`
 
 ---
 
@@ -194,25 +194,32 @@ The evaluation dataset should live at `tests/eval/threshold_calibration.json`. I
 python -m skill_mcp.eval.calibrate --dataset tests/eval/threshold_calibration.json
 ```
 
-The `skill_mcp/eval/` module does not yet exist. This is a TODO.
+Run calibration with:
+
+```bash
+make calibrate
+# or:
+python -m skill_mcp.eval.calibrate --dataset tests/eval/threshold_calibration.json
+# CI mode (exit 0 = targets met):
+python -m skill_mcp.eval.calibrate --quiet
+```
+
+Exit codes: `0` = at least one pair meets precision ≥ 0.90 and recall ≥ 0.85 · `1` = no pair meets targets · `2` = setup error.
 
 ---
 
-## TODOs (Implementation)
+## Implementation Status
 
-- [ ] Create `tests/eval/threshold_calibration.json` with at least 120 (query, skill, relevance) triples
-- [ ] Create `skill_mcp/eval/__init__.py` + `skill_mcp/eval/calibrate.py` implementing the sweep
-- [ ] Add `make calibrate` target to `Makefile`
-- [ ] Update master-skill files to note that thresholds are calibrated against this dataset (once calibration is complete)
-- [ ] Run calibration after every significant skill addition (>5 new skills) and document results in this file
+- ✅ `tests/eval/threshold_calibration.json`: 120 triples — 90 strong-match (3 per skill × 30 skills) + 30 true negatives
+- ✅ `skill_mcp/eval/__init__.py` + `skill_mcp/eval/calibrate.py`: full sweep with precision/recall/F1/specificity table, `--quiet` CI mode, exit codes 0/1/2
+- ✅ `make calibrate` target added to `Makefile`
+- ⏳ Run calibration after first full seeded deployment and record results here
+- ⏳ Update master-skill files with calibrated threshold values once sweep results are known
 
 ---
 
-## Current Status
+## Current Threshold Status
 
-Thresholds `T_high = 0.6` and `T_low = 0.4` are the current values. They are used in:
-- All `master-skill/platforms/*/` files
-- Tool descriptions in `src/worker.py` and `skill_mcp/server.py`
-- `README.md`
+Thresholds `T_high = 0.6` and `T_low = 0.4` remain judgment-based starting points — the calibration sweep has not yet been run against a fully seeded registry. Run `make calibrate` after seeding and record the best-pair output here.
 
-**These values should not change until the evaluation dataset exists.** Changing them without measurement could regress agent behavior in both directions. They represent a reasonable starting point, not a calibrated optimum.
+**Do not change these values without running the sweep.** A threshold change that looks right on intuition can shift agent behavior in both directions across the 30-skill corpus.

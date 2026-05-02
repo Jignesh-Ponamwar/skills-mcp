@@ -1,7 +1,7 @@
 # Skill Versioning Design
 
-**Status:** Design proposal — not yet implemented  
-**Affects:** `skill_mcp/models/skill.py`, `skill_mcp/db/qdrant_manager.py`, `skill_mcp/seed/seed_skills.py`, `src/worker.py`
+**Status:** Implemented  
+**Implemented in:** `skill_mcp/models/skill.py`, `skill_mcp/db/qdrant_manager.py`, `skill_mcp/seed/seed_skills.py`, `skill_mcp/tools/get_skill_body.py`, `skill_mcp/server.py`, `src/worker.py`
 
 ---
 
@@ -161,12 +161,12 @@ Phases A and B can land independently. Phase C requires both worker and local se
 
 ---
 
-## TODOs (Implementation)
+## Implementation Status
 
-- [ ] `skill_mcp/seed/seed_skills.py`: update `_skill_uuid()` to accept version suffix; add `latest` alias upsert
-- [ ] `skill_mcp/db/qdrant_manager.py`: add `get_skill_body_versioned(skill_id, version)` method
-- [ ] `skill_mcp/tools/get_skill_body.py`: parse `version` parameter; call versioned getter
-- [ ] `src/worker.py`: same changes as tools/get_skill_body.py for Worker deployment
-- [ ] `skill_mcp/models/skill.py`: add `deprecated: bool` and `replaced_by: str` fields to `SkillFrontMatter`
-- [ ] CI: add version format validation to `validate-skills` workflow
-- [ ] `Makefile`: add `seed-prune` target
+- ✅ `skill_mcp/models/skill.py`: `deprecated: bool` and `replaced_by: str` added to `SkillFrontMatter` and `SkillRecord`
+- ✅ `skill_mcp/db/qdrant_manager.py`: `get_body_versioned(skill_id, version)` and `get_frontmatter_payload(skill_id)` methods; `version_key` keyword index on body collection; `upsert_many_frontmatter` / `upsert_many_body` write both latest alias and versioned points
+- ✅ `skill_mcp/tools/get_skill_body.py`: accepts `version` parameter and inline `@version` suffix; falls back to latest with `version_note`; attaches `deprecation_notice` when deprecated
+- ✅ `skill_mcp/server.py`: tool registration passes `version=version`
+- ✅ `src/worker.py`: identical version pinning, inline suffix, and deprecation notice in the Worker
+- ⏳ CI: version format validation in `validate-skills` workflow (not yet added)
+- ⏳ `Makefile`: `seed-prune` target for removing old version points (not yet added)

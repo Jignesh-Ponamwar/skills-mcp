@@ -280,6 +280,10 @@ Every response includes: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DE
 
 The Worker is behind Cloudflare's network. DDoS protection, rate limiting, and bot management are available via Cloudflare dashboard.
 
+**M-05f: Per-IP application-level rate limiting**
+
+A sliding-window rate limiter is implemented in the Durable Object closure. Default: 60 requests/minute per IP (derived from `CF-Connecting-IP` → `X-Forwarded-For` → `"unknown"`). Configurable via `RATE_LIMIT_RPM` environment variable. Returns HTTP 429 when exceeded. Stale IP entries are evicted when the store exceeds 10,000 entries. State is in-memory and resets on Worker restart — not a substitute for Cloudflare's network-level protections, but stops naive scripted abuse.
+
 ### Residual Risk
 
 The endpoint has no authentication. Anyone who knows the Worker URL can invoke tools. For production deployments with sensitive skills, consider:
@@ -294,7 +298,7 @@ The endpoint has no authentication. Anyone who knows the Worker URL can invoke t
 
 **Threat ID:** T-06  
 **Severity:** Medium  
-**Status:** Partially mitigated
+**Status:** Mitigated
 
 ### Description
 
@@ -311,9 +315,9 @@ A compromised package version could affect either the seed pipeline or the deplo
 
 The Cloudflare Worker depends only on `mcp>=1.5.0`. All outbound HTTP uses `js.fetch` (no `requests` or `urllib` in the Worker — those don't work in Pyodide anyway).
 
-**M-06b: No requirements pinning** *(known risk — unresolved)*
+**M-06b: Requirements pinned to exact versions** *(resolved)*
 
-`requirements.txt` uses `>=` version specifiers. This is a known risk. Pinning to exact versions with `pip-compile` and using Dependabot for automated updates would reduce this risk. Not yet implemented.
+`requirements.txt` now pins all seed-script and local-server dependencies to exact versions (e.g., `qdrant-client==1.17.1`, `pydantic==2.12.5`). This prevents silent upgrades from breaking the seed pipeline. Dependabot or `pip-compile` updates should be reviewed before merging.
 
 **M-06c: Pyodide sandbox**
 
@@ -362,9 +366,10 @@ The DO is necessary because Cloudflare Workers are stateless by default — each
 | Deployment | Transport | MCP spec revision |
 |------------|-----------|------------------|
 | Cloudflare Worker | SSE (`GET /sse` + `POST /messages/`) | `2024-11-05` |
-| Local Python server | `streamable-http` or `stdio` | `2024-11-05` |
+| Cloudflare Worker | Streamable HTTP (`POST /mcp`, stateless) | `2025-03-26` |
+| Local Python server | `streamable-http` or `stdio` | `2025-03-26` |
 
-The MCP specification now defines `streamable-http` as the preferred transport, superseding the SSE transport. The Worker's SSE transport is functional but represents technical debt. Migration is tracked in [CONTRIBUTING.md](CONTRIBUTING.md#4-priority-4--protocol-and-infrastructure).
+The Worker now supports both transports. The Streamable HTTP endpoint (`POST /mcp`) is stateless — it handles one JSON-RPC message per request and returns a direct response, making it compatible with browser-based testers (Glama, MCP Inspector) and newer SDK clients. CORS headers (`Access-Control-Allow-Origin: *`) are included on all responses.
 
 ---
 
@@ -400,3 +405,4 @@ Maintainers will acknowledge within 48 hours and aim to fix critical issues with
 |------|---------|--------|
 | 2026-04-26 | 1.0 | Initial threat model |
 | 2026-05-01 | 1.1 | Added Architectural Clarifications section (DO usage, transport status); updated M-04d to reflect that read/write key separation is recommended but not default; added link to TRANSPARENCY.md; corrected M-06b wording from "planned" to "known risk — unresolved" |
+| 2026-05-02 | 1.2 | Added M-05f (per-IP application-level rate limiting, 60 req/min sliding window); resolved M-06b (requirements pinned to exact versions); updated transport status table to include Streamable HTTP (`POST /mcp`) and CORS; T-06 status updated from "Partially mitigated" to "Mitigated" |

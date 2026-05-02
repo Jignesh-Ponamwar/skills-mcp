@@ -1,0 +1,152 @@
+[
+  {"query": "set up Stripe subscriptions with webhooks and signature verification", "expected_skill_id": "stripe-integration", "relevance": "strong"},
+  {"query": "implement Stripe Checkout with subscription plans", "expected_skill_id": "stripe-integration", "relevance": "strong"},
+  {"query": "handle Stripe webhook events and verify signatures", "expected_skill_id": "stripe-integration", "relevance": "strong"},
+
+  {"query": "set up a Supabase database with row-level security", "expected_skill_id": "supabase-integration", "relevance": "strong"},
+  {"query": "add Supabase auth with OAuth and magic link login", "expected_skill_id": "supabase-integration", "relevance": "strong"},
+  {"query": "configure RLS policies in Supabase for multi-tenant access", "expected_skill_id": "supabase-integration", "relevance": "strong"},
+
+  {"query": "write pytest unit tests for a FastAPI endpoint", "expected_skill_id": "test-writer", "relevance": "strong"},
+  {"query": "add Jest tests for a React component with mocks", "expected_skill_id": "test-writer", "relevance": "strong"},
+  {"query": "generate Go test cases with table-driven tests", "expected_skill_id": "test-writer", "relevance": "strong"},
+
+  {"query": "containerize a Python app with a multi-stage Dockerfile", "expected_skill_id": "docker-containerization", "relevance": "strong"},
+  {"query": "set up Docker Compose for a web app with a database", "expected_skill_id": "docker-containerization", "relevance": "strong"},
+  {"query": "build a production Docker image with non-root user and health checks", "expected_skill_id": "docker-containerization", "relevance": "strong"},
+
+  {"query": "set up GitHub Actions CI/CD for a Python project", "expected_skill_id": "github-actions", "relevance": "strong"},
+  {"query": "create a workflow to build and push a Docker image on merge", "expected_skill_id": "github-actions", "relevance": "strong"},
+  {"query": "configure matrix builds and caching in GitHub Actions", "expected_skill_id": "github-actions", "relevance": "strong"},
+
+  {"query": "build a REST API with FastAPI and Pydantic v2 models", "expected_skill_id": "fastapi", "relevance": "strong"},
+  {"query": "add JWT authentication to a FastAPI application", "expected_skill_id": "fastapi", "relevance": "strong"},
+  {"query": "set up async SQLAlchemy with FastAPI dependency injection", "expected_skill_id": "fastapi", "relevance": "strong"},
+
+  {"query": "use the Anthropic Claude API with tool use and streaming", "expected_skill_id": "claude-api", "relevance": "strong"},
+  {"query": "implement prompt caching with the Anthropic SDK", "expected_skill_id": "claude-api", "relevance": "strong"},
+  {"query": "call Claude with extended thinking and batch processing", "expected_skill_id": "claude-api", "relevance": "strong"},
+
+  {"query": "call the OpenAI GPT-4o API with structured output", "expected_skill_id": "openai-api", "relevance": "strong"},
+  {"query": "use OpenAI function calling with tool definitions", "expected_skill_id": "openai-api", "relevance": "strong"},
+  {"query": "generate images with DALL-E 3 via the OpenAI API", "expected_skill_id": "openai-api", "relevance": "strong"},
+
+  {"query": "use the Google Gemini API with multimodal input", "expected_skill_id": "gemini-api", "relevance": "strong"},
+  {"query": "call Gemini with function calling and structured output", "expected_skill_id": "gemini-api", "relevance": "strong"},
+  {"query": "use Gemini 1.5 Pro with long context and document analysis", "expected_skill_id": "gemini-api", "relevance": "strong"},
+
+  {"query": "build a Next.js app with App Router and React Server Components", "expected_skill_id": "nextjs-best-practices", "relevance": "strong"},
+  {"query": "optimize images and fonts in Next.js App Router", "expected_skill_id": "nextjs-best-practices", "relevance": "strong"},
+  {"query": "set up data fetching patterns in Next.js with async params", "expected_skill_id": "nextjs-best-practices", "relevance": "strong"},
+
+  {"query": "implement React hooks with proper memoization and useCallback", "expected_skill_id": "react-best-practices", "relevance": "strong"},
+  {"query": "set up error boundaries and virtualization in React", "expected_skill_id": "react-best-practices", "relevance": "strong"},
+  {"query": "manage global state in React without Redux", "expected_skill_id": "react-best-practices", "relevance": "strong"},
+
+  {"query": "design a GraphQL schema with resolvers and DataLoader", "expected_skill_id": "graphql-api", "relevance": "strong"},
+  {"query": "prevent N+1 query problems with DataLoader in GraphQL", "expected_skill_id": "graphql-api", "relevance": "strong"},
+  {"query": "set up Apollo Client with a GraphQL backend", "expected_skill_id": "graphql-api", "relevance": "strong"},
+
+  {"query": "write TypeScript with generics and discriminated unions", "expected_skill_id": "typescript-patterns", "relevance": "strong"},
+  {"query": "use conditional types and branded types in TypeScript", "expected_skill_id": "typescript-patterns", "relevance": "strong"},
+  {"query": "configure a strict TypeScript tsconfig for a production project", "expected_skill_id": "typescript-patterns", "relevance": "strong"},
+
+  {"query": "deploy infrastructure to AWS using Terraform modules", "expected_skill_id": "terraform", "relevance": "strong"},
+  {"query": "set up Terraform remote state and workspaces", "expected_skill_id": "terraform", "relevance": "strong"},
+  {"query": "write Terraform for GCP with CI/CD integration", "expected_skill_id": "terraform", "relevance": "strong"},
+
+  {"query": "deploy a Python app to Cloudflare Workers", "expected_skill_id": "cloudflare-workers", "relevance": "strong"},
+  {"query": "use Cloudflare KV and D1 in a Workers application", "expected_skill_id": "cloudflare-workers", "relevance": "strong"},
+  {"query": "set up Cloudflare Workers AI with vectorize and R2", "expected_skill_id": "cloudflare-workers", "relevance": "strong"},
+
+  {"query": "write optimized SQL with CTEs and window functions", "expected_skill_id": "sql-query-writer", "relevance": "strong"},
+  {"query": "add indexes and analyze query execution plans in PostgreSQL", "expected_skill_id": "sql-query-writer", "relevance": "strong"},
+  {"query": "rewrite a slow SQL query to avoid common anti-patterns", "expected_skill_id": "sql-query-writer", "relevance": "strong"},
+
+  {"query": "extract text and tables from a PDF document programmatically", "expected_skill_id": "pdf-processing", "relevance": "strong"},
+  {"query": "fill a PDF form using Python with field detection", "expected_skill_id": "pdf-processing", "relevance": "strong"},
+  {"query": "merge and split PDF files with PyPDF", "expected_skill_id": "pdf-processing", "relevance": "strong"},
+
+  {"query": "create an Excel spreadsheet with charts and formulas using openpyxl", "expected_skill_id": "xlsx-creator", "relevance": "strong"},
+  {"query": "build a financial model in Excel with conditional formatting", "expected_skill_id": "xlsx-creator", "relevance": "strong"},
+  {"query": "generate a multi-sheet Excel report from Python data", "expected_skill_id": "xlsx-creator", "relevance": "strong"},
+
+  {"query": "create a Word document with tables and styles using python-docx", "expected_skill_id": "docx-creator", "relevance": "strong"},
+  {"query": "generate a professional report in DOCX format programmatically", "expected_skill_id": "docx-creator", "relevance": "strong"},
+  {"query": "add tracked changes and headers to a Word document", "expected_skill_id": "docx-creator", "relevance": "strong"},
+
+  {"query": "build a PowerPoint presentation with charts using pptxgenjs", "expected_skill_id": "pptx-creator", "relevance": "strong"},
+  {"query": "generate a slide deck from data with custom themes", "expected_skill_id": "pptx-creator", "relevance": "strong"},
+  {"query": "add images and design principles to a PPTX presentation", "expected_skill_id": "pptx-creator", "relevance": "strong"},
+
+  {"query": "perform exploratory data analysis on a CSV dataset", "expected_skill_id": "data-analysis", "relevance": "strong"},
+  {"query": "clean a dataframe and produce summary statistics and visualizations", "expected_skill_id": "data-analysis", "relevance": "strong"},
+  {"query": "analyze tabular data and generate actionable insights", "expected_skill_id": "data-analysis", "relevance": "strong"},
+
+  {"query": "scrape structured data from a paginated website with rate limiting", "expected_skill_id": "web-scraper", "relevance": "strong"},
+  {"query": "build a web scraper that handles bot detection and CAPTCHA", "expected_skill_id": "web-scraper", "relevance": "strong"},
+  {"query": "extract product listings from an e-commerce site with Playwright", "expected_skill_id": "web-scraper", "relevance": "strong"},
+
+  {"query": "write a detailed code review for a pull request with severity ratings", "expected_skill_id": "code-review", "relevance": "strong"},
+  {"query": "review a Python file for security issues and code quality", "expected_skill_id": "code-review", "relevance": "strong"},
+  {"query": "add CRITICAL and HIGH findings to a structured code review", "expected_skill_id": "code-review", "relevance": "strong"},
+
+  {"query": "integrate a REST API with authentication, pagination, and retry logic", "expected_skill_id": "api-integration", "relevance": "strong"},
+  {"query": "build an HTTP client with exponential backoff and error handling", "expected_skill_id": "api-integration", "relevance": "strong"},
+  {"query": "use an OpenAPI spec to generate a type-safe API client", "expected_skill_id": "api-integration", "relevance": "strong"},
+
+  {"query": "write a professional README with badges and usage examples", "expected_skill_id": "readme-writer", "relevance": "strong"},
+  {"query": "generate documentation for an open-source Python project", "expected_skill_id": "readme-writer", "relevance": "strong"},
+  {"query": "add API reference and contributing guide to a README", "expected_skill_id": "readme-writer", "relevance": "strong"},
+
+  {"query": "write better prompts for Claude using chain-of-thought techniques", "expected_skill_id": "llm-prompt-engineering", "relevance": "strong"},
+  {"query": "design a system prompt for an AI agent with tool use", "expected_skill_id": "llm-prompt-engineering", "relevance": "strong"},
+  {"query": "use few-shot examples and structured output in LLM prompts", "expected_skill_id": "llm-prompt-engineering", "relevance": "strong"},
+
+  {"query": "build an MCP server with FastMCP and Python tools", "expected_skill_id": "mcp-server-builder", "relevance": "strong"},
+  {"query": "create an MCP server with TypeScript SDK and resources", "expected_skill_id": "mcp-server-builder", "relevance": "strong"},
+  {"query": "add prompts and resource endpoints to a FastMCP server", "expected_skill_id": "mcp-server-builder", "relevance": "strong"},
+
+  {"query": "create a good-looking UI with typography and color palettes", "expected_skill_id": "frontend-design", "relevance": "strong"},
+  {"query": "add micro-animations and hover effects to a web page", "expected_skill_id": "frontend-design", "relevance": "strong"},
+  {"query": "choose a font system and visual hierarchy for a dashboard", "expected_skill_id": "frontend-design", "relevance": "strong"},
+
+  {"query": "build a self-contained interactive HTML artifact with React and Tailwind", "expected_skill_id": "web-artifacts-builder", "relevance": "strong"},
+  {"query": "create a D3 data visualization as a standalone HTML page", "expected_skill_id": "web-artifacts-builder", "relevance": "strong"},
+  {"query": "build an interactive dashboard in a single HTML file with no build step", "expected_skill_id": "web-artifacts-builder", "relevance": "strong"},
+
+  {"query": "write a conventional commit message from a git diff", "expected_skill_id": "git-commit-writer", "relevance": "strong"},
+  {"query": "generate a commit message with type, scope, and breaking changes", "expected_skill_id": "git-commit-writer", "relevance": "strong"},
+  {"query": "format a co-authored commit with conventional commits convention", "expected_skill_id": "git-commit-writer", "relevance": "strong"},
+
+  {"query": "hello world in Python", "expected_skill_id": null, "relevance": "none", "notes": "Basic programming, no skill needed"},
+  {"query": "what is a variable", "expected_skill_id": null, "relevance": "none", "notes": "Conceptual question, no procedural skill"},
+  {"query": "explain recursion", "expected_skill_id": null, "relevance": "none", "notes": "Conceptual, no skill"},
+  {"query": "how does the internet work", "expected_skill_id": null, "relevance": "none"},
+  {"query": "convert a list to a set in Python", "expected_skill_id": null, "relevance": "none"},
+  {"query": "sort a dictionary by value", "expected_skill_id": null, "relevance": "none"},
+  {"query": "write a for loop in JavaScript", "expected_skill_id": null, "relevance": "none"},
+  {"query": "what is a promise in JavaScript", "expected_skill_id": null, "relevance": "none"},
+  {"query": "calculate the median of a list", "expected_skill_id": null, "relevance": "none"},
+  {"query": "open a file in Python", "expected_skill_id": null, "relevance": "none"},
+  {"query": "parse a JSON string in JavaScript", "expected_skill_id": null, "relevance": "none"},
+  {"query": "add two numbers in Go", "expected_skill_id": null, "relevance": "none"},
+  {"query": "print a string to console in TypeScript", "expected_skill_id": null, "relevance": "none"},
+  {"query": "check if a string contains a substring", "expected_skill_id": null, "relevance": "none"},
+  {"query": "what is the difference between a list and a tuple", "expected_skill_id": null, "relevance": "none"},
+  {"query": "how do I install a Python package", "expected_skill_id": null, "relevance": "none"},
+  {"query": "what does git rebase do", "expected_skill_id": null, "relevance": "none"},
+  {"query": "rename a branch in git", "expected_skill_id": null, "relevance": "none"},
+  {"query": "what is a decorator in Python", "expected_skill_id": null, "relevance": "none"},
+  {"query": "what is the difference between == and === in JavaScript", "expected_skill_id": null, "relevance": "none"},
+  {"query": "format a date in Python", "expected_skill_id": null, "relevance": "none"},
+  {"query": "create a virtualenv in Python", "expected_skill_id": null, "relevance": "none"},
+  {"query": "what is dependency injection", "expected_skill_id": null, "relevance": "none"},
+  {"query": "how do I center a div in CSS", "expected_skill_id": null, "relevance": "none"},
+  {"query": "what is a REST API", "expected_skill_id": null, "relevance": "none"},
+  {"query": "use map and filter in JavaScript", "expected_skill_id": null, "relevance": "none"},
+  {"query": "write a regex to match an email address", "expected_skill_id": null, "relevance": "none"},
+  {"query": "what is memoization", "expected_skill_id": null, "relevance": "none"},
+  {"query": "what is the big O notation for binary search", "expected_skill_id": null, "relevance": "none"},
+  {"query": "explain the difference between TCP and UDP", "expected_skill_id": null, "relevance": "none"}
+]

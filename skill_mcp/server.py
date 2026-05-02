@@ -29,7 +29,7 @@ from __future__ import annotations
 
 import os
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
+from typing import AsyncIterator, Optional
 
 from dotenv import load_dotenv
 from fastmcp import FastMCP
@@ -111,11 +111,15 @@ def _skills_find_relevant(query: str, top_k: int = 5) -> str:
         "After loading: apply the instructions. "
         "If tier3_manifest lists files that the instructions explicitly reference, "
         "fetch them with skills_get_reference, skills_run_script, or skills_get_asset. "
-        "Most tasks are fully served by the instructions alone — do not load Tier 3 speculatively."
+        "Most tasks are fully served by the instructions alone — do not load Tier 3 speculatively.\n\n"
+        "Version pinning: pass version='1.2' to pin to a specific skill version, or use the "
+        "inline form skill_id='stripe-integration@1.2'. If the requested version is not found, "
+        "the latest version is returned with a version_note explaining the fallback. "
+        "Deprecated skills include a deprecation_notice field naming the replacement."
     ),
 )
-def _skills_get_body(skill_id: str) -> str:
-    return get_skill_body(skill_id=skill_id)
+def _skills_get_body(skill_id: str, version: Optional[str] = None) -> str:
+    return get_skill_body(skill_id=skill_id, version=version)
 
 
 @mcp.tool(
