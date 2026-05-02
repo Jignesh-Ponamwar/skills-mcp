@@ -60,9 +60,23 @@ from .tools.run_skill_script import run_skill_script
 
 @asynccontextmanager
 async def lifespan(_server: FastMCP) -> AsyncIterator[None]:
-    """Connect to Qdrant Cloud on startup. Embeddings use Workers AI REST API."""
-    qdrant_manager.connect()
-    qdrant_manager.ensure_collections()
+    """Connect to Qdrant Cloud on startup. Embeddings use Workers AI REST API.
+
+    Startup errors (bad credentials, unreachable cluster) are logged but do NOT
+    crash the server.  This lets Glama's build-test complete the MCP handshake
+    and introspect tools with dummy credentials.  Real tool calls that reach
+    Qdrant will return a graceful error if the connection is unavailable.
+    """
+    try:
+        qdrant_manager.connect()
+        qdrant_manager.ensure_collections()
+    except Exception as exc:  # noqa: BLE001
+        import sys
+        print(
+            f"[skill-mcp] WARNING: Qdrant startup check failed ({type(exc).__name__}: {exc}). "
+            "Server will start anyway — tool calls will fail if Qdrant is unreachable.",
+            file=sys.stderr,
+        )
     yield
     # No teardown needed — Qdrant connections are stateless HTTP
 
