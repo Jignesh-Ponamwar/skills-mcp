@@ -1,4 +1,4 @@
-# Transparency — skill-mcp Hosted Instance
+# Transparency - skill-mcp Hosted Instance
 
 This document describes what the hosted skill-mcp instance is, how it is operated, what guarantees it offers, and what trust decisions you are making when you connect an AI agent to it.
 
@@ -19,7 +19,7 @@ If you need reliability guarantees, auditability, or control over what skills ar
 
 ---
 
-## No SLA — Explicit Statement
+## No SLA - Explicit Statement
 
 > **There is no Service Level Agreement for the hosted instance.**
 
@@ -86,11 +86,11 @@ Your AI agent (MCP client)
         │  MCP over SSE or Streamable HTTP (HTTPS)
         ▼
 Cloudflare Worker (Python/Pyodide)
-  — single Durable Object instance
-  — holds SSE session state (in-memory, not persisted)
-  — no authentication on any endpoint
-  — per-IP rate limiting: 60 req/min (configurable via RATE_LIMIT_RPM)
-  — CORS headers on all responses (supports browser-based MCP clients)
+  - single Durable Object instance
+  - holds SSE session state (in-memory, not persisted)
+  - no authentication on any endpoint
+  - per-IP rate limiting: 60 req/min (configurable via RATE_LIMIT_RPM)
+  - CORS headers on all responses (supports browser-based MCP clients)
         │                │
         │ HTTPS REST     │ Workers AI binding
         ▼                ▼
@@ -101,8 +101,8 @@ Cloudflare Worker (Python/Pyodide)
 **There is no authentication on the `/sse` or `/mcp` endpoints.** Anyone who knows the Worker URL can connect and call all six MCP tools. A per-IP sliding-window rate limit (60 requests/minute by default, configurable via `RATE_LIMIT_RPM`) is enforced at the application level.
 
 **Transports:** The Worker supports two MCP transports:
-- **SSE** (`GET /sse` + `POST /messages/`) — MCP spec revision `2024-11-05`; used by Claude Desktop and Claude.ai
-- **Streamable HTTP** (`POST /mcp`, stateless) — MCP spec revision `2025-03-26`; used by browser-based testers (Glama, MCP Inspector) and newer SDK clients
+- **SSE** (`GET /sse` + `POST /messages/`) - MCP spec revision `2024-11-05`; used by Claude Desktop and Claude.ai
+- **Streamable HTTP** (`POST /mcp`, stateless) - MCP spec revision `2025-03-26`; used by browser-based testers (Glama, MCP Inspector) and newer SDK clients
 
 CORS headers (`Access-Control-Allow-Origin: *`) are included on all responses to support browser-based clients.
 
@@ -110,10 +110,10 @@ CORS headers (`Access-Control-Allow-Origin: *`) are included on all responses to
 
 ## Trust Boundaries
 
-Connecting an AI agent to any external MCP server — including this one — means that server's responses flow directly into your agent's context window. You are trusting that:
+Connecting an AI agent to any external MCP server - including this one - means that server's responses flow directly into your agent's context window. You are trusting that:
 
 1. **Skill bodies do not contain prompt injection.** The scanner reduces this risk but cannot eliminate it entirely.
-2. **Scripts are not executed via the hosted instance.** `skills_run_script` returns a manifest only on the Cloudflare Worker — execution requires the local Python server. No code runs server-side from tool calls against the hosted instance.
+2. **Scripts are not executed via the hosted instance.** `skills_run_script` returns a manifest only on the Cloudflare Worker - execution requires the local Python server. No code runs server-side from tool calls against the hosted instance.
 3. **The operator does not modify skills to manipulate agent behavior.** This is a trust-in-operator assumption you must make for any third-party MCP server.
 4. **The Qdrant cluster has not been compromised.** If the Qdrant API key were compromised, an attacker with write access could inject malicious skill content that bypasses the scanner.
 
@@ -123,7 +123,7 @@ Connecting an AI agent to any external MCP server — including this one — mea
 
 ## Rate Limiting and Abuse Prevention
 
-The hosted instance enforces a **per-IP sliding-window rate limit of 60 requests/minute** at the application level. The limit is configurable via the `RATE_LIMIT_RPM` environment variable for self-hosted deployments. When the limit is exceeded, the Worker returns HTTP 429. The rate state is held in the Durable Object closure and is not persisted — it resets on Worker restart.
+The hosted instance enforces a **per-IP sliding-window rate limit of 60 requests/minute** at the application level. The limit is configurable via the `RATE_LIMIT_RPM` environment variable for self-hosted deployments. When the limit is exceeded, the Worker returns HTTP 429. The rate state is held in the Durable Object closure and is not persisted - it resets on Worker restart.
 
 Cloudflare platform-level protections (DDoS mitigation, automated bot scoring) are also active.
 
@@ -138,7 +138,7 @@ For teams or high-frequency workflows, self-host to avoid shared quota exhaustio
 When skills in this repository are updated and the seed script is re-run:
 
 - The **latest-alias** Qdrant point for each skill is overwritten with the new content
-- A **versioned point** (`skill_id@version`) is also written and retained — old versions are kept until explicitly pruned via `make seed-prune` (planned target)
+- A **versioned point** (`skill_id@version`) is also written and retained - old versions are kept until explicitly pruned via `make seed-prune` (planned target)
 - Active agent sessions that already loaded a skill body are not affected (the body was copied into context)
 - Future `skills_get_body` calls return the latest version by default; specific versions can be requested with the `version` parameter or inline `skill_id@version` notation
 
@@ -150,7 +150,7 @@ Skill versioning is implemented. See [docs/VERSIONING.md](docs/VERSIONING.md) fo
 
 - **Security issues:** Do not open public GitHub issues. Email the maintainer (address in GitHub profile) privately.
 - **Incorrect or outdated skill content:** Open a GitHub issue or PR.
-- **Hosted instance downtime:** No formal reporting mechanism exists — this is an unmonitored personal deployment.
+- **Hosted instance downtime:** No formal reporting mechanism exists - this is an unmonitored personal deployment.
 
 See [THREAT_MODEL.md](THREAT_MODEL.md) for the full security model and residual risks.
 

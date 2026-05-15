@@ -1,7 +1,7 @@
 ---
 name: llm-prompt-engineering
 description: >
-  Design effective prompts for large language models — chain-of-thought reasoning, few-shot
+  Design effective prompts for large language models - chain-of-thought reasoning, few-shot
   examples, role assignment, XML structure, output format control, temperature tuning, and
   prompt chaining for multi-step tasks. Covers both general LLM prompting and model-specific
   best practices for Claude, GPT-4o, and Gemini. Use when writing system prompts, designing
@@ -55,7 +55,7 @@ Role assignment primes the model's knowledge domain and response style:
 - Identify vulnerabilities with severity ratings (Critical/High/Medium/Low)
 - Explain the attack vector for each finding
 - Provide concrete remediation code
-- Be precise — only flag real issues, not style preferences"
+- Be precise - only flag real issues, not style preferences"
 ```
 
 ---
@@ -100,7 +100,7 @@ For complex tasks, instruct the model to reason step by step before answering:
 Then provide your final answer."
 ```
 
-Or simply: **"Think step by step."** — this alone improves accuracy on reasoning tasks.
+Or simply: **"Think step by step."** - this alone improves accuracy on reasoning tasks.
 
 **Zero-shot CoT:**
 ```
@@ -262,7 +262,7 @@ Role: Pair programmer and code reviewer
 - Write tests
 
 ## Behavioral Rules
-1. Always show complete, working code — never truncate with "// rest of implementation"
+1. Always show complete, working code - never truncate with "// rest of implementation"
 2. Explain your reasoning briefly before showing code
 3. If you are uncertain about an API or library, say so rather than guessing
 4. When reviewing, use severity tags: [CRITICAL] [HIGH] [MEDIUM] [LOW]
@@ -270,7 +270,7 @@ Role: Pair programmer and code reviewer
 
 ## Format
 - Use markdown code blocks with language tags
-- Keep explanations concise — developers prefer reading code over prose
+- Keep explanations concise - developers prefer reading code over prose
 - For multi-file changes, show each file separately with its path as a header
 
 ## Limitations
@@ -290,4 +290,4 @@ Role: Pair programmer and code reviewer
 | Prompt stuffing | Long, unstructured prompts confuse models | Use XML sections and headers |
 | Missing output format | Free-form output is hard to parse | Always specify format for programmatic use |
 | Single example | One example is not a "pattern" | Provide 3-5 varied examples |
-| Ambiguous pronouns | "it" / "this" creates confusion | Be explicit — repeat the noun |
+| Ambiguous pronouns | "it" / "this" creates confusion | Be explicit - repeat the noun |

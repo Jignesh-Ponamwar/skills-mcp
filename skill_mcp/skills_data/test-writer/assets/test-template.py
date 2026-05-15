@@ -1,5 +1,5 @@
 """
-Standard test file template — bundled with the test-writer skill.
+Standard test file template - bundled with the test-writer skill.
 
 Copy this file and replace {placeholders} with your actual module and function names.
 Run with: pytest test_{module}.py -v
@@ -122,7 +122,7 @@ class TestCalculateDiscountEdgeCases:
 # ── External dependency tests (mocked) ───────────────────────────────────────
 
 class TestSendInvoice:
-    """Tests for send_invoice — mocks the email client."""
+    """Tests for send_invoice - mocks the email client."""
 
     def test_invoice_sent_for_completed_order(
         self, sample_order: dict, mock_email_client: MagicMock
@@ -156,7 +156,7 @@ class TestSendInvoice:
 # ── Database tests ────────────────────────────────────────────────────────────
 
 class TestGetUserById:
-    """Tests for get_user_by_id — uses mock DB session."""
+    """Tests for get_user_by_id - uses mock DB session."""
 
     def test_returns_user_when_found(self, mock_db: MagicMock, sample_user: dict) -> None:
         mock_db.query.return_value.filter.return_value.first.return_value = sample_user

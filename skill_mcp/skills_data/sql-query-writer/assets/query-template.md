@@ -1,4 +1,4 @@
-# SQL Query Template — Standard Structure
+# SQL Query Template - Standard Structure
 
 Use this template when delivering SQL queries. Fill in each section.
 

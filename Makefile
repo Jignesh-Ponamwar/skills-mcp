@@ -91,7 +91,7 @@ secrets:
 	@$(PYTHON) -c "from dotenv import dotenv_values; v=dotenv_values(); print(v.get('QDRANT_API_KEY',''))" | npx wrangler secret put QDRANT_API_KEY
 	@echo "[secrets] Done — secrets are set on the deployed Worker."
 
-deploy:
+deploy: secrets
 	npx wrangler deploy
 
 dev:

@@ -21,7 +21,7 @@ Examples:
 
 ## pytest Fixtures
 
-### Function-scoped fixture (default — fresh per test)
+### Function-scoped fixture (default - fresh per test)
 ```python
 import pytest
 
@@ -34,7 +34,7 @@ def test_apply_discount_gold_user(sample_user):
     assert result == 80.0
 ```
 
-### Session-scoped fixture (expensive setup — reused across all tests)
+### Session-scoped fixture (expensive setup - reused across all tests)
 ```python
 @pytest.fixture(scope="session")
 def embedding_model():
@@ -71,7 +71,7 @@ def test_query_works_on_all_dialects(db_dialect):
 ```python
 @pytest.fixture
 def make_order():
-    """Factory fixture — returns a callable to create orders with custom attrs."""
+    """Factory fixture - returns a callable to create orders with custom attrs."""
     def _make(status="pending", total=100.0, **kwargs):
         return Order(status=status, total=total, **kwargs)
     return _make

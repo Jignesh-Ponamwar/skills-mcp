@@ -1,9 +1,9 @@
 ---
 name: web-artifacts-builder
 description: >
-  Build complex, self-contained interactive web artifacts — rich HTML/CSS/JavaScript applications,
+  Build complex, self-contained interactive web artifacts - rich HTML/CSS/JavaScript applications,
   React components with Tailwind CSS and shadcn/ui, data visualizations with D3.js or Chart.js,
-  interactive tools, and games — all bundled into a single portable HTML file. Use when the user
+  interactive tools, and games - all bundled into a single portable HTML file. Use when the user
   wants to create an interactive demo, a data visualization, a UI prototype, a mini web app, or
   any rich browser-rendered artifact that can be embedded or shared as a single file.
 license: Apache-2.0
@@ -303,9 +303,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(<Dashboard />)
 - Pick one dominant color; use 60-30-10 rule (background: 60%, surface: 30%, accent: 10%)
 
 ### Typography
-- Headings: `font-size: clamp(1.5rem, 4vw, 2.5rem)` — scales on mobile
+- Headings: `font-size: clamp(1.5rem, 4vw, 2.5rem)` - scales on mobile
 - Body: 16px minimum; never below 14px for readable content
-- Avoid default system fonts for anything beyond demos — use `Inter` or `Geist` via Google Fonts
+- Avoid default system fonts for anything beyond demos - use `Inter` or `Geist` via Google Fonts
 
 ### Layout Principles
 - Use CSS Grid for page layout, Flexbox for component layout
@@ -313,7 +313,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(<Dashboard />)
 - Add meaningful micro-interactions: `transition: all 0.2s`, hover states, focus rings
 
 ### What to Avoid
-- Purple gradients on white — too generic
+- Purple gradients on white - too generic
 - Centered body text on wide screens
 - Missing loading/empty states
 - No hover states on interactive elements
@@ -323,9 +323,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(<Dashboard />)
 
 ## Common Mistakes
 
-- **CDN versions mismatched** — check exact version numbers for React, Recharts, etc.
-- **Babel `type="text/babel"` missing** — JSX won't parse without it when using CDN Babel
-- **No responsive design** — always add `meta viewport` and test at 375px width
-- **Missing accessibility** — buttons need `type="button"`, form inputs need labels
-- **Forgetting error states** — always handle empty data, loading, and error conditions visually
-- **Inline CSS overriding Tailwind** — be consistent; pick one approach per project
+- **CDN versions mismatched** - check exact version numbers for React, Recharts, etc.
+- **Babel `type="text/babel"` missing** - JSX won't parse without it when using CDN Babel
+- **No responsive design** - always add `meta viewport` and test at 375px width
+- **Missing accessibility** - buttons need `type="button"`, form inputs need labels
+- **Forgetting error states** - always handle empty data, loading, and error conditions visually
+- **Inline CSS overriding Tailwind** - be consistent; pick one approach per project

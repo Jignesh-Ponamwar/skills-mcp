@@ -38,7 +38,7 @@ Determine what the user needs:
 
 ### 2. Choose the Right Library
 For Python environments:
-- `pypdf` (formerly PyPDF2): text extraction, merging, splitting, metadata — pure Python, no system deps
+- `pypdf` (formerly PyPDF2): text extraction, merging, splitting, metadata - pure Python, no system deps
 - `pdfplumber`: best for tables and layout-aware extraction
 - `pymupdf` (fitz): fastest, handles scanned PDFs with OCR via Tesseract
 - `reportlab`: generate new PDFs or fill forms programmatically
@@ -113,7 +113,7 @@ with open("filled_form.pdf", "wb") as f:
 ```
 
 ## Edge Cases
-- Scanned PDFs (image-only): use `pymupdf` + Tesseract OCR — warn the user if no text is found
+- Scanned PDFs (image-only): use `pymupdf` + Tesseract OCR - warn the user if no text is found
 - Password-protected PDFs: call `reader.decrypt("password")` before reading
 - Large PDFs (>100 pages): process page by page to avoid memory issues
 - Right-to-left text (Arabic, Hebrew): `pdfplumber` handles RTL better than `pypdf`

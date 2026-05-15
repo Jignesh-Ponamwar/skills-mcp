@@ -1,4 +1,4 @@
-"""MCP tool: skills_get_asset — fetch a template or static resource bundled with a skill.
+"""MCP tool: skills_get_asset - fetch a template or static resource bundled with a skill.
 
 Assets live in the skill's assets/ subdirectory. They are templates, output format
 specifications, config examples, or other static resources the agent uses to structure

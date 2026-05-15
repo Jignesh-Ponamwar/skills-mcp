@@ -30,9 +30,9 @@ metadata:
 
 ## Professional Standards
 
-- **Zero formula errors** — no #REF!, #DIV/0!, #VALUE!, #N/A, or #NAME? errors allowed
-- **Always use formulas** instead of calculating values in Python and hardcoding them — spreadsheets must remain dynamic
-- **Consistent fonts** throughout — pick one font family (Calibri 11 or Aptos 11 for Excel defaults)
+- **Zero formula errors** - no #REF!, #DIV/0!, #VALUE!, #N/A, or #NAME? errors allowed
+- **Always use formulas** instead of calculating values in Python and hardcoding them - spreadsheets must remain dynamic
+- **Consistent fonts** throughout - pick one font family (Calibri 11 or Aptos 11 for Excel defaults)
 - **Document hardcoded values** with comments including source, date, and reference URL
 
 ---
@@ -102,20 +102,20 @@ for col, h in enumerate(headers, start=1):
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
 units = [1200, 1350, 1280, 1500, 1420, 1650]
 price = 29.99
-cogs_pct = 0.40  # key assumption — put in assumption row
+cogs_pct = 0.40  # key assumption - put in assumption row
 
 for i, (month, unit) in enumerate(zip(months, units), start=2):
     row = i
     # Month
     ws.cell(row=row, column=1, value=month)
-    # Units (input — blue)
+    # Units (input - blue)
     cell_units = ws.cell(row=row, column=2, value=unit)
     style_input(cell_units)
-    # Unit Price (input — blue)
+    # Unit Price (input - blue)
     cell_price = ws.cell(row=row, column=3, value=price)
     cell_price.number_format = '"$"#,##0.00'
     style_input(cell_price)
-    # Revenue (formula — always use formula, not Python calculation)
+    # Revenue (formula - always use formula, not Python calculation)
     cell_rev = ws.cell(row=row, column=4, value=f"=B{row}*C{row}")
     cell_rev.number_format = '"$"#,##0.00'
     style_formula(cell_rev)
@@ -202,24 +202,24 @@ with pd.ExcelWriter("output.xlsx", engine="openpyxl") as writer:
 
 | Color | Meaning |
 |-------|---------|
-| **Blue text / blue fill** | Hardcoded input — user enters this |
-| **Black text / white fill** | Formula — computed from other cells |
+| **Blue text / blue fill** | Hardcoded input - user enters this |
+| **Black text / white fill** | Formula - computed from other cells |
 | **Green text** | Internal link to another cell in same workbook |
 | **Red text** | External link (different workbook) |
-| **Yellow background** | Key assumption — highlight for visibility |
+| **Yellow background** | Key assumption - highlight for visibility |
 
 ---
 
 ## Formula Best Practices
 
 ```python
-# ✅ Always write Excel formulas — NOT Python calculations
+# ✅ Always write Excel formulas - NOT Python calculations
 cell.value = "=B2*C2"           # revenue formula
 cell.value = "=SUM(D2:D13)"     # total
 cell.value = "=IFERROR(D2/E2,0)" # safe division
 
 # ❌ Never hardcode computed values
-cell.value = 35988              # static — breaks when inputs change
+cell.value = 35988              # static - breaks when inputs change
 ```
 
 **Lock references for constants:**
@@ -232,9 +232,9 @@ cell.value = f"=D{row}*$H$2"   # COGS % stays fixed as formula copies down
 
 ## Common Mistakes
 
-- **Hardcoding calculated values** — always use Excel formulas; Python is for setup only
-- **Missing `number_format`** — always set `"$#,##0.00"` for currency, `"0%"` for percentages
-- **Not validating formula results** — open the file and check for #REF!, #VALUE!, #DIV/0!
-- **Inconsistent fonts** — pick one font and use it throughout
-- **No documentation for assumptions** — add `cell.comment` with source and date for hardcoded numbers
-- **Absolute vs relative references** — use `$A$1` when copying formulas that reference fixed cells
+- **Hardcoding calculated values** - always use Excel formulas; Python is for setup only
+- **Missing `number_format`** - always set `"$#,##0.00"` for currency, `"0%"` for percentages
+- **Not validating formula results** - open the file and check for #REF!, #VALUE!, #DIV/0!
+- **Inconsistent fonts** - pick one font and use it throughout
+- **No documentation for assumptions** - add `cell.comment` with source and date for hardcoded numbers
+- **Absolute vs relative references** - use `$A$1` when copying formulas that reference fixed cells

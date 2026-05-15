@@ -1,4 +1,4 @@
-# Conventional Commits 1.0.0 — Full Reference
+# Conventional Commits 1.0.0 - Full Reference
 
 Complete specification for the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) standard used as the basis for the git-commit-writer skill.
 
@@ -18,9 +18,9 @@ A commit message MUST conform to this structure:
 
 ### Required Elements
 
-**type** — Must be one of the registered types below. All lowercase.
+**type** - Must be one of the registered types below. All lowercase.
 
-**description** — A short summary of the change:
+**description** - A short summary of the change:
 - Written in imperative, present tense: "add feature" not "added feature"
 - First letter lowercase
 - No period at the end
@@ -28,18 +28,18 @@ A commit message MUST conform to this structure:
 
 ### Optional Elements
 
-**scope** — Parenthesised noun describing the section of the codebase changed:
+**scope** - Parenthesised noun describing the section of the codebase changed:
 - `feat(parser):` `fix(api):` `refactor(auth):`
 - Must be lowercase
 - No spaces inside parens
 - Omit if the change is cross-cutting
 
-**body** — Free-form additional context:
+**body** - Free-form additional context:
 - Separated from subject by exactly one blank line
 - Wrap lines at 72 characters
 - Explain WHY, not WHAT (the diff shows what)
 
-**footer(s)** — Key-value pairs at the end:
+**footer(s)** - Key-value pairs at the end:
 - Separated from body (or subject if no body) by exactly one blank line
 - Format: `Token: value` or `Token #number`
 - Multiple footers each on their own line
@@ -54,26 +54,26 @@ A commit message MUST conform to this structure:
 |------|---------|-----------------|
 | `feat` | New feature visible to users | MINOR |
 | `fix` | Bug fix | PATCH |
-| `docs` | Documentation changes only | — |
-| `style` | Formatting, whitespace — no behavior change | — |
-| `refactor` | Code restructuring — no feature or fix | — |
+| `docs` | Documentation changes only | - |
+| `style` | Formatting, whitespace - no behavior change | - |
+| `refactor` | Code restructuring - no feature or fix | - |
 | `perf` | Performance improvement | PATCH |
-| `test` | Adding or correcting tests | — |
-| `build` | Build system, dependency updates | — |
-| `ci` | CI/CD configuration changes | — |
-| `chore` | Catch-all for tooling, scripts, gitignore | — |
-| `revert` | Reverts a previous commit | — |
+| `test` | Adding or correcting tests | - |
+| `build` | Build system, dependency updates | - |
+| `ci` | CI/CD configuration changes | - |
+| `chore` | Catch-all for tooling, scripts, gitignore | - |
+| `revert` | Reverts a previous commit | - |
 
 ### Breaking Changes
 
 Breaking changes can appear in ANY type. Two ways to mark them:
 
-**Method 1 — `!` suffix (preferred for prominence):**
+**Method 1 - `!` suffix (preferred for prominence):**
 ```
 feat(api)!: remove deprecated /v1/users endpoint
 ```
 
-**Method 2 — `BREAKING CHANGE:` footer:**
+**Method 2 - `BREAKING CHANGE:` footer:**
 ```
 feat(api): migrate user endpoint to v2
 

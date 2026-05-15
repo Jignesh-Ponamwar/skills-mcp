@@ -365,10 +365,10 @@ async def test_get_unknown_user_returns_404(client: AsyncClient):
 
 ## Common Mistakes
 
-- **Blocking the event loop** — use `async` for all I/O; use `run_in_executor` for CPU-bound work
-- **Not using `response_model`** — always set `response_model` to prevent leaking sensitive fields
-- **Mutable default arguments** — use `Field(default_factory=list)` not `= []` in Pydantic models
-- **Missing 404 checks** — always verify resources exist before returning
-- **Not committing or rolling back DB session** — handle this in the dependency (see `get_db` above)
-- **Putting business logic in routes** — use service layer; routes should only validate and delegate
-- **Hardcoding secrets** — use `pydantic-settings` with `.env` files
+- **Blocking the event loop** - use `async` for all I/O; use `run_in_executor` for CPU-bound work
+- **Not using `response_model`** - always set `response_model` to prevent leaking sensitive fields
+- **Mutable default arguments** - use `Field(default_factory=list)` not `= []` in Pydantic models
+- **Missing 404 checks** - always verify resources exist before returning
+- **Not committing or rolling back DB session** - handle this in the dependency (see `get_db` above)
+- **Putting business logic in routes** - use service layer; routes should only validate and delegate
+- **Hardcoding secrets** - use `pydantic-settings` with `.env` files

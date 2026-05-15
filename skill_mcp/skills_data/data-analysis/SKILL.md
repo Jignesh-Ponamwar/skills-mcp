@@ -134,12 +134,12 @@ df["revenue_7d_avg"] = df["revenue"].rolling(7).mean()
 ### Step 8: Communicate Findings
 
 Structure your output as:
-1. **Dataset Summary** — rows, columns, date range (if applicable)
-2. **Data Quality** — missing values, duplicates, type issues found
-3. **Key Metrics** — top-level numbers (total, average, growth rate)
-4. **Patterns** — trends, segments, distributions worth noting
-5. **Anomalies** — outliers or unexpected values
-6. **Recommendations** — what to investigate further or act on
+1. **Dataset Summary** - rows, columns, date range (if applicable)
+2. **Data Quality** - missing values, duplicates, type issues found
+3. **Key Metrics** - top-level numbers (total, average, growth rate)
+4. **Patterns** - trends, segments, distributions worth noting
+5. **Anomalies** - outliers or unexpected values
+6. **Recommendations** - what to investigate further or act on
 
 ## Rules
 - State units and time periods explicitly ("Average monthly revenue in USD, Jan–Dec 2024")

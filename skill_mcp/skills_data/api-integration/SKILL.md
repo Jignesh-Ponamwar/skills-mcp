@@ -159,7 +159,7 @@ def handle_api_error(response: httpx.Response) -> None:
     if status == 400:
         raise ValueError(f"Bad request: {error_body}")
     elif status == 401:
-        raise PermissionError("Authentication failed — check API key")
+        raise PermissionError("Authentication failed - check API key")
     elif status == 403:
         raise PermissionError(f"Forbidden: {error_body}")
     elif status == 404:

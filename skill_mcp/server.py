@@ -1,28 +1,28 @@
 """
-skill-mcp local server — Python FastMCP entry point.
+skill-mcp local server - Python FastMCP entry point.
 
 This is the **local development** server. The production server is the
-Cloudflare Worker in src/worker.py — deploy it with `wrangler deploy`.
+Cloudflare Worker in src/worker.py - deploy it with `wrangler deploy`.
 
 Use this local server when you need script execution support: the Worker
 runs on Cloudflare's Python (Pyodide) runtime which cannot spawn subprocesses,
 so `skills_run_script` execution mode requires running locally.
 
 Six MCP tools:
-  skills_find_relevant  — semantic search (via Cloudflare Workers AI REST API)
-  skills_get_body       — full instructions + tier3_manifest
-  skills_get_options    — config variants, dependencies, limitations
-  skills_get_reference  — fetch a reference markdown file
-  skills_run_script     — execute a bundled script (sandboxed subprocess)
-  skills_get_asset      — fetch a template or static resource
+  skills_find_relevant  - semantic search (via Cloudflare Workers AI REST API)
+  skills_get_body       - full instructions + tier3_manifest
+  skills_get_options    - config variants, dependencies, limitations
+  skills_get_reference  - fetch a reference markdown file
+  skills_run_script     - execute a bundled script (sandboxed subprocess)
+  skills_get_asset      - fetch a template or static resource
 
 Transport (set MCP_TRANSPORT env var):
-  stdio            (default) — Claude Code, Cursor, any local MCP client
-  streamable-http            — networked / remote use
+  stdio            (default) - Claude Code, Cursor, any local MCP client
+  streamable-http            - networked / remote use
 
 Required env vars (.env):
-  QDRANT_URL, QDRANT_API_KEY  — Qdrant Cloud credentials
-  WORKERS_AI_ACCOUNT_ID, WORKERS_AI_API_TOKEN — Cloudflare credentials (for embedding)
+  QDRANT_URL, QDRANT_API_KEY  - Qdrant Cloud credentials
+  WORKERS_AI_ACCOUNT_ID, WORKERS_AI_API_TOKEN - Cloudflare credentials (for embedding)
 """
 
 from __future__ import annotations
@@ -53,6 +53,7 @@ from .tools.get_skill_options import get_skill_options
 from .tools.get_skill_reference import get_skill_reference
 from .tools.get_skill_asset import get_skill_asset
 from .tools.run_skill_script import run_skill_script
+from .tools.list_all_skills import list_all_skills
 # pylint: enable=wrong-import-position
 
 
@@ -74,11 +75,11 @@ async def lifespan(_server: FastMCP) -> AsyncIterator[None]:
         import sys
         print(
             f"[skill-mcp] WARNING: Qdrant startup check failed ({type(exc).__name__}: {exc}). "
-            "Server will start anyway — tool calls will fail if Qdrant is unreachable.",
+            "Server will start anyway - tool calls will fail if Qdrant is unreachable.",
             file=sys.stderr,
         )
     yield
-    # No teardown needed — Qdrant connections are stateless HTTP
+    # No teardown needed - Qdrant connections are stateless HTTP
 
 
 # ── FastMCP app ───────────────────────────────────────────────────────────────
@@ -86,14 +87,36 @@ async def lifespan(_server: FastMCP) -> AsyncIterator[None]:
 mcp = FastMCP(
     name="skill-mcp-server",
     instructions=(
-        "Skills registry with progressive disclosure.\n\n"
-        "1. Call skills_find_relevant to discover skills relevant to your task.\n"
-        "2. Call skills_get_body to load full instructions for a chosen skill. "
-        "   The response includes tier3_manifest listing available references, "
-        "   scripts, and assets.\n"
-        "3. Call skills_get_reference, skills_run_script, or skills_get_asset "
-        "   for supplementary material referenced in the body instructions.\n"
-        "4. Optionally call skills_get_options for config schema and variants."
+        "SKILLS REGISTRY - 100+ expert procedures delivered via MCP.\n\n"
+        "WORKFLOW (3-tier progressive disclosure):\n\n"
+        "TIER 1 - DISCOVERY (always call first):\n"
+        "  1. Call skills_find_relevant(query, top_k) with a task description.\n"
+        "  2. Review the similarity score (0 to 1):\n"
+        "     - score > 0.6:   Strong match - use this skill\n"
+        "     - 0.4 to 0.6:    Possible match - check description before using\n"
+        "     - score < 0.4:   Weak match - usually skip\n"
+        "  3. Hint: Be specific in queries. 'write pytest tests for FastAPI' "
+        "     outperforms 'testing'. Describe what you're building, not what you want.\n\n"
+        "TIER 2 - LOAD (after finding a match):\n"
+        "  Call skills_get_body(skill_id) for full instructions. Response includes:\n"
+        "    - instructions: Step-by-step procedures (read and follow)\n"
+        "    - system_prompt_addition: Optional context for your persona\n"
+        "    - tier3_manifest: Filenames of available references/scripts/assets\n"
+        "  Version pinning: Pass version='1.2' or use skill_id='stripe-integration@1.2'\n\n"
+        "TIER 3 - SUPPLEMENT (only if instructions reference them):\n"
+        "  Call ONE of the following as referenced in the body:\n"
+        "    - skills_get_reference(skill_id, filename) for markdown docs\n"
+        "    - skills_run_script(skill_id, filename, input_data) for helper scripts\n"
+        "    - skills_get_asset(skill_id, filename) for templates\n"
+        "  Never load tier-3 files speculatively - only fetch what the instructions name.\n"
+        "  skills_get_options(skill_id) is optional - call if user asks about variants.\n\n"
+        "BROWSING:\n"
+        "  Call skills_list_all() to browse all 100 available skills without searching.\n\n"
+        "TIPS:\n"
+        "  - Frontmatter includes use_cases, complexity_level, prerequisites, has_tier3\n"
+        "  - Deprecated skills have a deprecation_notice in the body response\n"
+        "  - Most tasks complete with just instructions (tier 1+2) - avoid tier-3 unless needed\n"
+        "  - Each skill comes from authoritative sources (Anthropic, Vercel, AWS, Google, etc.)"
     ),
     lifespan=lifespan,
 )
@@ -104,13 +127,13 @@ mcp = FastMCP(
 @mcp.tool(
     name="skills_find_relevant",
     description=(
-        "STEP 1 — Discover relevant skills. Call this FIRST at the start of any task "
+        "STEP 1 - Discover relevant skills. Call this FIRST at the start of any task "
         "to check whether the registry contains a curated skill that matches. "
         "Performs semantic vector search and returns ranked results with similarity scores.\n\n"
         "Workflow after this call:\n"
-        "  • score > 0.6  → strong match — call skills_get_body with that skill_id\n"
-        "  • score 0.4–0.6 → possible match — inspect description before proceeding\n"
-        "  • score < 0.4  → no relevant skill — proceed without one\n\n"
+        "  • score > 0.6  → strong match - call skills_get_body with that skill_id\n"
+        "  • score 0.4–0.6 → possible match - inspect description before proceeding\n"
+        "  • score < 0.4  → no relevant skill - proceed without one\n\n"
         "Query tips: be task-specific, not generic. "
         "'write pytest unit tests for a Flask REST API' outperforms 'testing'. "
         "Describe what you are trying to accomplish, not what you want to find."
@@ -123,16 +146,16 @@ def _skills_find_relevant(query: str, top_k: int = 5) -> str:
 @mcp.tool(
     name="skills_get_body",
     description=(
-        "STEP 2 — Load full skill instructions. Call after skills_find_relevant "
+        "STEP 2 - Load full skill instructions. Call after skills_find_relevant "
         "once you have identified the best-matching skill_id.\n\n"
         "Returns three fields:\n"
-        "  • instructions         — expert step-by-step guidance; read and follow these\n"
-        "  • system_prompt_addition — optional context to add to your persona (may be empty)\n"
-        "  • tier3_manifest       — lists available references, scripts, and assets by filename\n\n"
+        "  • instructions         - expert step-by-step guidance; read and follow these\n"
+        "  • system_prompt_addition - optional context to add to your persona (may be empty)\n"
+        "  • tier3_manifest       - lists available references, scripts, and assets by filename\n\n"
         "After loading: apply the instructions. "
         "If tier3_manifest lists files that the instructions explicitly reference, "
         "fetch them with skills_get_reference, skills_run_script, or skills_get_asset. "
-        "Most tasks are fully served by the instructions alone — do not load Tier 3 speculatively.\n\n"
+        "Most tasks are fully served by the instructions alone - do not load Tier 3 speculatively.\n\n"
         "Version pinning: pass version='1.2' to pin to a specific skill version, or use the "
         "inline form skill_id='stripe-integration@1.2'. If the requested version is not found, "
         "the latest version is returned with a version_note explaining the fallback. "
@@ -146,14 +169,14 @@ def _skills_get_body(skill_id: str, version: Optional[str] = None) -> str:
 @mcp.tool(
     name="skills_get_options",
     description=(
-        "OPTIONAL STEP 2b — Load config schema, variants, and constraints for a skill. "
+        "OPTIONAL STEP 2b - Load config schema, variants, and constraints for a skill. "
         "Call only when: (a) the user asks to customise skill behaviour, or "
         "(b) skills_get_body instructions mention configurable options.\n\n"
         "Returns: config_schema (JSON Schema for parameters), "
         "variants (alternative skill modes), "
         "dependencies (required tools/packages), "
         "limitations (known constraints).\n\n"
-        "Do NOT call this by default — most tasks complete with skills_get_body alone."
+        "Do NOT call this by default - most tasks complete with skills_get_body alone."
     ),
 )
 def _skills_get_options(skill_id: str) -> str:
@@ -163,7 +186,7 @@ def _skills_get_options(skill_id: str) -> str:
 @mcp.tool(
     name="skills_get_reference",
     description=(
-        "STEP 3a — Fetch a reference document bundled with a skill "
+        "STEP 3a - Fetch a reference document bundled with a skill "
         "(markdown files: checklists, policies, API specs, examples).\n\n"
         "Two-phase use:\n"
         "  1. Call with filename='list' (default) to see the full reference manifest\n"
@@ -180,8 +203,8 @@ def _skills_get_reference(skill_id: str, filename: str = "list") -> str:
 @mcp.tool(
     name="skills_run_script",
     description=(
-        "STEP 3b — Execute a helper script bundled with a skill. "
-        "Script source is NEVER returned — only stdout, stderr, and exit_code.\n\n"
+        "STEP 3b - Execute a helper script bundled with a skill. "
+        "Script source is NEVER returned - only stdout, stderr, and exit_code.\n\n"
         "Two-phase use:\n"
         "  1. Call with filename='list' to see available scripts and their descriptions\n"
         "  2. Call with the specific filename (and optional input_data) to execute\n\n"
@@ -207,17 +230,32 @@ def _skills_run_script(
 @mcp.tool(
     name="skills_get_asset",
     description=(
-        "STEP 3c — Fetch a template or static resource bundled with a skill "
+        "STEP 3c - Fetch a template or static resource bundled with a skill "
         "(markdown templates, config starters, example data files).\n\n"
         "Two-phase use:\n"
         "  1. Call with filename='list' (default) to see the full asset manifest\n"
         "  2. Call again with the specific filename to fetch its content\n\n"
-        "Use the returned content as a starting template — adapt it to the specific task. "
+        "Use the returned content as a starting template - adapt it to the specific task. "
         "Only call when skill instructions reference a specific asset file."
     ),
 )
 def _skills_get_asset(skill_id: str, filename: str = "list") -> str:
     return get_skill_asset(skill_id=skill_id, filename=filename)
+
+
+@mcp.tool(
+    name="skills_list_all",
+    description=(
+        "BROWSING - Browse all 100+ available skills in the registry without semantic search.\n\n"
+        "Use this when you want to see what skills are available, understand the full "
+        "breadth of the registry, or look for skills by browsing rather than searching.\n\n"
+        "Returns lightweight frontmatter for each skill (skill_id, name, tags, "
+        "complexity_level, has_tier3) to keep token usage reasonable.\n\n"
+        "Supports pagination: use offset to skip results, limit to control batch size."
+    ),
+)
+def _skills_list_all(limit: int = 100, offset: int = 0) -> str:
+    return list_all_skills(limit=limit, offset=offset)
 
 
 # ── Transport ─────────────────────────────────────────────────────────────────

@@ -10,7 +10,7 @@ class SkillFrontMatter(BaseModel):
     """Lightweight descriptor stored with a vector for semantic search.
 
     Returned by skills_find_relevant. Never contains the full instruction body
-    — agents must call skills_get_body(skill_id) for that.
+    - agents must call skills_get_body(skill_id) for that.
     """
 
     skill_id: str
@@ -25,15 +25,23 @@ class SkillFrontMatter(BaseModel):
     # skill:// URI for MCP SkillsProvider compatibility
     skill_uri: str = ""
     score: Optional[float] = None  # populated after vector search
-    # Deprecation — set in SKILL.md frontmatter when a skill is superseded
+    # Deprecation - set in SKILL.md frontmatter when a skill is superseded
     deprecated: bool = False
     replaced_by: str = ""  # skill_id of the replacement, or "" if none
+    # New metadata fields for better agent decision-making
+    use_cases: list[str] = Field(default_factory=list)  # Primary use cases/scenarios
+    has_tier3: bool = False  # Whether skill has references/scripts/assets
+    estimated_time: str = ""  # e.g., "5-10 minutes"
+    complexity_level: str = "intermediate"  # 'beginner' | 'intermediate' | 'advanced'
+    prerequisites: list[str] = Field(default_factory=list)  # Required knowledge/tools
+    last_updated: str = ""  # ISO date
+    source_url: str = ""  # Attribution URL to official source
 
 
 # ── Tier-2: Body + Options ────────────────────────────────────────────────────
 
 class SkillBody(BaseModel):
-    """Full instructions — fetched on demand by skill_id, no vector needed."""
+    """Full instructions - fetched on demand by skill_id, no vector needed."""
 
     skill_id: str
     instructions: str
@@ -42,7 +50,7 @@ class SkillBody(BaseModel):
 
 
 class SkillOptions(BaseModel):
-    """Config variants, deps, limitations — optional deep-dive per skill."""
+    """Config variants, deps, limitations - optional deep-dive per skill."""
 
     skill_id: str
     config_schema: dict[str, Any] = Field(default_factory=dict)
@@ -72,14 +80,14 @@ class SkillScript(BaseModel):
     """An executable script bundled inside a skill folder (scripts/*.py etc.).
 
     IMPORTANT: The source field is stored here but must NEVER be returned to
-    the agent by skills_run_script — only execution output is returned.
+    the agent by skills_run_script - only execution output is returned.
     """
 
     skill_id: str
     skill_name: str = ""
     filename: str                           # e.g. "extract.py"
     language: str                           # python | javascript | bash | unknown
-    source: str                             # full script source — internal only
+    source: str                             # full script source - internal only
     description: str = ""                   # parsed from first docstring/comment
     file_path: str = ""                     # e.g. "scripts/extract.py"
     dependencies: list[str] = Field(default_factory=list)  # best-effort parsed imports
@@ -129,6 +137,14 @@ class SkillRecord(BaseModel):
     limitations: list[str] = Field(default_factory=list)
     deprecated: bool = False
     replaced_by: str = ""
+    # New metadata fields
+    use_cases: list[str] = Field(default_factory=list)
+    has_tier3: bool = False
+    estimated_time: str = ""
+    complexity_level: str = "intermediate"
+    prerequisites: list[str] = Field(default_factory=list)
+    last_updated: str = ""
+    source_url: str = ""
 
     def to_frontmatter(self) -> SkillFrontMatter:
         return SkillFrontMatter(
@@ -144,6 +160,13 @@ class SkillRecord(BaseModel):
             skill_uri=f"skill://{self.skill_id}/SKILL.md",
             deprecated=self.deprecated,
             replaced_by=self.replaced_by,
+            use_cases=self.use_cases,
+            has_tier3=self.has_tier3,
+            estimated_time=self.estimated_time,
+            complexity_level=self.complexity_level,
+            prerequisites=self.prerequisites,
+            last_updated=self.last_updated,
+            source_url=self.source_url,
         )
 
     def to_body(self) -> SkillBody:

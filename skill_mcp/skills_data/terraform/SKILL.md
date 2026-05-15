@@ -132,7 +132,7 @@ locals {
 ## Step 4: Core Resources (AWS Examples)
 
 ```hcl
-# main.tf — VPC + Subnets + EC2 + RDS pattern
+# main.tf - VPC + Subnets + EC2 + RDS pattern
 
 # VPC
 resource "aws_vpc" "main" {
@@ -256,7 +256,7 @@ terraform {
 ## Step 7: Reusable Modules
 
 ```hcl
-# modules/networking/main.tf — reusable VPC module
+# modules/networking/main.tf - reusable VPC module
 variable "name_prefix" { type = string }
 variable "vpc_cidr"    { type = string; default = "10.0.0.0/16" }
 variable "tags"        { type = map(string); default = {} }
@@ -376,11 +376,11 @@ jobs:
 
 ## Common Mistakes
 
-- **Not pinning provider versions** — always use `version = "~> 5.0"` to prevent breaking changes
-- **Storing state locally** — always use remote state (S3 + DynamoDB) for team environments
-- **Missing state locking** — DynamoDB table prevents concurrent applies that corrupt state
-- **Sensitive values in tfvars committed to git** — use `.gitignore` for `*.tfvars`, use environment variables or Vault for secrets
-- **Using `count` for resources with changing order** — use `for_each` with a map/set of unique keys instead
-- **Forgetting `deletion_protection` in prod** — set on databases, critical buckets, etc.
-- **`terraform destroy` in CI without protection** — use `environment` with approval gates for destructive operations
-- **Not running `terraform fmt` in CI** — add format check to fail fast on unformatted code
+- **Not pinning provider versions** - always use `version = "~> 5.0"` to prevent breaking changes
+- **Storing state locally** - always use remote state (S3 + DynamoDB) for team environments
+- **Missing state locking** - DynamoDB table prevents concurrent applies that corrupt state
+- **Sensitive values in tfvars committed to git** - use `.gitignore` for `*.tfvars`, use environment variables or Vault for secrets
+- **Using `count` for resources with changing order** - use `for_each` with a map/set of unique keys instead
+- **Forgetting `deletion_protection` in prod** - set on databases, critical buckets, etc.
+- **`terraform destroy` in CI without protection** - use `environment` with approval gates for destructive operations
+- **Not running `terraform fmt` in CI** - add format check to fail fast on unformatted code

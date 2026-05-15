@@ -175,8 +175,8 @@ WHERE status = 'active';
 ### Step 5: Output Format
 
 For each query produced:
-1. **The query** — formatted with consistent indentation (2 or 4 spaces, uppercase keywords)
-2. **What it does** — one-line explanation
-3. **Assumptions** — data model assumptions made
-4. **Index suggestion** — if the query would benefit from an index
-5. **Dialect notes** — flag syntax that differs between PostgreSQL / MySQL / SQLite
+1. **The query** - formatted with consistent indentation (2 or 4 spaces, uppercase keywords)
+2. **What it does** - one-line explanation
+3. **Assumptions** - data model assumptions made
+4. **Index suggestion** - if the query would benefit from an index
+5. **Dialect notes** - flag syntax that differs between PostgreSQL / MySQL / SQLite

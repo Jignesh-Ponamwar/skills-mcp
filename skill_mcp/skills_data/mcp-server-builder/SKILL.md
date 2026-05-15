@@ -78,7 +78,7 @@ if __name__ == "__main__":
 
 ### Run Modes
 ```bash
-# stdio (for Claude Code, Cursor — recommended for local tools)
+# stdio (for Claude Code, Cursor - recommended for local tools)
 python server.py
 
 # SSE (for browser clients and remote access)
@@ -121,11 +121,11 @@ def code_review_prompt(language: str, pr_description: str) -> str:
 {pr_description}
 
 Check for:
-1. Correctness — does it do what it claims?
-2. Security — any vulnerabilities (injection, auth issues, path traversal)?
-3. Performance — any N+1 queries, unnecessary allocations?
-4. Error handling — all edge cases covered?
-5. Tests — adequate coverage?
+1. Correctness - does it do what it claims?
+2. Security - any vulnerabilities (injection, auth issues, path traversal)?
+3. Performance - any N+1 queries, unnecessary allocations?
+4. Error handling - all edge cases covered?
+5. Tests - adequate coverage?
 
 Use severity tags: [CRITICAL] [HIGH] [MEDIUM] [LOW]"""
 ```
@@ -170,7 +170,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   if (request.params.name === 'calculate') {
     const { expression } = request.params.arguments as { expression: string }
-    // Safe eval — use a proper math library in production
+    // Safe eval - use a proper math library in production
     const result = Function(`'use strict'; return (${expression})`)()
     return { content: [{ type: 'text', text: String(result) }] }
   }
@@ -204,10 +204,10 @@ def search_products(query: str, category: str = "", limit: int = 20) -> list[dic
 
 ### Return Structured Data
 ```python
-# ❌ String concatenation — hard for agent to parse
+# ❌ String concatenation - hard for agent to parse
 return f"User {user.name} has {len(orders)} orders totalling ${total}"
 
-# ✅ Structured dict — agent can reason about individual fields
+# ✅ Structured dict - agent can reason about individual fields
 return {
     "user": {"id": user.id, "name": user.name},
     "order_count": len(orders),
@@ -222,7 +222,7 @@ return {
 async def get_user(email: str) -> dict:
     user = await db.find_user_by_email(email)
     if not user:
-        # Return structured error — don't raise (let agent handle it)
+        # Return structured error - don't raise (let agent handle it)
         return {"found": False, "error": f"No user found with email: {email}"}
     return {"found": True, "user": {"id": user.id, "name": user.name, "email": user.email}}
 ```
@@ -277,20 +277,20 @@ The Inspector provides a web UI to list tools, call them, and view responses wit
 
 ## Security Checklist
 
-- [ ] **Path validation** — never accept arbitrary file paths; resolve and check against a whitelist
-- [ ] **Input validation** — validate all inputs, especially those used in SQL queries or shell commands
-- [ ] **No secrets in tool descriptions** — descriptions are sent to the LLM; don't include credentials
-- [ ] **Rate limiting** — protect expensive operations (API calls, DB queries) from being called in tight loops
-- [ ] **Authentication** — for remote (SSE/HTTP) servers, require an API key or OAuth token
-- [ ] **Least privilege** — tools should only have access to what they need
+- [ ] **Path validation** - never accept arbitrary file paths; resolve and check against a whitelist
+- [ ] **Input validation** - validate all inputs, especially those used in SQL queries or shell commands
+- [ ] **No secrets in tool descriptions** - descriptions are sent to the LLM; don't include credentials
+- [ ] **Rate limiting** - protect expensive operations (API calls, DB queries) from being called in tight loops
+- [ ] **Authentication** - for remote (SSE/HTTP) servers, require an API key or OAuth token
+- [ ] **Least privilege** - tools should only have access to what they need
 
 ---
 
 ## Common Mistakes
 
-- **Descriptions too short** — agents use descriptions to decide when to call tools; make them specific and complete
-- **Raising exceptions on not-found** — return a structured `{"found": false}` response so the agent can handle it gracefully
-- **Synchronous blocking I/O in async handlers** — use `httpx` (not `requests`), `asyncpg` (not `psycopg2`)
-- **Not sanitizing file paths** — always resolve and validate against a base directory
-- **Returning unstructured strings** — structured dicts make it easy for agents to extract relevant fields
-- **No logging** — add structured logging to diagnose issues when the agent calls your tools
+- **Descriptions too short** - agents use descriptions to decide when to call tools; make them specific and complete
+- **Raising exceptions on not-found** - return a structured `{"found": false}` response so the agent can handle it gracefully
+- **Synchronous blocking I/O in async handlers** - use `httpx` (not `requests`), `asyncpg` (not `psycopg2`)
+- **Not sanitizing file paths** - always resolve and validate against a base directory
+- **Returning unstructured strings** - structured dicts make it easy for agents to extract relevant fields
+- **No logging** - add structured logging to diagnose issues when the agent calls your tools

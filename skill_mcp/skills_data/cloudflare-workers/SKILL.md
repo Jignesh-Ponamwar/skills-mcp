@@ -29,7 +29,7 @@ metadata:
 
 # Cloudflare Workers Platform Skill
 
-Consolidated skill for building on the Cloudflare platform. Biases toward retrieval from live Cloudflare docs over pre-trained knowledge — API signatures, limits, and pricing change frequently.
+Consolidated skill for building on the Cloudflare platform. Biases toward retrieval from live Cloudflare docs over pre-trained knowledge - API signatures, limits, and pricing change frequently.
 
 ---
 
@@ -155,7 +155,7 @@ const { keys } = await env.MY_KV.list({ prefix: 'user:' })
 **KV Characteristics:**
 - Eventually consistent (changes propagate in ~60s globally)
 - Read-optimized (millions of reads/s, ~1 write/s per key)
-- Not suitable for high-frequency writes — use Durable Objects for that
+- Not suitable for high-frequency writes - use Durable Objects for that
 
 ---
 
@@ -179,7 +179,7 @@ await env.MY_DB.batch([
 ])
 ```
 
-**Schema migrations** — use `wrangler d1 migrations`:
+**Schema migrations** - use `wrangler d1 migrations`:
 ```bash
 wrangler d1 migrations create my-database add-users-table
 wrangler d1 migrations apply my-database --local   # local
@@ -243,7 +243,7 @@ const result = await env.AI.run('@cf/microsoft/resnet-50', {
 ## Step 7: Durable Objects
 
 ```typescript
-// src/counter.ts — the Durable Object class
+// src/counter.ts - the Durable Object class
 export class Counter implements DurableObject {
   state: DurableObjectState
   value: number = 0
@@ -265,7 +265,7 @@ export class Counter implements DurableObject {
   }
 }
 
-// src/index.ts — Worker that uses it
+// src/index.ts - Worker that uses it
 export default {
   async fetch(request: Request, env: Env) {
     const id = env.COUNTER.idFromName('global')
@@ -295,10 +295,10 @@ new_classes = ["Counter"]
 ## Step 8: Queues (Background Processing)
 
 ```typescript
-// Producer — enqueue from a Worker
+// Producer - enqueue from a Worker
 await env.MY_QUEUE.send({ userId: 123, action: 'send-welcome-email' })
 
-// Consumer — process messages
+// Consumer - process messages
 export default {
   async queue(batch: MessageBatch<{ userId: number; action: string }>, env: Env) {
     for (const msg of batch.messages) {
@@ -332,9 +332,9 @@ export async function onRequest(ctx: EventContext<Env, '/api/user', {}>) {
 
 ## Common Mistakes
 
-- **Accessing live Cloudflare docs for exact limits** — free/paid tier limits change; check `https://developers.cloudflare.com/`
-- **Using KV for high-write workloads** — KV is eventually consistent and write-limited; use Durable Objects instead
-- **Missing `compatibility_date`** — always set to a recent date to get latest APIs
-- **Blocking the event loop** — Workers are single-threaded; avoid CPU-heavy synchronous work
-- **Storing secrets in `wrangler.toml`** — use `wrangler secret put` for sensitive values
-- **Using `nodejs` APIs without `nodejs_compat` flag** — add `compatibility_flags = ["nodejs_compat"]` in `wrangler.toml`
+- **Accessing live Cloudflare docs for exact limits** - free/paid tier limits change; check `https://developers.cloudflare.com/`
+- **Using KV for high-write workloads** - KV is eventually consistent and write-limited; use Durable Objects instead
+- **Missing `compatibility_date`** - always set to a recent date to get latest APIs
+- **Blocking the event loop** - Workers are single-threaded; avoid CPU-heavy synchronous work
+- **Storing secrets in `wrangler.toml`** - use `wrangler secret put` for sensitive values
+- **Using `nodejs` APIs without `nodejs_compat` flag** - add `compatibility_flags = ["nodejs_compat"]` in `wrangler.toml`

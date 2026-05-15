@@ -24,14 +24,14 @@ metadata:
 # Test Writer Skill
 
 ## Overview
-Generate comprehensive, maintainable test suites. Focuses on correctness, isolation, and readability — tests that catch real bugs and survive refactoring.
+Generate comprehensive, maintainable test suites. Focuses on correctness, isolation, and readability - tests that catch real bugs and survive refactoring.
 
 ## Principles
-1. **One assertion concept per test** — each test validates one specific behavior
-2. **Descriptive names** — `test_<unit>_<scenario>_<expected>` format
-3. **Isolation** — no shared mutable state between tests; mock external dependencies
-4. **Determinism** — no flakiness from time, randomness, or network
-5. **Coverage** — happy path + edge cases + error paths
+1. **One assertion concept per test** - each test validates one specific behavior
+2. **Descriptive names** - `test_<unit>_<scenario>_<expected>` format
+3. **Isolation** - no shared mutable state between tests; mock external dependencies
+4. **Determinism** - no flakiness from time, randomness, or network
+5. **Coverage** - happy path + edge cases + error paths
 
 ## Step-by-Step Process
 

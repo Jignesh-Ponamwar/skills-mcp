@@ -15,6 +15,10 @@
         "python_workers"
     ],
     "compatibility_date": "2025-04-10",
+    "exclude": [
+        "_extras",
+        "_extras/**"
+    ],
 
     // Workers AI binding — provides @cf/baai/bge-small-en-v1.5 (384-dim embeddings)
     "ai": {

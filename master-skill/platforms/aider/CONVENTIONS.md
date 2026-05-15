@@ -1,6 +1,6 @@
-# Skill MCP — Aider Conventions
+# Skill MCP - Aider Conventions
 
-This project uses a **Skill MCP server** — a registry of curated expert instructions
+This project uses a **Skill MCP server** - a registry of curated expert instructions
 for common engineering tasks. Connect to it and follow skills when they apply.
 
 ## MCP Connection
@@ -31,10 +31,10 @@ If a skill matches (score > 0.4), load it before writing any code:
 
 ### Skill-driven development workflow
 
-1. **Discover** — `skills_find_relevant` with a specific query
-2. **Load** — `skills_get_body` for the best match
-3. **Apply** — follow the `instructions` field exactly
-4. **Supplement** — only if instructions reference specific files:
+1. **Discover** - `skills_find_relevant` with a specific query
+2. **Load** - `skills_get_body` for the best match
+3. **Apply** - follow the `instructions` field exactly
+4. **Supplement** - only if instructions reference specific files:
    - `skills_get_reference` for reference docs
    - `skills_run_script` for helper scripts (local server only)
    - `skills_get_asset` for templates
@@ -65,4 +65,4 @@ When no skill matches:
 api-integration, code-review, data-analysis, docx-creator, git-commit-writer,
 pdf-processing, readme-writer, sql-query-writer, test-writer, web-scraper
 
-*Use `skills_find_relevant` for discovery — do not hardcode skill_ids.*
+*Use `skills_find_relevant` for discovery - do not hardcode skill_ids.*

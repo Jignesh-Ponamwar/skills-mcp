@@ -1,6 +1,6 @@
-# Skill MCP — Agent Instructions for Claude Code
+# Skill MCP - Agent Instructions for Claude Code
 
-This project is connected to a **Skill MCP server** — a curated registry of expert
+This project is connected to a **Skill MCP server** - a curated registry of expert
 instruction sets for common AI tasks. Use it proactively to deliver higher-quality,
 more consistent results.
 
@@ -65,7 +65,7 @@ skills_get_options(skill_id="<skill_id>")
 # Reference documents
 skills_get_reference(skill_id="<id>", filename="<file.md>")
 
-# Execute a helper script — returns stdout/stderr only, source never exposed
+# Execute a helper script - returns stdout/stderr only, source never exposed
 skills_run_script(skill_id="<id>", filename="<script.py>", input_data={})
 
 # Templates and static assets
@@ -97,13 +97,13 @@ Call `filename="list"` on any Tier 3 tool to get its manifest first.
 `git-commit-writer` · `pdf-processing` · `readme-writer` ·
 `sql-query-writer` · `test-writer` · `web-scraper`
 
-*Use `skills_find_relevant` for semantic discovery — do not guess skill_ids.*
+*Use `skills_find_relevant` for semantic discovery - do not guess skill_ids.*
 
 ---
 
 ## Important Constraints
 
 - **Script execution** requires the local server; the Cloudflare Worker returns manifest only
-- Skills are read-only — no tool modifies registry state
-- Treat skill `instructions` as authoritative expert guidance — follow them precisely
+- Skills are read-only - no tool modifies registry state
+- Treat skill `instructions` as authoritative expert guidance - follow them precisely
 - `system_prompt_addition` from `skills_get_body` should be incorporated into your context

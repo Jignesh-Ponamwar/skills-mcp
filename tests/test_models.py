@@ -1,4 +1,4 @@
-"""Unit tests for Pydantic models — no external deps required."""
+"""Unit tests for Pydantic models - no external deps required."""
 
 import pytest
 

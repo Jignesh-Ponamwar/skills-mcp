@@ -91,7 +91,7 @@ End with:
 - Top 3 priority fixes
 
 ## Rules
-- Only flag real issues — don't rewrite working code to apply style preferences
+- Only flag real issues - don't rewrite working code to apply style preferences
 - Cite exact line numbers when possible
 - Explain WHY each issue matters, not just what it is
 - For security findings, show the attack scenario

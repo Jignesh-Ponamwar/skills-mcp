@@ -1,7 +1,7 @@
 ---
 name: skill-mcp-master
 description: >
-  Master reference for the Skill MCP server — a self-hosted agent skills registry
+  Master reference for the Skill MCP server - a self-hosted agent skills registry
   that delivers curated, expert instructions for common AI tasks via 6 MCP tools.
   Covers the full 3-tier progressive disclosure workflow: Tier 1 discovery
   (skills_find_relevant), Tier 2 loading (skills_get_body, skills_get_options),
@@ -24,7 +24,7 @@ metadata:
     - find a skill for this task
 ---
 
-# Skill MCP — Master Usage Guide
+# Skill MCP - Master Usage Guide
 
 ## What Is the Skill MCP?
 
@@ -36,7 +36,7 @@ Each skill contains:
 
 | Tier | Content | Tools |
 |------|---------|-------|
-| 1 | Frontmatter — name, description, tags, score | `skills_find_relevant` |
+| 1 | Frontmatter - name, description, tags, score | `skills_find_relevant` |
 | 2 | Instructions, system prompt addition | `skills_get_body`, `skills_get_options` |
 | 3 | Reference docs, executable scripts, asset templates | `skills_get_reference`, `skills_run_script`, `skills_get_asset` |
 
@@ -46,27 +46,27 @@ Each skill contains:
 
 Follow this sequence for every task where a skill might apply.
 
-### Step 1 — Discover (`skills_find_relevant`)
+### Step 1 - Discover (`skills_find_relevant`)
 
 ```
 skills_find_relevant(query="<specific description of your task>", top_k=5)
 ```
 
 **Interpret scores:**
-- `score > 0.6` → strong match — proceed to Step 2
-- `score 0.4–0.6` → possible match — read description to decide
-- `score < 0.4` → no relevant skill — proceed without one
+- `score > 0.6` → strong match - proceed to Step 2
+- `score 0.4–0.6` → possible match - read description to decide
+- `score < 0.4` → no relevant skill - proceed without one
 
 **Query tips:**
 - ✅ `"write pytest unit tests for a Flask REST API endpoint"`
 - ✅ `"extract tables from a multi-page PDF and output as CSV"`
 - ✅ `"review Python code for security vulnerabilities"`
-- ❌ `"testing"` (too generic — poor embedding)
+- ❌ `"testing"` (too generic - poor embedding)
 - ❌ `"help me"` (no task signal)
 
 ---
 
-### Step 2 — Load (`skills_get_body`)
+### Step 2 - Load (`skills_get_body`)
 
 ```
 skills_get_body(skill_id="<top result from Step 1>")
@@ -88,9 +88,9 @@ The response contains:
 ```
 
 **After loading:**
-1. Read and apply `instructions` — this is the authoritative guidance
+1. Read and apply `instructions` - this is the authoritative guidance
 2. If `system_prompt_addition` is non-empty, incorporate it into your context
-3. Check `tier3_manifest` — only proceed to Step 3 if instructions reference specific files
+3. Check `tier3_manifest` - only proceed to Step 3 if instructions reference specific files
 
 **Optional: load config** (`skills_get_options`)
 ```
@@ -100,9 +100,9 @@ Only needed when customising skill behaviour or checking constraints/dependencie
 
 ---
 
-### Step 3 — Supplement (only when needed)
+### Step 3 - Supplement (only when needed)
 
-**3a — Reference documents:**
+**3a - Reference documents:**
 ```
 # First: get the manifest
 skills_get_reference(skill_id="test-writer", filename="list")
@@ -110,27 +110,27 @@ skills_get_reference(skill_id="test-writer", filename="list")
 skills_get_reference(skill_id="test-writer", filename="TESTING-GUIDE.md")
 ```
 
-**3b — Execute a helper script:**
+**3b - Execute a helper script:**
 ```
 # First: see available scripts
 skills_run_script(skill_id="test-writer", filename="list")
 # Then: run with optional inputs
 skills_run_script(skill_id="test-writer", filename="coverage_check.py",
                   input_data={"TARGET_DIR": "./src", "MIN_COVERAGE": "80"})
-# Returns: exit_code, stdout, stderr — source is never exposed
+# Returns: exit_code, stdout, stderr - source is never exposed
 ```
 
-**3c — Fetch a template or asset:**
+**3c - Fetch a template or asset:**
 ```
 # First: get the manifest
 skills_get_asset(skill_id="test-writer", filename="list")
 # Then: fetch the template
 skills_get_asset(skill_id="test-writer", filename="test-template.py")
-# Use as a starting template — adapt it to the specific task
+# Use as a starting template - adapt it to the specific task
 ```
 
 > **Rule:** Only load Tier 3 resources that the Tier 2 instructions explicitly
-> reference. Do not load them speculatively — it wastes context and latency.
+> reference. Do not load them speculatively - it wastes context and latency.
 
 ---
 
@@ -165,9 +165,9 @@ template = skills_get_asset(skill_id="test-writer", filename="test-template.py")
 | Situation | Action |
 |-----------|--------|
 | Starting any non-trivial task | Always call `skills_find_relevant` first |
-| All scores < 0.4 | No relevant skill — proceed without one |
+| All scores < 0.4 | No relevant skill - proceed without one |
 | Score > 0.4 | Call `skills_get_body` to load instructions |
-| Instructions are complete | Apply them — stop, do not load Tier 3 |
+| Instructions are complete | Apply them - stop, do not load Tier 3 |
 | Instructions mention a file | Load that specific file via Tier 3 |
 | User asks to customise skill | Call `skills_get_options` |
 | Task is trivial (< 2 min) | Skip skill lookup if confidence is high |
@@ -189,7 +189,7 @@ template = skills_get_asset(skill_id="test-writer", filename="test-template.py")
 | `test-writer` | Unit, integration, and E2E test writing |
 | `web-scraper` | Web scraping and data extraction |
 
-*Query `skills_find_relevant` for semantic discovery — the above is a reference snapshot.*
+*Query `skills_find_relevant` for semantic discovery - the above is a reference snapshot.*
 
 ---
 
@@ -208,10 +208,10 @@ template = skills_get_asset(skill_id="test-writer", filename="test-template.py")
 
 ## Notes
 
-- Skills are **read-only** — calling any tool does not modify registry state
+- Skills are **read-only** - calling any tool does not modify registry state
 - **Script execution** is only available on the **local server**
   (`MCP_TRANSPORT=streamable-http python -m skill_mcp.server`).
   The Cloudflare Workers deployment returns the script manifest only.
-- Skills are versioned — `skills_get_options` returns the version of each skill
+- Skills are versioned - `skills_get_options` returns the version of each skill
 - The MCP server URL for SSE transport:
   `https://skill-mcp.<your-subdomain>.workers.dev/sse`

@@ -1,13 +1,13 @@
 """
-PDF form filler — bundled with the pdf-processing skill.
+PDF form filler - bundled with the pdf-processing skill.
 
 Fills an AcroForm PDF with the provided field values and saves the result.
 Does NOT support XFA forms (Adobe LiveCycle); see references/FORMS.md for details.
 
 Input (environment variables):
-  PDF_PATH     — absolute path to the source PDF form (required)
-  FIELDS_JSON  — JSON object of {"field_name": "value", ...} (required)
-  OUTPUT_PATH  — output file path (default: filled_<original_name>.pdf)
+  PDF_PATH     - absolute path to the source PDF form (required)
+  FIELDS_JSON  - JSON object of {"field_name": "value", ...} (required)
+  OUTPUT_PATH  - output file path (default: filled_<original_name>.pdf)
 
 Output (stdout): JSON result with filled field names, missing fields, and output path
 """

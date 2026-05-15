@@ -1,8 +1,8 @@
-"""MCP tool: skills_run_script — execute a script bundled with a skill.
+"""MCP tool: skills_run_script - execute a script bundled with a skill.
 
 Scripts live in the skill's scripts/ subdirectory. This tool mirrors exactly how
 bash script execution works in local Agent Skills: the script source NEVER enters
-the context window — only stdout/stderr output is returned.
+the context window - only stdout/stderr output is returned.
 
 Security model (enforced):
   - Scripts execute in an isolated temporary directory
@@ -45,7 +45,7 @@ def run_skill_script(
 ) -> str:
     """Execute a script bundled with a skill and return its output.
 
-    The script source is never returned — only execution output (stdout, stderr,
+    The script source is never returned - only execution output (stdout, stderr,
     exit_code). This mirrors bash script execution in local Agent Skills exactly.
 
     Args:
@@ -96,7 +96,7 @@ def run_skill_script(
                 "scripts": scripts,
                 "note": (
                     "Call skills_run_script(skill_id, filename='<name>', input_data={...}) "
-                    "to execute a script. Output only is returned — source is never exposed."
+                    "to execute a script. Output only is returned - source is never exposed."
                 ),
             },
             indent=2,
@@ -183,7 +183,7 @@ def _execute_script(
         with open(script_path, "w", encoding="utf-8") as f:
             f.write(source)
 
-        # Minimal environment — no credentials, no sensitive vars
+        # Minimal environment - no credentials, no sensitive vars
         clean_env: dict[str, str] = {}
         if sys.platform == "win32":
             # Windows requires SystemRoot and PATHEXT at minimum
@@ -195,7 +195,7 @@ def _execute_script(
             clean_env["HOME"] = tmpdir
             clean_env["TMPDIR"] = tmpdir
 
-        # Keys that scripts must not be allowed to override — doing so would let
+        # Keys that scripts must not be allowed to override - doing so would let
         # a malicious skill redirect binary execution or inject shared libraries.
         _BLOCKED_ENV_KEYS = frozenset({
             "PATH", "LD_PRELOAD", "LD_LIBRARY_PATH", "LD_AUDIT",
@@ -224,7 +224,7 @@ def _execute_script(
 
         # Use Popen + communicate so we can explicitly kill on timeout.
         # subprocess.run(timeout=…) raises TimeoutExpired but does NOT kill
-        # the child process — the caller is responsible for cleanup.
+        # the child process - the caller is responsible for cleanup.
         try:
             with subprocess.Popen(
                 cmd,

@@ -1,13 +1,13 @@
 """
-Python test coverage analyzer — bundled with the test-writer skill.
+Python test coverage analyzer - bundled with the test-writer skill.
 
 Uses Python's built-in ast module to statically analyze source and test code.
-No test execution required — pure static analysis.
+No test execution required - pure static analysis.
 
 Input (environment variables):
-  SOURCE_CODE   — Python source code to analyze (required)
-  TEST_CODE     — Python test code to cross-reference (optional)
-  FILENAME      — source filename hint (default: "module.py")
+  SOURCE_CODE   - Python source code to analyze (required)
+  TEST_CODE     - Python test code to cross-reference (optional)
+  FILENAME      - source filename hint (default: "module.py")
 
 Output (stdout): JSON with coverage analysis and recommendations
 """
@@ -127,11 +127,11 @@ def main() -> None:
             "test_functions_found": test_count,
             "public_functions_tested": len(tested_fns),
             "public_functions_untested": len(untested_fns),
-            "function_coverage_pct": fn_coverage_pct if test_code else "unknown — provide TEST_CODE",
+            "function_coverage_pct": fn_coverage_pct if test_code else "unknown - provide TEST_CODE",
             "untested_function_names": [f.name for f in untested_fns],
         },
         "recommendations": recommendations,
-        "note": "Static analysis only — run 'pytest --cov --cov-report=term-missing' for actual line coverage.",
+        "note": "Static analysis only - run 'pytest --cov --cov-report=term-missing' for actual line coverage.",
     }
 
     print(json.dumps(result, indent=2))

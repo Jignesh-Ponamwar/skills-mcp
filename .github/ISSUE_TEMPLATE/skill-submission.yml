@@ -8,7 +8,7 @@ body:
       value: |
         Before filling out this form, check that your proposed skill does not duplicate an existing one.
         Run `skills_find_relevant("<your proposed description>")` against the live registry or your local server.
-        If any result scores above 0.7, read that skill first — you may be adding a duplicate.
+        If any result scores above 0.7, read that skill first - you may be adding a duplicate.
 
   - type: input
     id: slug
@@ -25,7 +25,7 @@ body:
       label: One-sentence description (this goes into the embedding)
       description: |
         Write from the agent's perspective: "Use when the user asks to [task]. Covers [scope]."
-        This is the exact text that will be embedded for semantic search — write it to match how an agent phrases the need.
+        This is the exact text that will be embedded for semantic search - write it to match how an agent phrases the need.
       placeholder: "Use when the user asks to extract structured data from PDF documents, fill PDF forms, or parse tables from scanned files."
     validations:
       required: true
@@ -71,11 +71,11 @@ body:
       label: Does this skill need Tier 3 files?
       description: Tier 3 = references/, scripts/, or assets/ subdirectory files
       options:
-        - "No — the body instructions are self-contained"
-        - "Yes — reference docs (markdown files with spec/patterns)"
-        - "Yes — executable scripts (.py / .js / .sh)"
-        - "Yes — asset templates (markdown or other output templates)"
-        - "Yes — multiple of the above"
+        - "No - the body instructions are self-contained"
+        - "Yes - reference docs (markdown files with spec/patterns)"
+        - "Yes - executable scripts (.py / .js / .sh)"
+        - "Yes - asset templates (markdown or other output templates)"
+        - "Yes - multiple of the above"
     validations:
       required: true
 
@@ -85,9 +85,9 @@ body:
       label: Platform coverage
       description: Which AI agent platforms have you tested this with?
       placeholder: |
-        Claude Code — tested
-        Cursor — not tested
-        any — should work on any platform
+        Claude Code - tested
+        Cursor - not tested
+        any - should work on any platform
     validations:
       required: false
 

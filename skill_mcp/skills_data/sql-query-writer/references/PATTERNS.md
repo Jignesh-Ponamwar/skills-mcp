@@ -65,7 +65,7 @@ SELECT * FROM category_tree ORDER BY path;
 
 ## Window Functions
 
-### ROW_NUMBER — Deduplication and top-N per group
+### ROW_NUMBER - Deduplication and top-N per group
 ```sql
 -- Top 3 products by revenue per category
 SELECT *
@@ -95,7 +95,7 @@ SELECT
 FROM product_sales;
 ```
 
-### LAG / LEAD — Comparing adjacent rows
+### LAG / LEAD - Comparing adjacent rows
 ```sql
 -- Month-over-month revenue change
 SELECT
@@ -128,7 +128,7 @@ SELECT
 FROM daily_sales;
 ```
 
-### NTILE — Quartiles and percentiles
+### NTILE - Quartiles and percentiles
 ```sql
 SELECT
     customer_id,

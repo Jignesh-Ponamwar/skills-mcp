@@ -1,4 +1,4 @@
-"""MCP tool: skills_get_reference — fetch a reference file bundled with a skill.
+"""MCP tool: skills_get_reference - fetch a reference file bundled with a skill.
 
 Reference files live in the skill's references/ subdirectory (e.g., FORMS.md, POLICY.md).
 They are referenced in skill body instructions to provide supplementary documentation

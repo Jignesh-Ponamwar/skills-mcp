@@ -1,7 +1,7 @@
 ---
 name: nextjs-best-practices
 description: >
-  Apply Next.js App Router best practices — file conventions, React Server Components, async APIs
+  Apply Next.js App Router best practices - file conventions, React Server Components, async APIs
   (Next.js 15+), data fetching patterns, metadata, image/font optimization, error handling, route
   handlers, bundling, and self-hosting. Use when writing or reviewing Next.js code, building
   full-stack React apps, or migrating from the Pages Router.
@@ -68,31 +68,31 @@ app/
 
 ## 2. React Server Components (RSC) Boundaries
 
-### Server Components (default) — do:
+### Server Components (default) - do:
 - `async/await` data fetching directly in component
 - Access databases, file system, environment variables
 - Import server-only packages
 
-### Client Components (`'use client'`) — required when:
+### Client Components (`'use client'`) - required when:
 - Using `useState`, `useEffect`, `useReducer`, `useContext`
 - Using browser APIs (`window`, `document`, `localStorage`)
 - Using event handlers (`onClick`, `onChange`)
 - Using third-party client libraries
 
 ### Rules
-- **Never** make a Client Component `async` — it's invalid
+- **Never** make a Client Component `async` - it's invalid
 - **Never** pass non-serializable props (functions, class instances) from Server → Client
 - Server Components can import Client Components, not the reverse
 - Use `'use server'` only for Server Actions, not to mark Server Components
 
 ---
 
-## 3. Async APIs — Next.js 15+
+## 3. Async APIs - Next.js 15+
 
 In Next.js 15, `params`, `searchParams`, `cookies()`, `headers()`, and `draftMode()` are now **async**. Always await them:
 
 ```tsx
-// ✅ Correct — Next.js 15+
+// ✅ Correct - Next.js 15+
 export default async function Page({
   params,
   searchParams,
@@ -109,7 +109,7 @@ export default async function Page({
 ```
 
 ```tsx
-// ❌ Wrong — old synchronous pattern
+// ❌ Wrong - old synchronous pattern
 export default function Page({ params }: { params: { id: string } }) {
   const { id } = params  // broken in Next.js 15
 }
@@ -119,7 +119,7 @@ export default function Page({ params }: { params: { id: string } }) {
 
 ## 4. Data Fetching Patterns
 
-### Server Components — preferred for most fetching
+### Server Components - preferred for most fetching
 ```tsx
 async function ProductList() {
   const products = await db.products.findMany() // Direct DB access, no API needed
@@ -127,17 +127,17 @@ async function ProductList() {
 }
 ```
 
-### Avoid waterfalls — use `Promise.all`
+### Avoid waterfalls - use `Promise.all`
 ```tsx
-// ❌ Sequential waterfall — slow
+// ❌ Sequential waterfall - slow
 const user = await getUser(id)
 const posts = await getPosts(user.id)
 
-// ✅ Parallel — fast
+// ✅ Parallel - fast
 const [user, posts] = await Promise.all([getUser(id), getPosts(id)])
 ```
 
-### Server Actions — for mutations
+### Server Actions - for mutations
 ```tsx
 // app/actions.ts
 'use server'
@@ -161,7 +161,7 @@ export default function Page() {
 }
 ```
 
-### Route Handlers — for API endpoints needed by external clients
+### Route Handlers - for API endpoints needed by external clients
 ```ts
 // app/api/products/route.ts
 import { NextRequest, NextResponse } from 'next/server'
@@ -186,11 +186,11 @@ export async function POST(request: NextRequest) {
 ```tsx
 import Image from 'next/image'
 
-// Local image — size known automatically
+// Local image - size known automatically
 import photo from './photo.jpg'
 <Image src={photo} alt="Description" />
 
-// Remote image — must configure domain in next.config.ts
+// Remote image - must configure domain in next.config.ts
 <Image
   src="https://example.com/photo.jpg"
   alt="Description"
@@ -217,7 +217,7 @@ const config: NextConfig = {
 
 ## 6. Font Optimization
 
-**Always** use `next/font` instead of `<link>` tags — it prevents layout shift and self-hosts fonts:
+**Always** use `next/font` instead of `<link>` tags - it prevents layout shift and self-hosts fonts:
 ```tsx
 // app/layout.tsx
 import { Inter, Roboto_Mono } from 'next/font/google'
@@ -242,7 +242,7 @@ export default function RootLayout({ children }) {
 ## 7. Error Handling
 
 ```tsx
-// app/error.tsx — must be a Client Component
+// app/error.tsx - must be a Client Component
 'use client'
 
 export default function Error({
@@ -275,13 +275,13 @@ if (!session) redirect('/login')               // HTTP 307 redirect
 ## 8. Metadata
 
 ```tsx
-// app/layout.tsx — static
+// app/layout.tsx - static
 export const metadata = {
   title: { template: '%s | My App', default: 'My App' },
   description: 'My application description',
 }
 
-// app/products/[id]/page.tsx — dynamic
+// app/products/[id]/page.tsx - dynamic
 export async function generateMetadata({ params }) {
   const { id } = await params
   const product = await getProduct(id)
@@ -342,10 +342,10 @@ CMD ["node", "server.js"]
 
 ## Common Mistakes
 
-- Async Client Components — **invalid**, move `async` to a parent Server Component
-- `params` access without `await` in Next.js 15+ — add `await params`
-- `<img>` instead of `next/image` — always use `next/image` for optimization
-- `<link>` tags for fonts — always use `next/font`
-- Fetching in Client Components when a Server Component would work — default to Server
-- Route Handler + `page.tsx` in the same folder — causes a conflict, use different paths
-- `export const dynamic = 'force-dynamic'` everywhere — use it only when truly needed
+- Async Client Components - **invalid**, move `async` to a parent Server Component
+- `params` access without `await` in Next.js 15+ - add `await params`
+- `<img>` instead of `next/image` - always use `next/image` for optimization
+- `<link>` tags for fonts - always use `next/font`
+- Fetching in Client Components when a Server Component would work - default to Server
+- Route Handler + `page.tsx` in the same folder - causes a conflict, use different paths
+- `export const dynamic = 'force-dynamic'` everywhere - use it only when truly needed

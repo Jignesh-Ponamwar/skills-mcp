@@ -6,7 +6,7 @@ Strategies for extracting tables from PDFs, handling merged cells, multi-page ta
 
 ## Why PDF Table Extraction Is Hard
 
-PDFs store content as positioned text elements — there is no "table" concept in the file format. Table extraction means inferring rows and columns from the spatial relationships between text boxes. This is inherently heuristic and imperfect.
+PDFs store content as positioned text elements - there is no "table" concept in the file format. Table extraction means inferring rows and columns from the spatial relationships between text boxes. This is inherently heuristic and imperfect.
 
 **Reliability spectrum (best to worst):**
 1. Native text PDF with clear borders → `pdfplumber` works well
@@ -16,7 +16,7 @@ PDFs store content as positioned text elements — there is no "table" concept i
 
 ---
 
-## pdfplumber — Recommended for Most Cases
+## pdfplumber - Recommended for Most Cases
 
 ```python
 import pdfplumber
@@ -118,11 +118,11 @@ with pdfplumber.open("multi_page_table.pdf") as pdf:
             if not table:
                 continue
             if header is None:
-                # First table — assume first row is header
+                # First table - assume first row is header
                 header = table[0]
                 all_rows.extend(table[1:])
             else:
-                # Subsequent pages — check if first row repeats the header
+                # Subsequent pages - check if first row repeats the header
                 if table[0] == header:
                     all_rows.extend(table[1:])  # skip repeated header
                 else:

@@ -1,7 +1,7 @@
 # Seed script dependencies (run locally to populate Qdrant Cloud)
 # Install: pip install -r requirements.txt
 #
-# The Cloudflare Worker itself has no requirements.txt —
+# The Cloudflare Worker itself has no requirements.txt -
 # its deps (mcp>=1.5.0) are declared in pyproject.toml and
 # bundled automatically by wrangler on deploy.
 

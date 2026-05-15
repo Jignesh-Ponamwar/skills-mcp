@@ -65,7 +65,7 @@ Ask for or read the diff (`git diff --staged` or `git diff HEAD`). Understand:
 - Whether it's a breaking change
 
 ### Step 2: Choose the Type
-Apply the type that matches the *primary* intent. If a PR mixes types, flag it — atomic commits are better.
+Apply the type that matches the *primary* intent. If a PR mixes types, flag it - atomic commits are better.
 
 ### Step 3: Choose the Scope (Optional)
 Scope = the subsystem or module affected. Examples: `(auth)`, `(api)`, `(ui)`, `(db)`.
@@ -92,9 +92,9 @@ Include a body when:
 Separate from subject with a blank line. Wrap at 72 characters.
 
 ### Step 6: Add Footers
-- `BREAKING CHANGE: <description>` — required for breaking changes
-- `Closes #123` — closes a GitHub issue
-- `Co-authored-by: Name <email>` — pair programming / AI assistance
+- `BREAKING CHANGE: <description>` - required for breaking changes
+- `Closes #123` - closes a GitHub issue
+- `Co-authored-by: Name <email>` - pair programming / AI assistance
 
 ## Examples
 

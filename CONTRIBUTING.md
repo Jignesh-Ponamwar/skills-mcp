@@ -8,7 +8,7 @@ Thank you for contributing. This document explains what this project is trying t
 
 skill-mcp is an experiment in a specific idea: **that the boundary between a skill and an MCP server should dissolve**.
 
-Right now the two are separate things — a skill is a markdown file an agent reads, an MCP server is infrastructure an agent calls. But the most useful version of this system would be one where the server *is* a skill. Where an agent connects to skill-mcp and the server itself teaches the agent how to use it, what to expect, when to search, how to interpret scores, and how to compose multiple skills into a coherent workflow — without the agent needing an external instruction file dropped in the project root.
+Right now the two are separate things - a skill is a markdown file an agent reads, an MCP server is infrastructure an agent calls. But the most useful version of this system would be one where the server *is* a skill. Where an agent connects to skill-mcp and the server itself teaches the agent how to use it, what to expect, when to search, how to interpret scores, and how to compose multiple skills into a coherent workflow - without the agent needing an external instruction file dropped in the project root.
 
 That convergence is the real goal. The bundled SKILL.md files are a demo of the concept. The interesting open problems are architectural.
 
@@ -16,10 +16,10 @@ That convergence is the real goal. The bundled SKILL.md files are a demo of the 
 
 ## Table of Contents
 
-1. [Priority 1 — The server as a skill](#1-priority-1--the-server-as-a-skill)
-2. [Priority 2 — MCP tool design](#2-priority-2--mcp-tool-design)
-3. [Priority 3 — Agent efficiency](#3-priority-3--agent-efficiency)
-4. [Priority 4 — Protocol and infrastructure](#4-priority-4--protocol-and-infrastructure)
+1. [Priority 1 - The server as a skill](#1-priority-1--the-server-as-a-skill)
+2. [Priority 2 - MCP tool design](#2-priority-2--mcp-tool-design)
+3. [Priority 3 - Agent efficiency](#3-priority-3--agent-efficiency)
+4. [Priority 4 - Protocol and infrastructure](#4-priority-4--protocol-and-infrastructure)
 5. [Skill format reference](#5-skill-format-reference)
 6. [Submitting a new skill](#6-submitting-a-new-skill)
 7. [Contributor credit](#7-contributor-credit)
@@ -31,15 +31,15 @@ That convergence is the real goal. The bundled SKILL.md files are a demo of the 
 
 ---
 
-## 1. Priority 1 — The server as a skill
+## 1. Priority 1 - The server as a skill
 
-The current approach to teaching agents the 3-tier workflow is a drop-in file: `CLAUDE.md`, `.cursorrules`, `AGENTS.md`, etc. — one per platform, installed manually. This works but it's fragile. The instruction file can be missing, stale, or ignored.
+The current approach to teaching agents the 3-tier workflow is a drop-in file: `CLAUDE.md`, `.cursorrules`, `AGENTS.md`, etc. - one per platform, installed manually. This works but it's fragile. The instruction file can be missing, stale, or ignored.
 
-The better version: **the server describes itself through the protocol**. An agent that connects to skill-mcp and calls `tools/list` should receive tool descriptions that are precise enough to tell the agent exactly when to call each tool, in what order, and how to interpret the responses — without any external file.
+The better version: **the server describes itself through the protocol**. An agent that connects to skill-mcp and calls `tools/list` should receive tool descriptions that are precise enough to tell the agent exactly when to call each tool, in what order, and how to interpret the responses - without any external file.
 
 ### Open problems in this space
 
-**Tool description quality.** MCP tool descriptions are the primary interface between the server and the agent's decision-making. Today's descriptions are functional but not optimally instructive. A good tool description doesn't just say what the tool does — it tells the agent the *precondition* for calling it, the *postcondition* it should expect, and the *decision rule* for what to do next.
+**Tool description quality.** MCP tool descriptions are the primary interface between the server and the agent's decision-making. Today's descriptions are functional but not optimally instructive. A good tool description doesn't just say what the tool does - it tells the agent the *precondition* for calling it, the *postcondition* it should expect, and the *decision rule* for what to do next.
 
 Example of a description that guides behavior rather than just documenting it:
 
@@ -54,9 +54,9 @@ by semantic similarity. Use the score to decide next action:
 Do not call skills_get_body() before calling this tool.
 ```
 
-**A self-description tool.** Consider a `skills_describe_protocol()` tool (or resource) that returns the full 3-tier workflow as structured data — the decision tree, score thresholds, tier-3 loading rules — in a format optimised for agent comprehension, not human reading.
+**A self-description tool.** Consider a `skills_describe_protocol()` tool (or resource) that returns the full 3-tier workflow as structured data - the decision tree, score thresholds, tier-3 loading rules - in a format optimised for agent comprehension, not human reading.
 
-**Structured response envelopes.** Right now tool responses are plain text or JSON blobs. Responses could include a `next_action` hint — a machine-readable field that explicitly tells the agent what to do with the result rather than leaving it to inference:
+**Structured response envelopes.** Right now tool responses are plain text or JSON blobs. Responses could include a `next_action` hint - a machine-readable field that explicitly tells the agent what to do with the result rather than leaving it to inference:
 
 ```json
 {
@@ -73,15 +73,15 @@ Do not call skills_get_body() before calling this tool.
 
 ---
 
-## 2. Priority 2 — MCP tool design
+## 2. Priority 2 - MCP tool design
 
 The current 6 tools (find, get_body, get_options, get_reference, run_script, get_asset) cover the happy path. There are real gaps.
 
 ### Tools worth designing
 
-**`skills_list_all()`** — returns all skill IDs with their one-line descriptions. Semantic search is the right entrypoint for most tasks, but agents sometimes benefit from knowing the full catalogue — especially when the task is ambiguous or when they suspect a skill exists but their query isn't matching. This is a cheap Qdrant scroll, not an embedding call.
+**`skills_list_all()`** - returns all skill IDs with their one-line descriptions. Semantic search is the right entrypoint for most tasks, but agents sometimes benefit from knowing the full catalogue - especially when the task is ambiguous or when they suspect a skill exists but their query isn't matching. This is a cheap Qdrant scroll, not an embedding call.
 
-**`skills_suggest_workflow(task)`** — given a multi-step task description, returns an ordered list of skills with the role each one plays in completing the full workflow. The goal is not to return the single most relevant skill but to show how several skills compose into a coherent execution plan.
+**`skills_suggest_workflow(task)`** - given a multi-step task description, returns an ordered list of skills with the role each one plays in completing the full workflow. The goal is not to return the single most relevant skill but to show how several skills compose into a coherent execution plan.
 
 Example: `skills_suggest_workflow("build and deploy a FastAPI app with auth and CI")` might return:
 
@@ -92,48 +92,48 @@ Example: `skills_suggest_workflow("build and deploy a FastAPI app with auth and 
     {
       "step": 1,
       "skill_id": "fastapi",
-      "role": "Scaffold the API — routes, Pydantic models, dependency injection, JWT auth middleware"
+      "role": "Scaffold the API - routes, Pydantic models, dependency injection, JWT auth middleware"
     },
     {
       "step": 2,
       "skill_id": "docker-containerization",
-      "role": "Package the app — multi-stage Dockerfile, non-root user, health check, .dockerignore"
+      "role": "Package the app - multi-stage Dockerfile, non-root user, health check, .dockerignore"
     },
     {
       "step": 3,
       "skill_id": "github-actions",
-      "role": "Automate the pipeline — lint, test, build image, push to registry, deploy on merge"
+      "role": "Automate the pipeline - lint, test, build image, push to registry, deploy on merge"
     }
   ]
 }
 ```
 
-This requires either LLM reasoning in the Worker (possible via a CF AI text model) or a skill dependency graph declared in the options collection. Either approach is worth exploring — the design question is which produces more reliable ordering without hallucinated skills.
+This requires either LLM reasoning in the Worker (possible via a CF AI text model) or a skill dependency graph declared in the options collection. Either approach is worth exploring - the design question is which produces more reliable ordering without hallucinated skills.
 
 ### Tool design principles
 
 A tool that an agent will use correctly is designed around how agents reason, not around what is technically convenient to implement.
 
-- **Preconditions in the description** — state when the tool should NOT be called as clearly as when it should
-- **Postconditions that guide the next step** — the description should tell the agent what to do with the result
-- **Errors that teach** — error responses should explain what the agent did wrong and what to do instead, not just return a status code
-- **No ambiguous optional parameters** — if a parameter is optional but almost always needed, make that explicit in the description
+- **Preconditions in the description** - state when the tool should NOT be called as clearly as when it should
+- **Postconditions that guide the next step** - the description should tell the agent what to do with the result
+- **Errors that teach** - error responses should explain what the agent did wrong and what to do instead, not just return a status code
+- **No ambiguous optional parameters** - if a parameter is optional but almost always needed, make that explicit in the description
 
 **Contributions here:** designing and implementing new tools, improving existing tool descriptions, adding structured `next_action` response fields, writing tests that verify agent behavior against specific tool interactions.
 
 ---
 
-## 3. Priority 3 — Agent efficiency
+## 3. Priority 3 - Agent efficiency
 
 The 3-tier model is sound in theory. In practice, agents skip the skill lookup, call `skills_get_body` without first calling `skills_find_relevant`, or load skills they don't need. Understanding why this happens and fixing it is more valuable than adding more skills.
 
 ### Open problems in this space
 
-**Measuring agent compliance.** There is currently no instrumentation for whether agents are actually following the intended workflow. Adding structured logging to the Worker — recording which tools were called in what order per session — would make it possible to identify where the protocol breaks down.
+**Measuring agent compliance.** There is currently no instrumentation for whether agents are actually following the intended workflow. Adding structured logging to the Worker - recording which tools were called in what order per session - would make it possible to identify where the protocol breaks down.
 
 **Master-skill effectiveness.** The platform-specific instruction files (`CLAUDE.md`, `.cursorrules`, etc.) teach the workflow. But there's no data on which formulations actually work. Different platforms interpret instructions differently. Testing specific phrasings against real agent sessions and measuring compliance would produce genuinely useful results.
 
-**Score threshold calibration.** The 0.6 strong / 0.4 review thresholds were set by judgment, not measurement. For a given embedding model and skill corpus, there's a distribution of match scores. The thresholds should be derived from that distribution — the right cutoff is wherever precision and recall trade off best for the actual use case. This requires building an evaluation set of (query, expected_skill) pairs and running it.
+**Score threshold calibration.** The 0.6 strong / 0.4 review thresholds were set by judgment, not measurement. For a given embedding model and skill corpus, there's a distribution of match scores. The thresholds should be derived from that distribution - the right cutoff is wherever precision and recall trade off best for the actual use case. This requires building an evaluation set of (query, expected_skill) pairs and running it.
 
 **Multi-skill composition.** Most non-trivial tasks require more than one skill. The current model has no way to express that "after loading skill A, also check skill B." Options: skill-level dependency declarations in the options collection, a workflow graph, or letting the agent discover composition through `skills_find_relevant` at each step. The right answer is unknown and worth exploring.
 
@@ -143,7 +143,7 @@ The 3-tier model is sound in theory. In practice, agents skip the skill lookup, 
 
 ---
 
-## 4. Priority 4 — Protocol and infrastructure
+## 4. Priority 4 - Protocol and infrastructure
 
 ### Transport
 
@@ -151,21 +151,21 @@ The Worker currently uses the MCP SSE transport (GET `/sse` + POST `/messages/`)
 
 ### Federation
 
-A single skill-mcp instance with 30–100 skills covers most use cases. But organizations may want multiple registries — one for internal tooling, one for public skills, one per team. Design questions: how does an agent discover which registry to query first? Can a registry proxy queries to other registries? Can skills declare cross-registry dependencies?
+A single skill-mcp instance with 30–100 skills covers most use cases. But organizations may want multiple registries - one for internal tooling, one for public skills, one per team. Design questions: how does an agent discover which registry to query first? Can a registry proxy queries to other registries? Can skills declare cross-registry dependencies?
 
 ### Embedding model flexibility
 
-The system is currently coupled to `@cf/baai/bge-small-en-v1.5` (384-dim). The model is embedded in both the seed script (via REST) and the Worker (via AI binding). Decoupling model configuration from the code — so operators can choose a different embedding model without forking — would make the system more adaptable. The main constraint is that seed-time and query-time must use the same model.
+The system is currently coupled to `@cf/baai/bge-small-en-v1.5` (384-dim). The model is embedded in both the seed script (via REST) and the Worker (via AI binding). Decoupling model configuration from the code - so operators can choose a different embedding model without forking - would make the system more adaptable. The main constraint is that seed-time and query-time must use the same model.
 
 ### Collection schema evolution
 
-As skills gain new fields (e.g., `confidence_scores`, `dependencies`, `last_verified`), the Qdrant collection schemas need to evolve. There's currently no migration system — re-seeding overwrites. A proper migration layer that handles schema changes without requiring a full re-seed would be valuable for production deployments.
+As skills gain new fields (e.g., `confidence_scores`, `dependencies`, `last_verified`), the Qdrant collection schemas need to evolve. There's currently no migration system - re-seeding overwrites. A proper migration layer that handles schema changes without requiring a full re-seed would be valuable for production deployments.
 
 ### Security scanner improvements
 
-The prompt-injection scanner (`skill_mcp/security/prompt_injection.py`) uses regex pattern matching. The known gap is semantic attacks — injection phrased in ways that evade pattern matching but are understood by LLMs. Two directions worth exploring:
+The prompt-injection scanner (`skill_mcp/security/prompt_injection.py`) uses regex pattern matching. The known gap is semantic attacks - injection phrased in ways that evade pattern matching but are understood by LLMs. Two directions worth exploring:
 
-- **LLM-assisted review**: calling a Claude API endpoint during CI to ask "does this skill body contain prompt injection attempts?" — expensive but more accurate for edge cases
+- **LLM-assisted review**: calling a Claude API endpoint during CI to ask "does this skill body contain prompt injection attempts?" - expensive but more accurate for edge cases
 - **Adversarial test corpus**: building a dataset of known-injection and known-clean skill bodies to measure scanner precision/recall over time
 
 **Contributions here:** streamable-http transport migration, federation protocol design, embedding model abstraction, collection migration tooling, LLM-assisted scanner, adversarial test corpus.
@@ -225,7 +225,7 @@ What agents get wrong without this skill. Be specific.
 
 ### Critical rules
 
-**Only `description + triggers` are embedded.** Write them to match how an agent would phrase the need — not how you'd name the skill. The body is never embedded and can be as detailed as needed.
+**Only `description + triggers` are embedded.** Write them to match how an agent would phrase the need - not how you'd name the skill. The body is never embedded and can be as detailed as needed.
 
 **Reference tier-3 files by name in the body.** The agent receives a `tier3_manifest` and fetches only files explicitly mentioned in the instructions. Nothing loads speculatively.
 
@@ -245,7 +245,7 @@ python scripts/validate_skills.py
 
 ## 6. Submitting a new skill
 
-Use the GitHub issue template to propose a skill before writing it — this catches duplicates and scope questions early.
+Use the GitHub issue template to propose a skill before writing it - this catches duplicates and scope questions early.
 
 **Step-by-step:**
 
@@ -259,12 +259,12 @@ Use the GitHub issue template to propose a skill before writing it — this catc
    python scripts/validate_skills.py skill_mcp/skills_data/my-skill/SKILL.md
    ```
 5. **Open a PR** referencing the issue number. CI runs automatically.
-6. **Review** — a maintainer will evaluate the skill against [docs/REVIEWER_CHECKLIST.md](docs/REVIEWER_CHECKLIST.md).
+6. **Review** - a maintainer will evaluate the skill against [docs/REVIEWER_CHECKLIST.md](docs/REVIEWER_CHECKLIST.md).
 
 **What makes a skill worth adding:**
 
 - It prevents a specific, documented failure mode (not just "documents how to use X")
-- The trigger phrases are distinct from existing skills — no significant overlap
+- The trigger phrases are distinct from existing skills - no significant overlap
 - The instructions contain procedural value that a model could not derive from training alone
 - The body is correct and current at the time of submission
 
@@ -287,7 +287,7 @@ This field is stored in Qdrant and returned by `skills_find_relevant` as part of
 
 ## 8. Duplicate and near-duplicate skills
 
-The CI `check-duplicates` job catches exact slug and name collisions. It does **not** catch near-duplicates — two skills that cover overlapping domains with different slugs.
+The CI `check-duplicates` job catches exact slug and name collisions. It does **not** catch near-duplicates - two skills that cover overlapping domains with different slugs.
 
 ### Policy
 
@@ -353,13 +353,13 @@ Skills load directly into agent context windows. All submitted skills are scanne
 
 **False positive?** Open an issue with the skill file and scanner output. Do not bypass or disable the scanner.
 
-**Scanner bypass?** Disclose privately — do not open a public issue. This is a real attack surface.
+**Scanner bypass?** Disclose privately - do not open a public issue. This is a real attack surface.
 
 ---
 
 ## 11. Review process
 
-Reviewers use the checklist in [docs/REVIEWER_CHECKLIST.md](docs/REVIEWER_CHECKLIST.md). Read it before submitting — a PR that pre-addresses every checklist item merges faster.
+Reviewers use the checklist in [docs/REVIEWER_CHECKLIST.md](docs/REVIEWER_CHECKLIST.md). Read it before submitting - a PR that pre-addresses every checklist item merges faster.
 
 **Response time:** 3–5 business days.
 
@@ -382,7 +382,7 @@ These two rules must never be broken regardless of the change:
 
 **Invariant 1: Never embed the full body.**
 
-Only `description + triggers` go into the `skill_frontmatter` vector collection. The body is payload-only. Embedding the body pollutes the search space with instruction prose — the search space should contain only intent signals, not instructions.
+Only `description + triggers` go into the `skill_frontmatter` vector collection. The body is payload-only. Embedding the body pollutes the search space with instruction prose - the search space should contain only intent signals, not instructions.
 
 **Invariant 2: Never return script source to the agent.**
 
@@ -392,6 +392,6 @@ Only `description + triggers` go into the `skill_frontmatter` vector collection.
 
 ## Starting point
 
-The highest-leverage place to start is reading `src/worker.py` (the MCP tool implementations) and the `master-skill/` instruction files side by side. The gap between what the tool descriptions say and what the master-skill files have to add manually to make agents behave correctly — that gap is the most productive thing to close.
+The highest-leverage place to start is reading `src/worker.py` (the MCP tool implementations) and the `master-skill/` instruction files side by side. The gap between what the tool descriptions say and what the master-skill files have to add manually to make agents behave correctly - that gap is the most productive thing to close.
 
 Open a [Discussion](https://github.com/Jignesh-Ponamwar/skills-mcp/discussions) before starting large changes. Design alignment before implementation avoids wasted work.

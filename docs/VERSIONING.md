@@ -11,10 +11,10 @@ Skills currently have no versioning beyond a decorative `metadata.version: "1.0"
 
 This creates several problems:
 
-1. **Silent regressions** — a skill update can change agent behavior in all active deployments immediately, with no visibility
-2. **No rollback** — if a seeded skill has a bug, recovery requires editing and re-seeding from git history
-3. **No drift detection** — agents cannot detect that a skill they loaded in turn 3 has since changed
-4. **No explicit deprecation** — skills cannot signal "use `new-skill` instead of `old-skill`"
+1. **Silent regressions** - a skill update can change agent behavior in all active deployments immediately, with no visibility
+2. **No rollback** - if a seeded skill has a bug, recovery requires editing and re-seeding from git history
+3. **No drift detection** - agents cannot detect that a skill they loaded in turn 3 has since changed
+4. **No explicit deprecation** - skills cannot signal "use `new-skill` instead of `old-skill`"
 
 ---
 
@@ -28,7 +28,7 @@ MAJOR.MINOR
   └──────── Breaking changes (scope change, removed functionality, incompatible trigger phrases)
 ```
 
-`PATCH` is omitted because skill bodies are prose, not code — the line between a "patch" and a "minor" change is too ambiguous to be useful.
+`PATCH` is omitted because skill bodies are prose, not code - the line between a "patch" and a "minor" change is too ambiguous to be useful.
 
 Examples:
 - `1.0` → `1.1`: Added two trigger phrases, expanded the "Common Mistakes" section
@@ -73,7 +73,7 @@ skills_get_body(skill_id="stripe-integration")           # latest
 skills_get_body(skill_id="stripe-integration", version="1.0")  # pinned
 ```
 
-The short form `skill_id="stripe-integration@1.0"` is also accepted and parsed server-side — this allows master-skill files to reference specific versions without changing the tool signature.
+The short form `skill_id="stripe-integration@1.0"` is also accepted and parsed server-side - this allows master-skill files to reference specific versions without changing the tool signature.
 
 **Fallback:** if `version` is specified but not found, the tool returns the latest version with a `version_note` field: `"Requested version 1.0 not found; returning latest (1.2)"`.
 
@@ -143,11 +143,11 @@ Agents that loaded a skill in an earlier turn have no way to know if the skill w
 
 The versioning system is backward-compatible. The migration sequence:
 
-1. **Phase A** — add `version` field to all existing skills in `SKILL.md` (already present, set to `"1.0"`)
-2. **Phase B** — update seed script to store `skill_id@version` point IDs alongside `skill_id` latest alias
-3. **Phase C** — add optional `version` parameter to `skills_get_body` and `skills_find_relevant` in both `src/worker.py` and `skill_mcp/tools/`
-4. **Phase D** — update master-skill files to mention version pinning in the 3-tier workflow description
-5. **Phase E** — add `make seed-prune` target for old version cleanup
+1. **Phase A** - add `version` field to all existing skills in `SKILL.md` (already present, set to `"1.0"`)
+2. **Phase B** - update seed script to store `skill_id@version` point IDs alongside `skill_id` latest alias
+3. **Phase C** - add optional `version` parameter to `skills_get_body` and `skills_find_relevant` in both `src/worker.py` and `skill_mcp/tools/`
+4. **Phase D** - update master-skill files to mention version pinning in the 3-tier workflow description
+5. **Phase E** - add `make seed-prune` target for old version cleanup
 
 Phases A and B can land independently. Phase C requires both worker and local server updates in the same PR.
 

@@ -1,12 +1,12 @@
 """Cloudflare Workers AI embedding client with TTL cache.
 
-Uses @cf/baai/bge-small-en-v1.5 (384-dim) via the Cloudflare REST API —
+Uses @cf/baai/bge-small-en-v1.5 (384-dim) via the Cloudflare REST API -
 the same model the deployed Worker uses at query time, so local-server
 vectors and Worker query vectors are directly comparable.
 
 Required env vars (.env):
-  WORKERS_AI_ACCOUNT_ID — Cloudflare account ID
-  WORKERS_AI_API_TOKEN  — Cloudflare API token with "Workers AI Run" permission
+  WORKERS_AI_ACCOUNT_ID - Cloudflare account ID
+  WORKERS_AI_API_TOKEN  - Cloudflare API token with "Workers AI Run" permission
 """
 
 from __future__ import annotations
@@ -35,11 +35,11 @@ class Embedder:
     # ── Public API ─────────────────────────────────────────────────────────────
 
     def load(self) -> None:
-        """No-op — Workers AI needs no local model loading."""
+        """No-op - Workers AI needs no local model loading."""
 
     @property
     def is_loaded(self) -> bool:
-        """Always True — Workers AI is a remote API, no local model to warm up."""
+        """Always True - Workers AI is a remote API, no local model to warm up."""
         return True
 
     def embed(self, text: str) -> list[float]:
@@ -90,7 +90,7 @@ class Embedder:
         if not account_id or not api_token:
             raise RuntimeError(
                 "WORKERS_AI_ACCOUNT_ID and WORKERS_AI_API_TOKEN must be set in .env.\n"
-                "Get them at https://dash.cloudflare.com — "
+                "Get them at https://dash.cloudflare.com - "
                 "token needs 'Workers AI Run' permission."
             )
 
@@ -107,7 +107,7 @@ class Embedder:
         resp.raise_for_status()
         result = resp.json()
         if not result.get("success"):
-            # Do not include the raw API response — it may contain account details or tokens.
+            # Do not include the raw API response - it may contain account details or tokens.
             errors = result.get("errors") or []
             msg = "; ".join(str(e.get("message", e)) for e in errors) if errors else "unknown error"
             raise RuntimeError(f"Workers AI embedding failed: {msg}")

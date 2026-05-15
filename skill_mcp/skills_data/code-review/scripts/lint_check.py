@@ -1,13 +1,13 @@
 """
-Python AST static analysis — bundled with the code-review skill.
+Python AST static analysis - bundled with the code-review skill.
 
 Performs fast, zero-dependency static analysis using Python's built-in ast module.
 Returns structured JSON with severity-tagged issues.
 
 Input (environment variables):
-  CODE      — Python source code to analyze (required)
-  FILENAME  — filename hint for error messages (default: "code.py")
-  SEVERITY  — minimum severity to report: CRITICAL|HIGH|MEDIUM|LOW|INFO (default: LOW)
+  CODE      - Python source code to analyze (required)
+  FILENAME  - filename hint for error messages (default: "code.py")
+  SEVERITY  - minimum severity to report: CRITICAL|HIGH|MEDIUM|LOW|INFO (default: LOW)
 
 Output (stdout): JSON with found issues and summary
 """

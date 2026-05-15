@@ -12,7 +12,7 @@ A complete reference for working with fillable PDF forms: field types, value for
 |-----------|------------|---------------|-------|
 | Text | Single-line text | `"Alice Johnson"` | Plain string |
 | Multiline text | Multi-line text | `"Line 1\nLine 2"` | Use `\n` for line breaks |
-| Checkbox | Boolean | `/Yes` or `/Off` | PDF checkbox values — NOT `True`/`False` |
+| Checkbox | Boolean | `/Yes` or `/Off` | PDF checkbox values - NOT `True`/`False` |
 | Radio button | Mutually exclusive | `/Option1` | Value must match the export value |
 | Dropdown (list) | Select | `"Option Text"` | Match the display text exactly |
 | Digital signature | Signature field | N/A | Cannot be filled programmatically |
@@ -21,7 +21,7 @@ A complete reference for working with fillable PDF forms: field types, value for
 ### XFA Forms (Dynamic PDF Forms)
 
 XFA forms (used by Adobe LiveCycle) are XML-based and behave differently:
-- `pypdf` does **not** support XFA — it will silently fail or write nothing
+- `pypdf` does **not** support XFA - it will silently fail or write nothing
 - Use Adobe Acrobat SDK, `pdfrw`, or convert XFA → AcroForm first
 - Detection: `reader.xfa` is not None if the form uses XFA
 
@@ -55,10 +55,10 @@ Common `/FT` values: `/Tx` (text), `/Btn` (checkbox/radio), `/Ch` (choice/dropdo
 Checkboxes in PDFs use PDF name objects, not booleans:
 
 ```python
-# WRONG — does not work
+# WRONG - does not work
 fields = {"agree_checkbox": True}
 
-# CORRECT — use the PDF export value
+# CORRECT - use the PDF export value
 fields = {"agree_checkbox": "/Yes"}   # when checked
 fields = {"agree_checkbox": "/Off"}   # when unchecked
 ```
@@ -67,7 +67,7 @@ To discover the correct export value for a checkbox:
 ```python
 field = reader.get_fields()["agree_checkbox"]
 # The on-state value is in /AP/N (appearance stream) or /AS
-# Or try /Yes as default — most AcroForms use this
+# Or try /Yes as default - most AcroForms use this
 ```
 
 ---
@@ -96,7 +96,7 @@ with open("filled_form.pdf", "wb") as f:
     writer.write(f)
 ```
 
-**Important:** Call `update_page_form_field_values` on every page — forms can span multiple pages.
+**Important:** Call `update_page_form_field_values` on every page - forms can span multiple pages.
 
 ---
 
@@ -105,7 +105,7 @@ with open("filled_form.pdf", "wb") as f:
 "Flattening" merges the form data into the page content, making it non-editable:
 
 ```python
-# With pypdf — set the read-only flag
+# With pypdf - set the read-only flag
 writer.update_page_form_field_values(
     writer.pages[0],
     field_values,

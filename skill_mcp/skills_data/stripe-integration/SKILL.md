@@ -1,7 +1,7 @@
 ---
 name: stripe-integration
 description: >
-  Build Stripe payment integrations — one-time payments, subscriptions, marketplaces, and Connect
+  Build Stripe payment integrations - one-time payments, subscriptions, marketplaces, and Connect
   platforms. Covers API selection (Checkout Sessions vs PaymentIntents vs Setup Intents), webhooks,
   restricted API keys, Stripe Connect (Accounts v2), billing, and security best practices. Use when
   accepting payments, integrating Stripe, building subscription billing, creating connected accounts,
@@ -46,7 +46,7 @@ metadata:
 | Subscriptions / recurring billing | **Billing APIs + Checkout Sessions** |
 | Embedded banking / financial accounts | **Treasury v2** |
 
-When in doubt, start with **Checkout Sessions** — it handles PCI compliance, 3D Secure, and local payment methods automatically.
+When in doubt, start with **Checkout Sessions** - it handles PCI compliance, 3D Secure, and local payment methods automatically.
 
 ---
 
@@ -102,7 +102,7 @@ const session = await stripe.checkout.sessions.create({
 })
 return { url: session.url }  // redirect user to this URL
 
-// After payment — verify via webhook, NOT success_url query param
+// After payment - verify via webhook, NOT success_url query param
 ```
 
 ---
@@ -144,7 +144,7 @@ return { url: portalSession.url }
 
 ## Step 5: Webhooks (Required for Reliable Integration)
 
-**Never** trust the `success_url` to confirm payment — always use webhooks.
+**Never** trust the `success_url` to confirm payment - always use webhooks.
 
 ```typescript
 // app/api/webhooks/stripe/route.ts (Next.js App Router)
@@ -189,7 +189,7 @@ export async function POST(request: Request) {
 
 **Webhook setup:**
 ```bash
-# Local development — forward events to localhost
+# Local development - forward events to localhost
 stripe listen --forward-to localhost:3000/api/webhooks/stripe
 
 # Copy the webhook signing secret from output ↑ to STRIPE_WEBHOOK_SECRET
@@ -232,7 +232,7 @@ const paymentIntent = await stripe.paymentIntents.create({
 ## Step 7: Security Best Practices
 
 ### API Key Management
-- Use **restricted keys** in production — grant only the permissions each service needs
+- Use **restricted keys** in production - grant only the permissions each service needs
 - Store keys in environment variables / secret managers, never in code or git
 - Rotate keys immediately if compromised: `stripe.apiKeys.rotate()`
 
@@ -246,14 +246,14 @@ await stripe.paymentIntents.create(
 ```
 
 ### Webhook Signature Verification
-Always verify `stripe-signature` header using `stripe.webhooks.constructEvent()` — never skip this.
+Always verify `stripe-signature` header using `stripe.webhooks.constructEvent()` - never skip this.
 
 ### Testing
 ```bash
 # Test card numbers:
-# 4242 4242 4242 4242  — succeeds
-# 4000 0025 0000 3155  — requires 3D Secure
-# 4000 0000 0000 9995  — card declined
+# 4242 4242 4242 4242  - succeeds
+# 4000 0025 0000 3155  - requires 3D Secure
+# 4000 0000 0000 9995  - card declined
 ```
 
 ---
@@ -273,10 +273,10 @@ Before switching to live keys:
 
 ## Common Mistakes
 
-- **Checking `success_url` to confirm payment** — always use webhooks instead
-- **Using the full secret key in production** — use restricted keys
-- **Hardcoding amounts client-side** — validate amount server-side to prevent manipulation
-- **Storing raw card numbers** — never handle raw card data; use Stripe Elements or Checkout
-- **Missing idempotency keys on retries** — always pass `idempotencyKey` for mutations
-- **Not verifying webhook signatures** — always call `stripe.webhooks.constructEvent()`
-- **Using deprecated APIs** — prefer `Accounts v2` for Connect; `Checkout Sessions` for payments
+- **Checking `success_url` to confirm payment** - always use webhooks instead
+- **Using the full secret key in production** - use restricted keys
+- **Hardcoding amounts client-side** - validate amount server-side to prevent manipulation
+- **Storing raw card numbers** - never handle raw card data; use Stripe Elements or Checkout
+- **Missing idempotency keys on retries** - always pass `idempotencyKey` for mutations
+- **Not verifying webhook signatures** - always call `stripe.webhooks.constructEvent()`
+- **Using deprecated APIs** - prefer `Accounts v2` for Connect; `Checkout Sessions` for payments

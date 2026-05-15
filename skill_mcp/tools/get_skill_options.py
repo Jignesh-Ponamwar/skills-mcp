@@ -1,4 +1,4 @@
-"""MCP tool: skills_get_options — fetch config variants and constraints for a skill."""
+"""MCP tool: skills_get_options - fetch config variants and constraints for a skill."""
 
 from __future__ import annotations
 

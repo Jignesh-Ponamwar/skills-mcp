@@ -139,7 +139,7 @@ doc.add_paragraph("Figure 1: Quarterly Revenue", style="Caption")
 section = doc.sections[0]
 header = section.header
 header_para = header.paragraphs[0]
-header_para.text = "Confidential — Company Name"
+header_para.text = "Confidential - Company Name"
 header_para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
 ```
 
@@ -168,4 +168,4 @@ for table in doc.tables:
 - **Template-based generation**: Load an existing .docx as a template with `Document("template.docx")` to inherit styles
 - **Large documents**: Add a page break with `doc.add_page_break()` between major sections
 - **Complex formatting**: Use `doc.styles` to list available styles before applying custom ones
-- **Track changes / comments**: `python-docx` does not support these — use LibreOffice CLI for conversion instead
+- **Track changes / comments**: `python-docx` does not support these - use LibreOffice CLI for conversion instead

@@ -1,7 +1,7 @@
 ---
 name: react-best-practices
 description: >
-  Apply React best practices — hooks patterns, state management, component composition, performance
+  Apply React best practices - hooks patterns, state management, component composition, performance
   optimization, error boundaries, accessibility, and testing. Covers React 18+, Suspense, concurrent
   features, custom hooks, Context API, and TypeScript integration. Use when writing React components,
   reviewing React code, optimizing renders, or designing component architecture.
@@ -56,10 +56,10 @@ export function UserCard({ user, onSelect, className }: UserCardProps) {
 
 ---
 
-## 2. Hooks — Rules and Patterns
+## 2. Hooks - Rules and Patterns
 
 ### Rules of Hooks (enforce with eslint-plugin-react-hooks)
-- Only call hooks at the **top level** — never inside conditions, loops, or nested functions
+- Only call hooks at the **top level** - never inside conditions, loops, or nested functions
 - Only call hooks from **React function components** or custom hooks
 
 ### useState
@@ -72,7 +72,7 @@ setCount(prev => prev + 1)  // ✅ safe with concurrent rendering
 setCount(count + 1)          // ❌ stale closure risk
 ```
 
-### useEffect — Common Patterns
+### useEffect - Common Patterns
 ```tsx
 // Fetch data on mount + when id changes
 useEffect(() => {
@@ -96,7 +96,7 @@ useEffect(() => {
 
 **useEffect exhaustive deps rule:** include every reactive value used inside the effect in the dependency array. Use `useCallback`/`useMemo` to stabilize references.
 
-### useCallback and useMemo — When to Use
+### useCallback and useMemo - When to Use
 ```tsx
 // ✅ DO memoize: callback passed to a child wrapped in React.memo
 const handleSubmit = useCallback(async (data: FormData) => {
@@ -110,7 +110,7 @@ const sortedItems = useMemo(
   [items]
 )
 
-// ❌ DON'T memoize cheap operations — the overhead exceeds savings
+// ❌ DON'T memoize cheap operations - the overhead exceeds savings
 const label = useMemo(() => `Hello, ${name}`, [name])  // overkill
 ```
 
@@ -148,9 +148,9 @@ function Counter() {
 }
 ```
 
-### Context API — Use Sparingly
+### Context API - Use Sparingly
 ```tsx
-// Good for: auth state, theme, locale — NOT high-frequency updates
+// Good for: auth state, theme, locale - NOT high-frequency updates
 interface ThemeContextValue {
   theme: 'light' | 'dark'
   toggleTheme: () => void
@@ -179,7 +179,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
 ## 4. Performance Optimization
 
-### React.memo — Prevent Unnecessary Re-renders
+### React.memo - Prevent Unnecessary Re-renders
 ```tsx
 const UserCard = React.memo(function UserCard({ user, onSelect }: UserCardProps) {
   return <div onClick={() => onSelect(user.id)}>{user.name}</div>
@@ -330,10 +330,10 @@ useEffect(() => {
 
 ## Common Mistakes
 
-- **Missing `key` prop in lists** — always use stable, unique keys (not array index)
-- **Stale closures in effects** — add all reactive values to dependency arrays
-- **Calling hooks conditionally** — hooks must run on every render in the same order
-- **Mutating state directly** — always create new objects/arrays; never `state.items.push(x)`
-- **Overusing useContext for high-frequency updates** — context re-renders all consumers; use Zustand/Jotai for frequently changing global state
-- **Forgetting cleanup in useEffect** — return a cleanup function for subscriptions, timers, and fetch cancellations
-- **Using index as key in dynamic lists** — use item.id; index keys cause incorrect re-ordering
+- **Missing `key` prop in lists** - always use stable, unique keys (not array index)
+- **Stale closures in effects** - add all reactive values to dependency arrays
+- **Calling hooks conditionally** - hooks must run on every render in the same order
+- **Mutating state directly** - always create new objects/arrays; never `state.items.push(x)`
+- **Overusing useContext for high-frequency updates** - context re-renders all consumers; use Zustand/Jotai for frequently changing global state
+- **Forgetting cleanup in useEffect** - return a cleanup function for subscriptions, timers, and fetch cancellations
+- **Using index as key in dynamic lists** - use item.id; index keys cause incorrect re-ordering

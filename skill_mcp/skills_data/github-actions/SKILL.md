@@ -1,7 +1,7 @@
 ---
 name: github-actions
 description: >
-  Write GitHub Actions CI/CD workflows — automated testing, linting, building, Docker image
+  Write GitHub Actions CI/CD workflows - automated testing, linting, building, Docker image
   publishing, deployment, and release management. Covers workflow syntax, triggers, jobs, steps,
   matrix builds, caching dependencies, secrets management, environment protection rules, and
   reusable workflows. Use when setting up CI/CD pipelines, automating tests on pull requests,
@@ -149,13 +149,13 @@ jobs:
 ## Step 4: Dependency Caching
 
 ```yaml
-# Node.js — built into setup-node
+# Node.js - built into setup-node
 - uses: actions/setup-node@v4
   with:
     node-version: '20'
     cache: 'npm'      # or 'yarn', 'pnpm'
 
-# Python — built into setup-python
+# Python - built into setup-python
 - uses: actions/setup-python@v5
   with:
     python-version: '3.12'
@@ -192,7 +192,7 @@ jobs:
 **Secret management rules:**
 - Add secrets in: GitHub repo → Settings → Secrets and variables → Actions
 - Use GitHub Environments for production secrets (adds approval gates)
-- Never print secrets — GitHub redacts known secrets but be careful with transformed values
+- Never print secrets - GitHub redacts known secrets but be careful with transformed values
 
 ---
 
@@ -380,11 +380,11 @@ jobs:
 
 ## Common Mistakes
 
-- **Using `pull_request_target` carelessly** — it has write permissions and can expose secrets to PRs from forks; use `pull_request` for untrusted code
-- **Pinning actions to `@master`** — always pin to a version tag: `actions/checkout@v4`
-- **Missing `permissions`** — explicitly declare minimum required permissions in the job
-- **Not using `npm ci`** — use `npm ci` (not `npm install`) in CI for reproducible installs
-- **Hardcoding secrets in workflow files** — always use `${{ secrets.NAME }}`
-- **No `fail-fast: false` in matrix** — by default, one matrix failure cancels all; set `fail-fast: false` for visibility
-- **Missing `if: github.ref == 'refs/heads/main'`** — deploy jobs must gate on branch
-- **Not caching dependencies** — always set up caching to reduce build times by 50-80%
+- **Using `pull_request_target` carelessly** - it has write permissions and can expose secrets to PRs from forks; use `pull_request` for untrusted code
+- **Pinning actions to `@master`** - always pin to a version tag: `actions/checkout@v4`
+- **Missing `permissions`** - explicitly declare minimum required permissions in the job
+- **Not using `npm ci`** - use `npm ci` (not `npm install`) in CI for reproducible installs
+- **Hardcoding secrets in workflow files** - always use `${{ secrets.NAME }}`
+- **No `fail-fast: false` in matrix** - by default, one matrix failure cancels all; set `fail-fast: false` for visibility
+- **Missing `if: github.ref == 'refs/heads/main'`** - deploy jobs must gate on branch
+- **Not caching dependencies** - always set up caching to reduce build times by 50-80%

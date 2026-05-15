@@ -191,9 +191,9 @@ cd ..
 
 ### Layout Rules
 - Every slide needs at least one visual element (image, chart, icon, or bold shape)
-- Text-only slides are boring — add a supporting graphic
+- Text-only slides are boring - add a supporting graphic
 - Use consistent alignment and margins (0.5in minimum from edges)
-- One key message per slide — if you have three points, consider three slides
+- One key message per slide - if you have three points, consider three slides
 
 ### What to Avoid
 - Centered body text on every slide
@@ -209,7 +209,7 @@ cd ..
 After creating slides:
 1. Convert to images: `libreoffice --headless --convert-to png output.pptx`
 2. Visually inspect: check for text overflow, overlapping elements, low contrast
-3. Verify all slides have visual elements — no text-only slides
+3. Verify all slides have visual elements - no text-only slides
 4. Check font sizes are readable (≥14pt body, ≥24pt titles)
 5. Confirm color consistency across all slides
 

@@ -1,6 +1,6 @@
 # Threshold Calibration Framework
 
-**Status:** Implemented — dataset and calibration runner both exist  
+**Status:** Implemented - dataset and calibration runner both exist  
 **Relevant code:** `skill_mcp/tools/find_skills.py`, `src/worker.py` (`_skills_find_relevant`), `skill_mcp/eval/calibrate.py`, `tests/eval/threshold_calibration.json`
 
 ---
@@ -11,9 +11,9 @@ The similarity thresholds currently documented and used in the master-skill file
 
 | Threshold | Interpretation |
 |-----------|---------------|
-| > 0.6     | Strong match — call `skills_get_body` |
-| 0.4–0.6   | Possible match — inspect description |
-| < 0.4     | No match — proceed without a skill |
+| > 0.6     | Strong match - call `skills_get_body` |
+| 0.4–0.6   | Possible match - inspect description |
+| < 0.4     | No match - proceed without a skill |
 
 These values were set by judgment, not measurement. The CONTRIBUTING.md acknowledges this:
 
@@ -44,9 +44,9 @@ Recall    = TP / (TP + FN)   # Of relevant skills, what fraction were found?
 F1        = 2 * P * R / (P + R)
 ```
 
-For a skills registry, **precision matters more than recall** at the strong-match threshold (> T_high). A loaded skill that does not match the task wastes context and may introduce wrong instructions. A missed skill is recoverable — the agent proceeds without it.
+For a skills registry, **precision matters more than recall** at the strong-match threshold (> T_high). A loaded skill that does not match the task wastes context and may introduce wrong instructions. A missed skill is recoverable - the agent proceeds without it.
 
-At the weak-match threshold (T_low < score < T_high), recall matters more — the agent is asked to inspect the description before proceeding.
+At the weak-match threshold (T_low < score < T_high), recall matters more - the agent is asked to inspect the description before proceeding.
 
 Proposed targets (to be validated against an actual eval set):
 
@@ -91,7 +91,7 @@ A calibration dataset is a list of `(query, expected_skill_id, relevance)` tripl
     "query": "write a Python script to process CSV data",
     "expected_skill_id": null,
     "relevance": "none",
-    "notes": "data-analysis exists but CSV processing is general Python — should be below T_low"
+    "notes": "data-analysis exists but CSV processing is general Python - should be below T_low"
   }
 ]
 ```
@@ -105,11 +105,11 @@ A calibration dataset is a list of `(query, expected_skill_id, relevance)` tripl
 
 A useful evaluation set must cover:
 
-1. **True positives at high confidence** — queries that clearly match a specific skill (one per skill minimum)
-2. **True positives at borderline confidence** — queries that should match but use different phrasing
-3. **True negatives** — queries where no skill should fire (general programming tasks, common knowledge)
-4. **Near-duplicate queries** — queries that are close to two different skills' trigger phrases (tests disambiguation)
-5. **Cross-skill queries** — multi-step tasks that involve more than one skill
+1. **True positives at high confidence** - queries that clearly match a specific skill (one per skill minimum)
+2. **True positives at borderline confidence** - queries that should match but use different phrasing
+3. **True negatives** - queries where no skill should fire (general programming tasks, common knowledge)
+4. **Near-duplicate queries** - queries that are close to two different skills' trigger phrases (tests disambiguation)
+5. **Cross-skill queries** - multi-step tasks that involve more than one skill
 
 Minimum dataset size: 3 positive queries × 30 skills + 30 true-negative queries = **120 queries**.
 
@@ -117,8 +117,8 @@ Minimum dataset size: 3 positive queries × 30 skills + 30 true-negative queries
 
 Start from two sources:
 
-1. **Trigger phrases in SKILL.md** — each existing trigger phrase is a strong-match query for its skill. This gives ~150–300 positive examples directly.
-2. **Paraphrased negatives** — take existing trigger phrases and rephrase them to be vaguer or out-of-scope. These should score below T_low.
+1. **Trigger phrases in SKILL.md** - each existing trigger phrase is a strong-match query for its skill. This gives ~150–300 positive examples directly.
+2. **Paraphrased negatives** - take existing trigger phrases and rephrase them to be vaguer or out-of-scope. These should score below T_low.
 
 Human annotation is needed for true negatives and near-duplicate disambiguation. An LLM can assist but a human should review all annotations in the ambiguous range (0.35–0.65 score).
 
@@ -129,7 +129,7 @@ Human annotation is needed for true negatives and near-duplicate disambiguation.
 Once the dataset exists:
 
 ```python
-# Pseudocode — implements calibration sweep
+# Pseudocode - implements calibration sweep
 import json
 from skill_mcp.tools.find_skills import find_relevant_skills
 
@@ -187,7 +187,7 @@ This is one reason [VERSIONING.md](VERSIONING.md) recommends tracking which embe
 
 ## Where to Store the Evaluation Dataset
 
-The evaluation dataset should live at `tests/eval/threshold_calibration.json`. It is not a unit test — it requires live Qdrant access — but it should be runnable as an optional CI check:
+The evaluation dataset should live at `tests/eval/threshold_calibration.json`. It is not a unit test - it requires live Qdrant access - but it should be runnable as an optional CI check:
 
 ```bash
 # Run calibration (requires QDRANT_URL, QDRANT_API_KEY, WORKERS_AI_* in env)
@@ -210,7 +210,7 @@ Exit codes: `0` = at least one pair meets precision ≥ 0.90 and recall ≥ 0.85
 
 ## Implementation Status
 
-- ✅ `tests/eval/threshold_calibration.json`: 120 triples — 90 strong-match (3 per skill × 30 skills) + 30 true negatives
+- ✅ `tests/eval/threshold_calibration.json`: 120 triples - 90 strong-match (3 per skill × 30 skills) + 30 true negatives
 - ✅ `skill_mcp/eval/__init__.py` + `skill_mcp/eval/calibrate.py`: full sweep with precision/recall/F1/specificity table, `--quiet` CI mode, exit codes 0/1/2
 - ✅ `make calibrate` target added to `Makefile`
 - ⏳ Run calibration after first full seeded deployment and record results here
@@ -220,6 +220,6 @@ Exit codes: `0` = at least one pair meets precision ≥ 0.90 and recall ≥ 0.85
 
 ## Current Threshold Status
 
-Thresholds `T_high = 0.6` and `T_low = 0.4` remain judgment-based starting points — the calibration sweep has not yet been run against a fully seeded registry. Run `make calibrate` after seeding and record the best-pair output here.
+Thresholds `T_high = 0.6` and `T_low = 0.4` remain judgment-based starting points - the calibration sweep has not yet been run against a fully seeded registry. Run `make calibrate` after seeding and record the best-pair output here.
 
 **Do not change these values without running the sweep.** A threshold change that looks right on intuition can shift agent behavior in both directions across the 30-skill corpus.

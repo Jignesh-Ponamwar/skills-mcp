@@ -54,7 +54,7 @@ go get github.com/anthropics/anthropic-sdk-go
 | Model | Best For | Speed | Cost |
 |-------|---------|-------|------|
 | `claude-opus-4-5` | Complex reasoning, coding, research | Slower | Higher |
-| `claude-sonnet-4-5` | Balanced — most tasks | Medium | Medium |
+| `claude-sonnet-4-5` | Balanced - most tasks | Medium | Medium |
 | `claude-haiku-3-5` | Fast, lightweight tasks, classification | Fast | Lower |
 
 **Default to `claude-opus-4-5`** for new implementations unless the user specifies otherwise or speed/cost is a constraint.
@@ -125,7 +125,7 @@ def chat(user_message: str) -> str:
 Use streaming for long outputs to reduce perceived latency:
 
 ```python
-# Python — streaming
+# Python - streaming
 with client.messages.stream(
     model="claude-opus-4-5",
     max_tokens=4096,
@@ -136,7 +136,7 @@ with client.messages.stream(
 ```
 
 ```typescript
-// TypeScript — streaming
+// TypeScript - streaming
 const stream = client.messages.stream({
   model: 'claude-opus-4-5',
   max_tokens: 4096,
@@ -188,7 +188,7 @@ while True:
     messages.append({"role": "assistant", "content": response.content})
 
     if response.stop_reason == "end_turn":
-        # Final text response — done
+        # Final text response - done
         for block in response.content:
             if hasattr(block, "text"):
                 print(block.text)
@@ -354,9 +354,9 @@ for result in client.messages.batches.results(batch.id):
 
 ## Common Mistakes
 
-- **Hardcoding API keys** — always use `ANTHROPIC_API_KEY` environment variable
-- **Not streaming long outputs** — add streaming to reduce latency for responses > 500 tokens
-- **Ignoring stop_reason** — check `response.stop_reason`; `"tool_use"` means loop continues
-- **Skipping prompt caching** — add `cache_control` to large system prompts to cut costs
-- **Using non-serializable tool results** — always stringify tool results before returning
-- **Forgetting to append assistant + tool_result to messages** — the agentic loop requires both
+- **Hardcoding API keys** - always use `ANTHROPIC_API_KEY` environment variable
+- **Not streaming long outputs** - add streaming to reduce latency for responses > 500 tokens
+- **Ignoring stop_reason** - check `response.stop_reason`; `"tool_use"` means loop continues
+- **Skipping prompt caching** - add `cache_control` to large system prompts to cut costs
+- **Using non-serializable tool results** - always stringify tool results before returning
+- **Forgetting to append assistant + tool_result to messages** - the agentic loop requires both

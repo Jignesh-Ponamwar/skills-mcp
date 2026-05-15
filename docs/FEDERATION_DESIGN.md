@@ -1,6 +1,6 @@
 # Federation Design
 
-**Status:** Architecture proposal — not yet implemented  
+**Status:** Architecture proposal - not yet implemented  
 **Purpose:** Defines the long-term architecture for federated skill registries
 
 ---
@@ -10,7 +10,7 @@
 A single registry with 30–100 skills covers common tasks. At scale, this model breaks:
 
 - **Scope conflict**: one public registry cannot serve both enterprise internal tooling and open-source community skills
-- **Trust boundaries**: organizations want to control which skills their agents load — mixing public and private skills in one server blurs that boundary
+- **Trust boundaries**: organizations want to control which skills their agents load - mixing public and private skills in one server blurs that boundary
 - **Contributor incentives**: a single centralized registry creates a bottleneck and a single point of trust. A federated model allows organizations to run their own registries while still discovering public skills.
 - **Resilience**: a single hosted instance is a single point of failure. Federated registries can fail independently.
 
@@ -40,7 +40,7 @@ skill://internal.acme.corp/acme-deploy-pipeline@2.0         # private enterprise
 skill://localhost:8000/my-local-skill                       # local dev registry
 ```
 
-The URI is already partially implemented — `SkillFrontMatter` has a `skill_uri` field in `skill_mcp/models/skill.py`. Currently it is set to an empty string. In a federated system, the seed script would populate it from the registry's base URL + skill ID + version.
+The URI is already partially implemented - `SkillFrontMatter` has a `skill_uri` field in `skill_mcp/models/skill.py`. Currently it is set to an empty string. In a federated system, the seed script would populate it from the registry's base URL + skill ID + version.
 
 ---
 
@@ -48,9 +48,9 @@ The URI is already partially implemented — `SkillFrontMatter` has a `skill_uri
 
 When an agent calls `skills_find_relevant`, the server performs resolution in this order:
 
-1. **Local registry** — skills in the server's own Qdrant collections (always searched first)
-2. **Trusted remote registries** — a configurable list of remote registry URLs (searched in order)
-3. **Public fallback registry** — optional, can be disabled
+1. **Local registry** - skills in the server's own Qdrant collections (always searched first)
+2. **Trusted remote registries** - a configurable list of remote registry URLs (searched in order)
+3. **Public fallback registry** - optional, can be disabled
 
 Results from all registries are merged and ranked by score. The registry of origin is included in each result:
 
@@ -140,7 +140,7 @@ metadata:
     - skill://skills-mcp.workers.dev/docker-containerization@1.0
 ```
 
-When an agent loads this skill, `skills_get_options` returns the dependencies and their source URIs. The agent can then fetch them via their respective registries. This is advisory — the agent decides whether to fetch dependencies, not the server.
+When an agent loads this skill, `skills_get_options` returns the dependencies and their source URIs. The agent can then fetch them via their respective registries. This is advisory - the agent decides whether to fetch dependencies, not the server.
 
 ---
 
@@ -212,7 +212,7 @@ The current model (`@cf/baai/bge-small-en-v1.5`) is specific to Cloudflare Worke
 
 Single registry, no federation. All skills in one Qdrant cluster. No `skill://` URIs populated.
 
-### Phase 1 — URI foundation
+### Phase 1 - URI foundation
 
 - Populate `skill_uri` field in all existing skills: `skill://<configured-base-url>/<skill-id>@<version>`
 - Add registry advertisement endpoint `/.well-known/skill-registry.json`
@@ -220,16 +220,16 @@ Single registry, no federation. All skills in one Qdrant cluster. No `skill://` 
 
 **Backward compatibility:** complete. New fields are additive.
 
-### Phase 2 — Local federation
+### Phase 2 - Local federation
 
 - Add `registries.yml` configuration support
 - Implement `federation/proxy.py` with parallel multi-registry search
 - Add `registries` parameter to `skills_find_relevant`
-- Default: `registries: ["local"]` — no behavior change unless explicitly configured
+- Default: `registries: ["local"]` - no behavior change unless explicitly configured
 
 **Backward compatibility:** complete. New parameter is optional.
 
-### Phase 3 — Remote skill caching
+### Phase 3 - Remote skill caching
 
 - Cache results from remote registries in local Qdrant with TTL
 - Add `skills_refresh_cache(registry_uri)` admin tool
@@ -237,7 +237,7 @@ Single registry, no federation. All skills in one Qdrant cluster. No `skill://` 
 
 **Backward compatibility:** additive. Cached remote skills appear alongside local ones.
 
-### Phase 4 — Dependency resolution
+### Phase 4 - Dependency resolution
 
 - Support `dependencies` in `SkillOptions` with `skill://` URIs
 - `skills_get_options` returns resolvable dependency URIs
@@ -245,7 +245,7 @@ Single registry, no federation. All skills in one Qdrant cluster. No `skill://` 
 
 **Backward compatibility:** additive.
 
-### Phase 5 — Enterprise auth and private registries
+### Phase 5 - Enterprise auth and private registries
 
 - mTLS and Bearer token support for registry connections
 - Private registry skills are not included in public federation responses

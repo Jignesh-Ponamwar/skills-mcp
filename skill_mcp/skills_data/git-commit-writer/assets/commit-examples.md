@@ -4,7 +4,7 @@
 
 ---
 
-## feat — New Features
+## feat - New Features
 
 ```
 feat(auth): add Google OAuth2 login provider
@@ -42,7 +42,7 @@ feat(billing): add support for annual subscription discounts
 
 ---
 
-## fix — Bug Fixes
+## fix - Bug Fixes
 
 ```
 fix(parser): handle empty array in JSON response without throwing
@@ -81,7 +81,7 @@ Background cleanup now runs every 60 seconds via the scheduler.
 
 ---
 
-## refactor — Code Restructuring
+## refactor - Code Restructuring
 
 ```
 refactor(db): replace raw SQL with SQLAlchemy ORM in user queries

@@ -1,12 +1,12 @@
 """
-SQL syntax validator — bundled with the sql-query-writer skill.
+SQL syntax validator - bundled with the sql-query-writer skill.
 
 Parses and analyzes SQL for syntax errors and common anti-patterns.
 Uses sqlparse for tokenization; falls back to basic checks if not installed.
 
 Input (environment variables):
-  SQL      — SQL query to validate (required)
-  DIALECT  — target dialect: postgresql | mysql | sqlite (default: postgresql)
+  SQL      - SQL query to validate (required)
+  DIALECT  - target dialect: postgresql | mysql | sqlite (default: postgresql)
 
 Output (stdout): JSON with validation result and detected issues
 """
@@ -164,7 +164,7 @@ def validate_basic(sql: str, dialect: str) -> dict:
         issues.append({"severity": "MEDIUM", "rule": "unknown-statement", "message": "Statement doesn't start with a recognized SQL keyword."})
 
     if "SELECT *" in sql_upper:
-        issues.append({"severity": "LOW", "rule": "select-star", "message": "SELECT * — list explicit columns."})
+        issues.append({"severity": "LOW", "rule": "select-star", "message": "SELECT * - list explicit columns."})
 
     return {
         "valid": len([i for i in issues if i["severity"] == "HIGH"]) == 0,

@@ -1,4 +1,4 @@
-"""MCP tool: skills_find_relevant — semantic search over the frontmatter collection."""
+"""MCP tool: skills_find_relevant - semantic search over the frontmatter collection."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ _search_cache: TTLCache = TTLCache(
 
 _DEFAULT_TOP_K = 5
 _MAX_TOP_K = 20
-_MAX_QUERY_LEN = 2_000  # chars — prevent cache bloat and oversized embedding payloads
+_MAX_QUERY_LEN = 2_000  # chars - prevent cache bloat and oversized embedding payloads
 
 
 def find_relevant_skills(query: str, top_k: int = _DEFAULT_TOP_K) -> str:
@@ -46,7 +46,7 @@ def find_relevant_skills(query: str, top_k: int = _DEFAULT_TOP_K) -> str:
 
     top_k = max(1, min(top_k, _MAX_TOP_K))
     # Use only the first 200 chars of the query in the cache key to bound key size;
-    # the full query is still used for embedding — this just limits key memory usage.
+    # the full query is still used for embedding - this just limits key memory usage.
     cache_key = f"search|{top_k}|{query[:200]}"
 
     cached = _search_cache.get(cache_key)

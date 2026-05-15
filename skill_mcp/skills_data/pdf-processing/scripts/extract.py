@@ -1,13 +1,13 @@
 """
-PDF text and table extraction script — bundled with the pdf-processing skill.
+PDF text and table extraction script - bundled with the pdf-processing skill.
 
 Reads a PDF file and extracts text and tables, outputting structured JSON.
 Tries pdfplumber first (better layout), falls back to pypdf.
 
 Input (environment variables):
-  PDF_PATH       — absolute path to the PDF file (required)
-  OUTPUT_FORMAT  — "json" (default) | "text"
-  MAX_PAGES      — integer, max pages to extract (default: all)
+  PDF_PATH       - absolute path to the PDF file (required)
+  OUTPUT_FORMAT  - "json" (default) | "text"
+  MAX_PAGES      - integer, max pages to extract (default: all)
 
 Output (stdout): JSON extraction result or plain text
 """

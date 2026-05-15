@@ -1,7 +1,7 @@
 ---
 name: supabase-integration
 description: >
-  Integrate Supabase into applications — PostgreSQL database queries, Row Level Security (RLS)
+  Integrate Supabase into applications - PostgreSQL database queries, Row Level Security (RLS)
   policies, authentication (email/password, OAuth, magic link), real-time subscriptions, storage
   (file uploads), and Edge Functions. Covers the Supabase JavaScript/TypeScript SDK, Python client,
   type-safe queries with generated types, and local development with the Supabase CLI. Use when
@@ -125,7 +125,7 @@ const { error } = await supabase
   .from('posts')
   .update({ title: 'Updated Title' })
   .eq('id', postId)
-  .eq('author_id', userId)  // extra safety — only update own posts
+  .eq('author_id', userId)  // extra safety - only update own posts
 
 // UPSERT
 const { data } = await supabase
@@ -357,9 +357,9 @@ supabase secrets set RESEND_API_KEY=re_xxxxx
 
 ## Common Mistakes
 
-- **Not enabling RLS** — all unauthenticated users get full read access without RLS
-- **Using service role key client-side** — `SUPABASE_SERVICE_ROLE_KEY` bypasses RLS; never expose it in the browser
-- **Not handling errors** — always destructure `{ data, error }` and check `error`
-- **Forgetting to generate types** — run `supabase gen types` after every schema change
-- **Real-time without cleanup** — always call `supabase.removeChannel()` on component unmount
-- **Storing sensitive data in `user_metadata`** — it's accessible client-side; use separate `profiles` table with RLS for private fields
+- **Not enabling RLS** - all unauthenticated users get full read access without RLS
+- **Using service role key client-side** - `SUPABASE_SERVICE_ROLE_KEY` bypasses RLS; never expose it in the browser
+- **Not handling errors** - always destructure `{ data, error }` and check `error`
+- **Forgetting to generate types** - run `supabase gen types` after every schema change
+- **Real-time without cleanup** - always call `supabase.removeChannel()` on component unmount
+- **Storing sensitive data in `user_metadata`** - it's accessible client-side; use separate `profiles` table with RLS for private fields

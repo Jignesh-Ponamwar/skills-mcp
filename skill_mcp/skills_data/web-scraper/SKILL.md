@@ -31,7 +31,7 @@ Extract structured data from websites responsibly. Choose the right tool based o
 | Static HTML, simple pages | `requests` + `beautifulsoup4` |
 | JS-rendered content (SPAs, React/Vue) | `playwright` or `selenium` |
 | Heavy scraping / crawling | `scrapy` |
-| API available | Use the API — always prefer it |
+| API available | Use the API - always prefer it |
 
 ## Step-by-Step Process
 
@@ -39,7 +39,7 @@ Extract structured data from websites responsibly. Choose the right tool based o
 Before scraping, check:
 - `robots.txt` at `site.com/robots.txt`
 - The site's developer docs for a public API
-- Network tab in DevTools — many "scraped" sites already have an XHR/fetch API
+- Network tab in DevTools - many "scraped" sites already have an XHR/fetch API
 
 If an API exists, use it. It's faster, more reliable, and respectful.
 
@@ -148,7 +148,7 @@ df.to_csv("scraped_data.csv", index=False)
 - **429 Too Many Requests**: back off exponentially, add jitter
 - **Cloudflare / bot detection**: use `playwright` with a real browser profile; avoid headless detection signatures
 - **IP blocks**: rotate residential proxies if permitted by the site's ToS
-- **CAPTCHAs**: do not attempt to bypass — respect the site's access controls
+- **CAPTCHAs**: do not attempt to bypass - respect the site's access controls
 
 ## Legal and Ethical Notes
 - Only scrape publicly accessible data

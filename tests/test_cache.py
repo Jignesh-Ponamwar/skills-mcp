@@ -1,4 +1,4 @@
-"""Unit tests for TTLCache — no external deps required."""
+"""Unit tests for TTLCache - no external deps required."""
 
 import time
 

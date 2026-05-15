@@ -1,16 +1,16 @@
 """
-Idempotent seed script — populates all six Qdrant collections from the
+Idempotent seed script - populates all six Qdrant collections from the
 structured skills_data/ directory.
 
 Embeddings are generated via the Cloudflare Workers AI REST API
-(@cf/baai/bge-small-en-v1.5, 384-dim) — the same model used by the
+(@cf/baai/bge-small-en-v1.5, 384-dim) - the same model used by the
 deployed Worker at query time. No local GPU or sentence-transformers needed.
 
 Requires in .env:
-  QDRANT_URL       — Qdrant Cloud cluster URL
-  QDRANT_API_KEY   — Qdrant Cloud API key
-  WORKERS_AI_ACCOUNT_ID    — Cloudflare account ID (dashboard → right sidebar)
-  WORKERS_AI_API_TOKEN     — Cloudflare API token with "Workers AI Run" permission
+  QDRANT_URL       - Qdrant Cloud cluster URL
+  QDRANT_API_KEY   - Qdrant Cloud API key
+  WORKERS_AI_ACCOUNT_ID    - Cloudflare account ID (dashboard → right sidebar)
+  WORKERS_AI_API_TOKEN     - Cloudflare API token with "Workers AI Run" permission
 
 Tier-1/2 (pass 1):
   Reads skills_data/<slug>/SKILL.md, embeds frontmatter description+triggers,
@@ -71,7 +71,7 @@ def _embed_batch(texts: list[str]) -> list[list[float]]:
     """Embed all texts in a single Cloudflare Workers AI API call.
 
     The @cf/baai/bge-small-en-v1.5 endpoint accepts an array of texts and
-    returns an array of vectors in one round-trip — much faster than N
+    returns an array of vectors in one round-trip - much faster than N
     individual calls for large skill catalogs.
     """
     if not texts:
@@ -108,7 +108,7 @@ def extract_first_heading_or_paragraph(markdown_content: str) -> str:
         stripped = line.strip()
         if stripped.startswith("#"):
             return stripped.lstrip("#").strip()
-    # No heading — return first non-empty, non-separator paragraph sentence
+    # No heading - return first non-empty, non-separator paragraph sentence
     for line in markdown_content.splitlines():
         stripped = line.strip()
         if stripped and not stripped.startswith("---") and not stripped.startswith("```"):
@@ -154,7 +154,7 @@ def extract_script_description(source: str, language: str) -> str:
         text = " ".join(docstring_lines).strip()
         return text[:200] if text else ""
 
-    # JavaScript / Bash / TypeScript — extract leading comment block
+    # JavaScript / Bash / TypeScript - extract leading comment block
     comment_lines: list[str] = []
     for line in lines:
         stripped = line.strip()
@@ -263,7 +263,7 @@ def _parse_skill_md_manual(path: Path) -> Optional[dict]:
     try:
         fm = yaml.safe_load(parts[1])
     except yaml.YAMLError as e:
-        print(f"  [warn] Skipping {path}: YAML parse error — {e}")
+        print(f"  [warn] Skipping {path}: YAML parse error - {e}")
         return None
     body = parts[2].strip()
     return {"frontmatter": fm or {}, "body": body}
@@ -275,6 +275,12 @@ def _extract_skill_fields(slug: str, parsed: dict) -> dict:
     meta = fm.get("metadata") or {}
     # Strip trailing whitespace/newlines from YAML literal-block strings (|, >)
     description = str(fm.get("description") or "").strip()
+
+    # Validate: no em-dashes allowed
+    full_content = description + parsed["body"]
+    if "-" in full_content:
+        raise ValueError(f"Em-dashes (-) not allowed in skill {slug}. Use '-' or '--' instead.")
+
     return {
         "skill_id": slug,
         "name": str(fm.get("name") or slug).strip(),
@@ -287,6 +293,13 @@ def _extract_skill_fields(slug: str, parsed: dict) -> dict:
         "trigger_phrases": list(meta.get("triggers") or []),
         "skill_uri": f"skill://{slug}/SKILL.md",
         "instructions": parsed["body"],
+        # New fields
+        "use_cases": list(meta.get("use_cases") or []),
+        "estimated_time": str(meta.get("estimated_time") or "").strip(),
+        "complexity_level": str(meta.get("complexity_level") or "intermediate").strip(),
+        "prerequisites": list(meta.get("prerequisites") or []),
+        "last_updated": str(meta.get("last_updated") or "").strip(),
+        "source_url": str(meta.get("source_url") or "").strip(),
     }
 
 
@@ -339,7 +352,7 @@ def seed(skills_dir: Path = _DEFAULT_SKILLS_DIR) -> None:
             triggers=fields["trigger_phrases"],
         )
         if scan.blocked:
-            print(f"  [BLOCKED] {slug}: prompt-injection scan failed — skill will NOT be seeded")
+            print(f"  [BLOCKED] {slug}: prompt-injection scan failed - skill will NOT be seeded")
             print(scan.summary())
             blocked_slugs.append(slug)
             continue
@@ -365,15 +378,29 @@ def seed(skills_dir: Path = _DEFAULT_SKILLS_DIR) -> None:
     print("\n[seed] Connecting to Qdrant…")
     qdrant_manager.connect()
     qdrant_manager.ensure_collections()
-    print("[seed] Collections ready (6 total — tiers 1, 2, and 3)")
+    print("[seed] Collections ready (6 total - tiers 1, 2, and 3)")
 
-    # Embed description + trigger_phrases (frontmatter only — never the body)
+    # Embed description + trigger_phrases (frontmatter only - never the body)
     embed_texts = [
         s["description"] + " " + " ".join(s["trigger_phrases"])
         for s in skills
     ]
     print(f"\n[seed] Embedding {len(embed_texts)} skill descriptors via Cloudflare Workers AI…")
     vectors = _embed_batch(embed_texts)
+
+    # Pre-compute has_tier3 flag for each skill
+    has_tier3_map = {}
+    for skill_path in skill_paths:
+        slug = skill_path.parent.name
+        skill_folder = skill_path.parent
+        refs_dir = skill_folder / "references"
+        scripts_dir = skill_folder / "scripts"
+        assets_dir = skill_folder / "assets"
+        # has_tier3 is True if ANY of the tier-3 directories exist and have files
+        has_refs = refs_dir.is_dir() and any(refs_dir.glob("*.md"))
+        has_scripts = scripts_dir.is_dir() and any(scripts_dir.iterdir())
+        has_assets = assets_dir.is_dir() and any(assets_dir.iterdir())
+        has_tier3_map[slug] = has_refs or has_scripts or has_assets
 
     frontmatters = [
         SkillFrontMatter(
@@ -387,6 +414,14 @@ def seed(skills_dir: Path = _DEFAULT_SKILLS_DIR) -> None:
             author=s["author"],
             license=s["license"],
             skill_uri=s["skill_uri"],
+            # New fields
+            use_cases=s["use_cases"],
+            estimated_time=s["estimated_time"],
+            complexity_level=s["complexity_level"],
+            prerequisites=s["prerequisites"],
+            last_updated=s["last_updated"],
+            source_url=s["source_url"],
+            has_tier3=has_tier3_map.get(s["skill_id"], False),
         )
         for s in skills
     ]
@@ -407,12 +442,12 @@ def seed(skills_dir: Path = _DEFAULT_SKILLS_DIR) -> None:
     print("\n[seed] Seeding tier-3 assets (references, scripts, assets)…")
     ref_count = script_count = asset_count = 0
 
-    _MAX_FILE_BYTES = 1_048_576  # 1 MB — skip files larger than this
+    _MAX_FILE_BYTES = 1_048_576  # 1 MB - skip files larger than this
 
     def _safe_path(file: Path, base_dir: Path) -> bool:
         """Return True only if *file* resolves to a path inside *base_dir*.
 
-        Rejects symlinks that point outside the skill folder — prevents a
+        Rejects symlinks that point outside the skill folder - prevents a
         maliciously crafted skill directory from reading arbitrary host files.
         Uses Path.parents for cross-platform correctness (no string separator hacks).
         """
@@ -519,10 +554,10 @@ def seed(skills_dir: Path = _DEFAULT_SKILLS_DIR) -> None:
                 print(f"  ↳ asset: {slug}/{asset_file.name} ({asset_type})")
 
     print(
-        f"\n[seed] Tier-3 complete — "
+        f"\n[seed] Tier-3 complete - "
         f"{ref_count} references, {script_count} scripts, {asset_count} assets"
     )
-    print("[seed] Done — all six collections populated successfully")
+    print("[seed] Done - all six collections populated successfully")
     print(f"[seed] Skills loaded: {', '.join(s['skill_id'] for s in skills)}")
 
 

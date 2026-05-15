@@ -1,4 +1,4 @@
-# Code Review — Structured Output Template
+# Code Review - Structured Output Template
 
 Copy this template and fill in each section for the code being reviewed.
 
@@ -105,7 +105,7 @@ Copy this template and fill in each section for the code being reviewed.
 
 ## Positive Notes
 
-- {Something the author did well — always include at least one}
+- {Something the author did well - always include at least one}
 - {Another positive observation}
 
 ---

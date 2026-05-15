@@ -30,7 +30,7 @@ _skip = pytest.mark.skipif(
 
 pytestmark = _skip
 
-# Fixed 384-dim vector for deterministic tests — avoids calling Cloudflare Workers AI
+# Fixed 384-dim vector for deterministic tests - avoids calling Cloudflare Workers AI
 _FIXED_VECTOR: list[float] = [0.01] * 384
 
 
@@ -83,7 +83,7 @@ def setup_test_collections(monkeypatch_module):
         config_schema={"framework": {"type": "string", "default": "pytest"}},
         variants=[{"name": "tdd", "description": "TDD mode"}],
         dependencies=["pytest"],
-        limitations=["Static analysis only — no runtime execution"],
+        limitations=["Static analysis only - no runtime execution"],
     )
 
     vector = embedder.embed(fm.description + " " + " ".join(fm.trigger_phrases))

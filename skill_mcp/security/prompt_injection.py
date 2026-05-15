@@ -2,28 +2,28 @@
 Prompt-injection scanner for the SKILL.md ingestion pipeline.
 
 A malicious SKILL.md with embedded instruction overrides could alter how agents
-behave after loading the skill body — turning the skills registry into a
+behave after loading the skill body - turning the skills registry into a
 prompt-injection delivery mechanism. This scanner runs at seed time and in CI
 to reject or flag suspicious content before it enters the vector database.
 
 Attack surfaces covered
 -----------------------
-1. Instruction-override phrases    — "ignore previous instructions", "disregard", etc.
-2. Role / identity hijacking       — "you are now", "act as DAN", "pretend you are"
-3. Prompt delimiter injection      — </system>, [SYSTEM], <<SYS>>, <|im_start|>, etc.
-4. Credential exfiltration         — patterns that direct the agent to send secrets
-5. HTML / script injection         — <script>, javascript:, data:text/html, iframe
-6. Unicode attacks                 — BiDi override chars, zero-width spaces, null bytes
-7. Base64 encoded payloads         — long base64 chunks that decode to override content
-8. Content displacement            — ≥20 consecutive blank lines (pushes body off-screen)
-9. Suspiciously long lines         — >2000 chars (possible encoded or obfuscated payload)
+1. Instruction-override phrases    - "ignore previous instructions", "disregard", etc.
+2. Role / identity hijacking       - "you are now", "act as DAN", "pretend you are"
+3. Prompt delimiter injection      - </system>, [SYSTEM], <<SYS>>, <|im_start|>, etc.
+4. Credential exfiltration         - patterns that direct the agent to send secrets
+5. HTML / script injection         - <script>, javascript:, data:text/html, iframe
+6. Unicode attacks                 - BiDi override chars, zero-width spaces, null bytes
+7. Base64 encoded payloads         - long base64 chunks that decode to override content
+8. Content displacement            - ≥20 consecutive blank lines (pushes body off-screen)
+9. Suspiciously long lines         - >2000 chars (possible encoded or obfuscated payload)
 
 Severity levels
 ---------------
-CRITICAL  — Definite injection attempt; ingestion is BLOCKED
-HIGH      — Strong indicator; ingestion is BLOCKED
-MEDIUM    — Suspicious; ingestion continues with a WARNING flag in the skill metadata
-LOW       — Minor concern; logged only
+CRITICAL  - Definite injection attempt; ingestion is BLOCKED
+HIGH      - Strong indicator; ingestion is BLOCKED
+MEDIUM    - Suspicious; ingestion continues with a WARNING flag in the skill metadata
+LOW       - Minor concern; logged only
 
 Usage
 -----
@@ -97,7 +97,7 @@ class ScanResult:
 
     def summary(self) -> str:
         status = "BLOCKED" if self.blocked else ("WARNED" if self.warnings else "CLEAN")
-        lines = [f"[scan:{status}] {self.skill_id} — {len(self.findings)} finding(s)"]
+        lines = [f"[scan:{status}] {self.skill_id} - {len(self.findings)} finding(s)"]
         for f in self.findings:
             loc = f" (line {f.line})" if f.line is not None else ""
             exc = f" | {f.excerpt!r}" if f.excerpt else ""
@@ -107,7 +107,7 @@ class ScanResult:
 
 # ── Compiled pattern library ───────────────────────────────────────────────────
 
-# CRITICAL — explicit instruction-override language
+# CRITICAL - explicit instruction-override language
 _INSTRUCTION_OVERRIDE = re.compile(
     r"""
     \b ignore \s+ (all \s+)? (the \s+)? (previous|prior|above|earlier|existing|your) \s+ instructions? \b  |
@@ -123,7 +123,7 @@ _INSTRUCTION_OVERRIDE = re.compile(
     re.IGNORECASE | re.VERBOSE,
 )
 
-# CRITICAL — role / identity hijacking
+# CRITICAL - role / identity hijacking
 _ROLE_HIJACK = re.compile(
     r"""
     \b you \s+ are \s+ now \s+ (a \s+ | an \s+)?     |
@@ -138,7 +138,7 @@ _ROLE_HIJACK = re.compile(
     re.IGNORECASE | re.VERBOSE,
 )
 
-# HIGH — prompt delimiter injection (structural attacks targeting LLM context parsers)
+# HIGH - prompt delimiter injection (structural attacks targeting LLM context parsers)
 _DELIMITER_INJECTION = re.compile(
     r"""
     </? \s* (system|human|assistant|user|prompt|context|instruction) \s* >  |
@@ -153,7 +153,7 @@ _DELIMITER_INJECTION = re.compile(
     re.IGNORECASE | re.VERBOSE,
 )
 
-# CRITICAL — credential / data exfiltration patterns
+# CRITICAL - credential / data exfiltration patterns
 _EXFILTRATION = re.compile(
     r"""
     \b exfiltrat (e|ing|ion) \b                                   |
@@ -171,7 +171,7 @@ _EXFILTRATION = re.compile(
     re.IGNORECASE | re.VERBOSE,
 )
 
-# MEDIUM/HIGH — HTML / script injection
+# MEDIUM/HIGH - HTML / script injection
 _HTML_INJECTION = re.compile(
     r"""
     <script\b                             |
@@ -185,33 +185,33 @@ _HTML_INJECTION = re.compile(
     re.IGNORECASE | re.VERBOSE,
 )
 
-# HIGH — Unicode BiDi + zero-width characters (can hide injected content visually)
+# HIGH - Unicode BiDi + zero-width characters (can hide injected content visually)
 # Using explicit Unicode escapes to avoid encoding issues in source files.
 #
 # BiDi override / embedding / isolate chars: U+202A–U+202E and U+2066–U+2069
 # Zero-width: U+200B (ZWSP), U+200C (ZWNJ), U+200D (ZWJ),
 #             U+200E (LRM), U+200F (RLM), U+00AD (soft hyphen), U+FEFF (BOM)
-# Null byte: U+0000 — checked in _scan_unicode via ord()
+# Null byte: U+0000 - checked in _scan_unicode via ord()
 _UNICODE_ATTACK = re.compile(
     "[‪-‮⁦-⁩]"    # BiDi override / embedding / isolate
     "|[​-‏­﻿]"    # Zero-width / soft-hyphen / BOM
     # (null byte U+0000 checked separately in _scan_unicode via ord())
 )
 
-# MEDIUM — excessive blank lines (content displacement / off-screen hiding)
+# MEDIUM - excessive blank lines (content displacement / off-screen hiding)
 _BLANK_LINE_FLOOD = re.compile(r"(\n[ \t]*){20,}")
 
-# LOW-MEDIUM — long base64-ish chunks (possible encoded hidden payload)
+# LOW-MEDIUM - long base64-ish chunks (possible encoded hidden payload)
 # Threshold 48+ chars covers payloads like "ignore all previous instructions" (60 chars encoded)
 _BASE64_CHUNK = re.compile(r"[A-Za-z0-9+/]{48,}={0,2}")
 
 # Thresholds
 _LONG_LINE_CHARS = 2000     # chars per line before flagging as suspicious
 
-# Fenced code block pattern — triple backticks or triple tildes
+# Fenced code block pattern - triple backticks or triple tildes
 _CODE_BLOCK = re.compile(r"```[\s\S]*?```|~~~[\s\S]*?~~~", re.MULTILINE)
 
-# Inline code pattern — single backticks (for short code spans)
+# Inline code pattern - single backticks (for short code spans)
 _INLINE_CODE = re.compile(r"`[^`\n]+`")
 
 
@@ -226,7 +226,7 @@ def _safe_excerpt(text: str, start: int, length: int = 60) -> str:
 def _strip_code_blocks(text: str) -> str:
     """Replace fenced code blocks and inline code with whitespace placeholders.
 
-    Code examples are trusted content — they often contain patterns (TypeScript
+    Code examples are trusted content - they often contain patterns (TypeScript
     generics, <script> tags, HTML) that would otherwise trigger the scanner.
     Replacing with whitespace preserves line numbers for non-code findings.
     """
@@ -265,7 +265,7 @@ def _scan_unicode(text: str, field_name: str) -> list[Finding]:
             line=_lineno(text, m.start()),
         ))
 
-    # Explicit null byte check (U+0000) — cannot use literal in regex source
+    # Explicit null byte check (U+0000) - cannot use literal in regex source
     for i, char in enumerate(text):
         if ord(char) == 0:
             findings.append(Finding(
@@ -303,7 +303,7 @@ def _scan_base64_payloads(text: str) -> list[Finding]:
                     line=None,
                 ))
         except Exception:
-            pass  # Not valid base64 — not inherently suspicious
+            pass  # Not valid base64 - not inherently suspicious
     return findings
 
 
@@ -321,7 +321,7 @@ def scan_skill(
 
     Scans: name, description, triggers, and the full body markdown.
 
-    The body is the highest-risk field — it is loaded directly into the agent
+    The body is the highest-risk field - it is loaded directly into the agent
     context window when skills_get_body() is called. The other fields flow
     into the embedding and search result display.
 
@@ -343,12 +343,12 @@ def scan_skill(
 
         # For structural HTML/delimiter patterns, strip fenced code blocks first.
         # Code examples legitimately contain <script>, TypeScript generics like
-        # Promise<User>, HTML tags, etc. — these should not trigger the scanner.
+        # Promise<User>, HTML tags, etc. - these should not trigger the scanner.
         # Instruction overrides and exfiltration patterns are checked in full text
         # because those should never appear even in code comments.
         text_no_code = _strip_code_blocks(text) if is_body else text
 
-        # ── 1. Instruction overrides — scan FULL text (incl. code) ───────────
+        # ── 1. Instruction overrides - scan FULL text (incl. code) ───────────
         for m in _INSTRUCTION_OVERRIDE.finditer(text):
             result.findings.append(Finding(
                 severity=Severity.CRITICAL,
@@ -358,7 +358,7 @@ def scan_skill(
                 line=_lineno(text, m.start()),
             ))
 
-        # ── 2. Role hijacking — scan FULL text ───────────────────────────────
+        # ── 2. Role hijacking - scan FULL text ───────────────────────────────
         for m in _ROLE_HIJACK.finditer(text):
             result.findings.append(Finding(
                 severity=Severity.CRITICAL if is_body else Severity.HIGH,
@@ -368,7 +368,7 @@ def scan_skill(
                 line=_lineno(text, m.start()),
             ))
 
-        # ── 3. Delimiter injection — scan CODE-STRIPPED text ─────────────────
+        # ── 3. Delimiter injection - scan CODE-STRIPPED text ─────────────────
         # TypeScript generics (<User>, <Promise<T>>) would otherwise false-positive
         for m in _DELIMITER_INJECTION.finditer(text_no_code):
             result.findings.append(Finding(
@@ -389,7 +389,7 @@ def scan_skill(
                 line=_lineno(text, m.start()),
             ))
 
-        # ── 5. HTML / script injection — scan CODE-STRIPPED text ─────────────
+        # ── 5. HTML / script injection - scan CODE-STRIPPED text ─────────────
         # <script> tags in code block examples (e.g., web-artifacts-builder skill)
         # are legitimate and must not be flagged. Only non-code prose is scanned.
         for m in _HTML_INJECTION.finditer(text_no_code):
@@ -414,7 +414,7 @@ def scan_skill(
                 result.findings.append(Finding(
                     severity=Severity.MEDIUM,
                     category="content-displacement",
-                    description="≥20 consecutive blank lines — possible content displacement attack",
+                    description="≥20 consecutive blank lines - possible content displacement attack",
                     line=_lineno(text, m.start()),
                 ))
 
@@ -426,7 +426,7 @@ def scan_skill(
                     category="long-line",
                     description=(
                         f"Line {i} in {field_name} is {len(line)} chars "
-                        f"(>{_LONG_LINE_CHARS}) — possible encoded payload"
+                        f"(>{_LONG_LINE_CHARS}) - possible encoded payload"
                     ),
                     line=i,
                 ))

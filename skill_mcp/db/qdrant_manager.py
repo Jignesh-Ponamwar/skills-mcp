@@ -1,12 +1,12 @@
 """Qdrant connection, collection bootstrap, and query helpers.
 
 Six collections across three disclosure tiers:
-  skill_frontmatter  — 384-dim vectors, semantic search
-  skill_body         — payload-only, full instructions
-  skill_options      — payload-only, config schema, variants, dependencies
-  skill_references   — payload-only, reference markdown files
-  skill_scripts      — payload-only, executable scripts (source never returned to agents)
-  skill_assets       — payload-only, templates and static resources
+  skill_frontmatter  - 384-dim vectors, semantic search
+  skill_body         - payload-only, full instructions
+  skill_options      - payload-only, config schema, variants, dependencies
+  skill_references   - payload-only, reference markdown files
+  skill_scripts      - payload-only, executable scripts (source never returned to agents)
+  skill_assets       - payload-only, templates and static resources
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ from ..models.skill import (
     SkillScript,
 )
 
-# Collection names — override via env vars if you renamed them in Qdrant
+# Collection names - override via env vars if you renamed them in Qdrant
 FRONTMATTER_COLLECTION = os.getenv("FRONTMATTER_COLLECTION", "skill_frontmatter")
 BODY_COLLECTION = os.getenv("BODY_COLLECTION", "skill_body")
 OPTIONS_COLLECTION = os.getenv("OPTIONS_COLLECTION", "skill_options")
@@ -67,7 +67,7 @@ class QdrantManager:
     def client(self) -> QdrantClient:
         if self._client is None:
             raise RuntimeError(
-                "QdrantManager not connected — call qdrant_manager.connect() first"
+                "QdrantManager not connected - call qdrant_manager.connect() first"
             )
         return self._client
 
@@ -108,7 +108,7 @@ class QdrantManager:
                     field_schema=PayloadSchemaType.KEYWORD,
                 )
 
-        # Ensure version_key index exists on body collection (idempotent — safe to run on existing collections)
+        # Ensure version_key index exists on body collection (idempotent - safe to run on existing collections)
         try:
             self.client.create_payload_index(
                 collection_name=BODY_COLLECTION,
@@ -116,7 +116,7 @@ class QdrantManager:
                 field_schema=PayloadSchemaType.KEYWORD,
             )
         except Exception:
-            pass  # Already exists — ignore
+            pass  # Already exists - ignore
 
         # ── Tier-3: references, scripts, assets (payload-only, skill_id+filename lookup) ──
 
@@ -172,13 +172,13 @@ class QdrantManager:
         points = []
         for fm, vec in pairs:
             payload = fm.model_dump(exclude={"score"})
-            # Latest alias point — always overwritten by re-seeding
+            # Latest alias point - always overwritten by re-seeding
             points.append(PointStruct(
                 id=_skill_uuid(fm.skill_id),
                 vector=vec,
                 payload=payload,
             ))
-            # Versioned point — kept alongside the latest alias
+            # Versioned point - kept alongside the latest alias
             if fm.version:
                 ver_key = f"{fm.skill_id}@{fm.version}"
                 points.append(PointStruct(
@@ -294,7 +294,7 @@ class QdrantManager:
         payload = self._payload_lookup(BODY_COLLECTION, skill_id)
         if payload is None:
             return None
-        # Filter to only known SkillBody fields — extra keys (e.g. version_key) cause Pydantic errors
+        # Filter to only known SkillBody fields - extra keys (e.g. version_key) cause Pydantic errors
         return SkillBody(**{k: v for k, v in payload.items() if k in SkillBody.model_fields})
 
     def get_body_versioned(self, skill_id: str, version: str) -> Optional[SkillBody]:
@@ -407,6 +407,29 @@ class QdrantManager:
             "scripts": _safe_filenames(SCRIPTS_COLLECTION),
             "assets": _safe_filenames(ASSETS_COLLECTION),
         }
+
+    def list_all_frontmatter(
+        self, offset: int = 0, limit: int = 100
+    ) -> list[SkillFrontMatter]:
+        """List all frontmatters without vector search, with pagination."""
+        # Use scroll to get all points with pagination
+        points, _ = self.client.scroll(
+            collection_name=FRONTMATTER_COLLECTION,
+            limit=limit,
+            offset=offset,
+            with_payload=True,
+        )
+        results: list[SkillFrontMatter] = []
+        for point in points:
+            payload: dict[str, Any] = point.payload or {}
+            # No vector score for non-search queries
+            results.append(SkillFrontMatter(**payload))
+        return results
+
+    def get_frontmatter_count(self) -> int:
+        """Get total count of frontmatter points in the collection."""
+        collection_info = self.client.get_collection(FRONTMATTER_COLLECTION)
+        return collection_info.points_count or 0
 
 
 # Module-level singleton

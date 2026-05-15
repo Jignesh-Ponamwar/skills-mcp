@@ -1,72 +1,104 @@
-# ── secrets — NEVER in the image ─────────────────────────────────────────────
-.env
-.env.*
-*.pem
-*.key
-*.p12
-*.pfx
-*.secret
+# =============================================================================
+# Docker Build Context Exclusions
+# =============================================================================
+# Files excluded from Docker image builds to reduce image size
 
-# ── wrangler / cloudflare ─────────────────────────────────────────────────────
-.wrangler/
-wrangler.jsonc
+# =============================================================================
+# N8N AUTOMATION (Development only - not needed in production image)
+# =============================================================================
+n8n/
+n8n/node_modules/
+n8n/.env
+n8n/.env.local
+n8n/.n8n/
+n8n/database.sqlite
+n8n/cache/
+n8n/logs/
 
-# ── Python build artifacts ────────────────────────────────────────────────────
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-*.egg
-*.egg-info/
-.eggs/
-dist/
-build/
-.venv/
-venv/
-env/
-.Python
-
-# ── Test / coverage ───────────────────────────────────────────────────────────
-.pytest_cache/
-.coverage
-.coverage.*
-htmlcov/
-tests/
-pytest.ini
-
-# ── Node (not needed in Python image) ────────────────────────────────────────
-node_modules/
-npm-debug.log*
-package.json
-package-lock.json
-
-# ── Git ───────────────────────────────────────────────────────────────────────
+# =============================================================================
+# VERSION CONTROL & DOCUMENTATION (Not runtime dependencies)
+# =============================================================================
 .git/
 .gitignore
 .github/
+.gitlab-ci.yml
+.circleci/
+docs/
+*.md
+CONTRIBUTING.md
+LICENSE
+CHANGELOG.md
 
-# ── IDE ───────────────────────────────────────────────────────────────────────
+# =============================================================================
+# DEVELOPMENT & TEST FILES
+# =============================================================================
+.venv/
+venv/
+env/
+*.pyc
+__pycache__/
+.pytest_cache/
+.coverage
+.mypy_cache/
+.dmypy.json
+*.log
+
+# =============================================================================
+# NODE & PACKAGE MANAGERS (If not needed in final build)
+# =============================================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# =============================================================================
+# IDE & EDITOR FILES
+# =============================================================================
 .vscode/
 .idea/
 *.swp
 *.swo
-.fleet/
+*~
+.project
+.classpath
+.settings/
+*.sublime-workspace
 
-# ── OS ───────────────────────────────────────────────────────────────────────
+# =============================================================================
+# OS ARTIFACTS
+# =============================================================================
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 desktop.ini
 
-# ── Docs (not needed at runtime) ─────────────────────────────────────────────
-README.md
-SETUP.md
-CONTRIBUTING.md
-THREAT_MODEL.md
-*.png
-*.jpg
-master-skill/
-scripts/setup.ps1
-scripts/setup.sh
-
-# ── Claude Code session ───────────────────────────────────────────────────────
+# =============================================================================
+# BUILD ARTIFACTS & TEMPORARY FILES
+# =============================================================================
 .claude/
+.cache/
+tmp/
+temp/
+dist/
+build/
+*.bak
+*.tmp
+*.temp
+*.orig
+
+# =============================================================================
+# SECRETS (Never in Docker image)
+# =============================================================================
+.env
+.env.local
+.env.*.local
+.wrangler/
+*.pem
+*.key
+*.secret
+.secret

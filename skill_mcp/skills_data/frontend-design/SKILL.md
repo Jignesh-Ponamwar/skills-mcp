@@ -33,12 +33,12 @@ metadata:
 
 Before touching a line of CSS, decide:
 
-1. **Purpose** — What is this interface for? Who uses it? What emotion should it evoke?
-2. **Tone** — Serious/clinical? Playful/energetic? Minimal/confident? Bold/expressive?
-3. **Differentiator** — What one thing will make this memorable? (Unusual typography? Unexpected layout? Strong color contrast?)
-4. **Constraint** — What can you NOT use? (Overused styles to avoid)
+1. **Purpose** - What is this interface for? Who uses it? What emotion should it evoke?
+2. **Tone** - Serious/clinical? Playful/energetic? Minimal/confident? Bold/expressive?
+3. **Differentiator** - What one thing will make this memorable? (Unusual typography? Unexpected layout? Strong color contrast?)
+4. **Constraint** - What can you NOT use? (Overused styles to avoid)
 
-**Choose an extreme and execute with intentionality.** Mediocre design lives in the middle. Either go brutally minimal or richly layered — both work; the generic middle does not.
+**Choose an extreme and execute with intentionality.** Mediocre design lives in the middle. Either go brutally minimal or richly layered - both work; the generic middle does not.
 
 ---
 
@@ -60,11 +60,11 @@ Before touching a line of CSS, decide:
 ### Font Scale (Never Use Default Browser Sizes)
 ```css
 :root {
-  --text-xs:   0.75rem;   /* 12px — captions */
-  --text-sm:   0.875rem;  /* 14px — secondary text */
-  --text-base: 1rem;      /* 16px — body */
-  --text-lg:   1.125rem;  /* 18px — lead text */
-  --text-xl:   1.25rem;   /* 20px — small headings */
+  --text-xs:   0.75rem;   /* 12px - captions */
+  --text-sm:   0.875rem;  /* 14px - secondary text */
+  --text-base: 1rem;      /* 16px - body */
+  --text-lg:   1.125rem;  /* 18px - lead text */
+  --text-xl:   1.25rem;   /* 20px - small headings */
   --text-2xl:  1.5rem;    /* 24px */
   --text-3xl:  1.875rem;  /* 30px */
   --text-4xl:  2.25rem;   /* 36px */
@@ -86,16 +86,16 @@ Before touching a line of CSS, decide:
 ### 4-Layer System
 ```css
 :root {
-  /* Base — backgrounds, surfaces */
+  /* Base - backgrounds, surfaces */
   --color-bg:       #09090b;   /* dark: near-black */
   --color-surface:  #18181b;   /* dark: card background */
   --color-border:   #27272a;   /* subtle borders */
 
-  /* Content — text */
+  /* Content - text */
   --color-text:     #fafafa;   /* primary text */
   --color-muted:    #a1a1aa;   /* secondary text, labels */
 
-  /* Accent — one dominant brand color */
+  /* Accent - one dominant brand color */
   --color-accent:   #8b5cf6;   /* violet */
   --color-accent-h: #7c3aed;   /* hover state */
   --color-accent-l: #8b5cf620; /* 12% opacity for backgrounds */
@@ -109,15 +109,15 @@ Before touching a line of CSS, decide:
 
 ### Color Rules
 - **60-30-10 rule:** 60% background/neutral, 30% surface/secondary, 10% accent
-- One primary accent color — never two competing brand colors at equal weight
+- One primary accent color - never two competing brand colors at equal weight
 - Use opacity variants instead of additional colors: `hsl(262 80% 60% / 0.15)`
-- Dark mode default is increasingly expected — design it from the start
+- Dark mode default is increasingly expected - design it from the start
 
 ### Avoid
 - Purple gradients on white backgrounds
 - Rainbow color palettes with no hierarchy
 - Low-contrast text (WCAG AA: ≥4.5:1 for body, ≥3:1 for large text)
-- Pure black (`#000000`) on pure white — use `#09090b` and `#fafafa`
+- Pure black (`#000000`) on pure white - use `#09090b` and `#fafafa`
 
 ---
 
@@ -188,7 +188,7 @@ Mobile-first, always:
 **Animate for meaning, not decoration.** Every animation should communicate something.
 
 ```css
-/* Entrance — elements appear with purpose */
+/* Entrance - elements appear with purpose */
 @keyframes slide-up {
   from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -196,14 +196,14 @@ Mobile-first, always:
 
 .card { animation: slide-up 0.3s ease-out; }
 
-/* Interactive feedback — confirm the user's action */
+/* Interactive feedback - confirm the user's action */
 button {
   transition: transform 0.1s ease, box-shadow 0.2s ease;
 }
 button:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
 button:active { transform: translateY(0); box-shadow: none; }
 
-/* Loading state — communicates progress */
+/* Loading state - communicates progress */
 .skeleton {
   background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
   background-size: 200% 100%;
@@ -235,7 +235,7 @@ button:active { transform: translateY(0); box-shadow: none; }
 <section class="hero">
   <span class="eyebrow">Introducing v2.0</span>
   <h1 class="headline">Design that<br><em>speaks</em> for itself.</h1>
-  <p class="subheading">Build interfaces that users remember — and come back to.</p>
+  <p class="subheading">Build interfaces that users remember - and come back to.</p>
   <div class="cta-group">
     <a href="#" class="btn btn-primary">Get started free</a>
     <a href="#" class="btn btn-ghost">See examples →</a>

@@ -28,7 +28,7 @@ metadata:
 
 # Gemini API Development Skill
 
-## Critical Rules — Always Apply
+## Critical Rules - Always Apply
 
 > These rules override training data. Pre-trained model knowledge of Gemini APIs is outdated.
 
@@ -40,7 +40,7 @@ metadata:
 | `gemini-2.5-flash` | 1M | Fast, balanced, multimodal |
 | `gemini-2.5-flash-lite` | 1M | Cost-efficient, high-frequency tasks |
 
-> **Never use** `gemini-2.0-*` or `gemini-1.5-*` — these are deprecated legacy models.
+> **Never use** `gemini-2.0-*` or `gemini-1.5-*` - these are deprecated legacy models.
 
 ### Current SDKs (Use These)
 
@@ -51,7 +51,7 @@ metadata:
 | Go | `google.golang.org/genai` | `go get google.golang.org/genai` |
 | Java | `com.google.genai:google-genai` | Maven/Gradle (see below) |
 
-> **Never use** `google-generativeai` (Python) or `@google/generative-ai` (JS) — deprecated.
+> **Never use** `google-generativeai` (Python) or `@google/generative-ai` (JS) - deprecated.
 
 ---
 
@@ -259,7 +259,7 @@ print(response.text)
 ## Step 9: Documentation Lookup
 
 ### With MCP (Preferred)
-If the `search_documentation` tool (Google MCP server) is available, use it as your **only** documentation source — it returns up-to-date, indexed docs.
+If the `search_documentation` tool (Google MCP server) is available, use it as your **only** documentation source - it returns up-to-date, indexed docs.
 
 ### Without MCP (Fallback)
 Fetch from official docs:
@@ -274,8 +274,8 @@ Fetch from official docs:
 
 ## Common Mistakes to Avoid
 
-- **Using deprecated models** — always use `gemini-2.5-*`, never `gemini-1.5-*` or `gemini-2.0-*`
-- **Using deprecated SDKs** — `google-generativeai` and `@google/generative-ai` are retired
-- **Hardcoding API keys** — use environment variables or secret managers
-- **Ignoring safety ratings** — check `response.prompt_feedback` before using output
-- **Not handling rate limits** — implement exponential backoff for production code
+- **Using deprecated models** - always use `gemini-2.5-*`, never `gemini-1.5-*` or `gemini-2.0-*`
+- **Using deprecated SDKs** - `google-generativeai` and `@google/generative-ai` are retired
+- **Hardcoding API keys** - use environment variables or secret managers
+- **Ignoring safety ratings** - check `response.prompt_feedback` before using output
+- **Not handling rate limits** - implement exponential backoff for production code

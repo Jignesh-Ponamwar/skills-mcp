@@ -1,4 +1,4 @@
-# PDF Extraction Output — Standard Format
+# PDF Extraction Output - Standard Format
 
 Use this template when reporting extracted PDF content to the user. Fill in each section with the actual extracted data.
 
@@ -13,7 +13,7 @@ Use this template when reporting extracted PDF content to the user. Fill in each
 | **Total words** | {total_words} |
 | **File size** | {file_size_kb} KB |
 | **Extraction method** | {method} *(pdfplumber / pypdf / OCR)* |
-| **Extraction quality** | {quality} *(high / medium / low — note if OCR was needed)* |
+| **Extraction quality** | {quality} *(high / medium / low - note if OCR was needed)* |
 
 ---
 
@@ -37,7 +37,7 @@ Use this template when reporting extracted PDF content to the user. Fill in each
 
 ## Data Quality Notes
 
-- {note_1} *(e.g., "Page 3 contains a scanned image — text may contain OCR errors")*
+- {note_1} *(e.g., "Page 3 contains a scanned image - text may contain OCR errors")*
 - {note_2} *(e.g., "Table on page 5 has merged cells; values were forward-filled")*
 
 ---

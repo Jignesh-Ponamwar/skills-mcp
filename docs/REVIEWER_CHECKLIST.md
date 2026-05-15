@@ -1,12 +1,12 @@
 # Skill Reviewer Checklist
 
-This checklist is for maintainers reviewing PRs that add or modify skills. It is also public — contributors should read it before submitting so they can pre-address every item.
+This checklist is for maintainers reviewing PRs that add or modify skills. It is also public - contributors should read it before submitting so they can pre-address every item.
 
 Use this as a rubric, not a mechanical pass/fail gate. Each section has a severity label: **Block** (must be resolved before merge), **Resolve** (needs discussion or clarification), or **Note** (log but do not block).
 
 ---
 
-## 1. Schema and Format — Block
+## 1. Schema and Format - Block
 
 - [ ] `name` in frontmatter exactly matches the directory slug
 - [ ] `description` is present and at least one complete sentence
@@ -18,7 +18,7 @@ Use this as a rubric, not a mechanical pass/fail gate. Each section has a severi
 
 ---
 
-## 2. Prompt-Injection Scan — Block
+## 2. Prompt-Injection Scan - Block
 
 - [ ] Scanner returns `CLEAN` or `WARNED` (not `BLOCKED`) on the submitted files
   ```bash
@@ -26,21 +26,21 @@ Use this as a rubric, not a mechanical pass/fail gate. Each section has a severi
   ```
 - [ ] No CRITICAL findings (instruction overrides, role hijacking, exfiltration patterns)
 - [ ] No HIGH findings (delimiter injection, HTML injection, Unicode attacks, base64 payloads)
-- [ ] MEDIUM findings (long lines, blank line floods) have a legitimate explanation (e.g., long code example) — note in review comment
+- [ ] MEDIUM findings (long lines, blank line floods) have a legitimate explanation (e.g., long code example) - note in review comment
 
 ---
 
-## 3. Description and Trigger Phrase Quality — Block/Resolve
+## 3. Description and Trigger Phrase Quality - Block/Resolve
 
-- [ ] Description is written from the **agent's perspective**: "Use when the user asks to [task]" — not a feature marketing description
+- [ ] Description is written from the **agent's perspective**: "Use when the user asks to [task]" - not a feature marketing description
 - [ ] Description does **not** duplicate the description of an existing skill (run `skills_find_relevant` with the proposed description; no existing skill should score > 0.7)
 - [ ] Trigger phrases cover **distinct phrasings** of the same intent, not minor word variations
 - [ ] Trigger phrases do not substantially overlap existing skill trigger phrases (manual check: compare with top 3 semantic search results)
-- [ ] Trigger phrases are written the way an **agent** would phrase a task — not how a human would Google it
+- [ ] Trigger phrases are written the way an **agent** would phrase a task - not how a human would Google it
 
 ---
 
-## 4. Body Content Quality — Resolve
+## 4. Body Content Quality - Resolve
 
 - [ ] The body contains **procedural instructions**, not documentation paraphrases. Ask: "Would an agent produce better output following these steps vs. relying on training alone?"
 - [ ] The body explicitly names any Tier-3 files it references (by filename)
@@ -50,7 +50,7 @@ Use this as a rubric, not a mechanical pass/fail gate. Each section has a severi
 
 ---
 
-## 5. Tier-3 Files — Resolve/Note
+## 5. Tier-3 Files - Resolve/Note
 
 - [ ] Every file in `references/`, `scripts/`, and `assets/` is explicitly referenced by name in the body (nothing loads speculatively)
 - [ ] Script files (`.py`, `.js`, `.sh`) contain a docstring or comment describing their purpose and expected inputs/outputs
@@ -60,7 +60,7 @@ Use this as a rubric, not a mechanical pass/fail gate. Each section has a severi
 
 ---
 
-## 6. Duplicate and Overlap Check — Block/Resolve
+## 6. Duplicate and Overlap Check - Block/Resolve
 
 - [ ] Slug does not already exist in `skill_mcp/skills_data/` (CI catches exact duplicates)
 - [ ] Semantically similar skills have been checked: top `skills_find_relevant` results reviewed
@@ -69,7 +69,7 @@ Use this as a rubric, not a mechanical pass/fail gate. Each section has a severi
 
 ---
 
-## 7. Structural Invariants — Block
+## 7. Structural Invariants - Block
 
 - [ ] The full body is **not** in the `triggers` or `description` fields (only intent signals belong there)
 - [ ] No script source is exposed via any tool response path (the `source` field in Qdrant payload is never returned by `skills_run_script`)
@@ -96,7 +96,7 @@ A skill should be closed (not merged) when:
 ## Reviewer Notes Template
 
 ```
-## Review — [skill slug] — [APPROVE / REQUEST CHANGES / REJECT]
+## Review - [skill slug] - [APPROVE / REQUEST CHANGES / REJECT]
 
 **Schema:** ✅ / ❌
 **Injection scan:** ✅ CLEAN / ⚠️ WARNED / ❌ BLOCKED

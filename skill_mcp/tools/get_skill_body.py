@@ -1,7 +1,7 @@
-"""MCP tool: skills_get_body — fetch full instructions for a single skill.
+"""MCP tool: skills_get_body - fetch full instructions for a single skill.
 
 The response includes a tier3_manifest field listing available reference files,
-scripts, and assets by filename only — no content is loaded. This lets the
+scripts, and assets by filename only - no content is loaded. This lets the
 agent selectively fetch only what the instructions reference (progressive
 disclosure). If no tier-3 files exist for a skill the manifest is empty.
 
@@ -32,7 +32,7 @@ def get_skill_body(skill_id: str, version: Optional[str] = None) -> str:
     activate. The body contains step-by-step instructions and any system-prompt
     text the agent should prepend for this skill.
 
-    The response also includes tier3_manifest — a lightweight index of available
+    The response also includes tier3_manifest - a lightweight index of available
     reference files, scripts, and assets. Check it and load what you need:
       - references: call skills_get_reference(skill_id, filename)
       - scripts: call skills_run_script(skill_id, filename, input_data)
@@ -64,7 +64,7 @@ def get_skill_body(skill_id: str, version: Optional[str] = None) -> str:
     if version:
         body = qdrant_manager.get_body_versioned(skill_id, version)
         if body is None:
-            # Requested version not found — fall back to latest
+            # Requested version not found - fall back to latest
             body = qdrant_manager.get_body(skill_id)
             if body is not None:
                 version_note = (

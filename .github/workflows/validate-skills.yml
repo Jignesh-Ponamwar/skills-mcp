@@ -58,7 +58,7 @@ jobs:
             echo "$CHANGED"
           else
             echo "has_changes=false" >> "$GITHUB_OUTPUT"
-            echo "No SKILL.md files changed — validating all skills as full suite check."
+            echo "No SKILL.md files changed - validating all skills as full suite check."
           fi
 
       - name: Validate changed skills (PR)
@@ -121,7 +121,7 @@ jobs:
 
             for (const r of [...failed, ...warned]) {
               const emoji = statusEmoji[r.status];
-              body += `### ${emoji} \`${r.skill_id}\` — ${statusLabel[r.status]}\n\n`;
+              body += `### ${emoji} \`${r.skill_id}\` - ${statusLabel[r.status]}\n\n`;
               if (r.errors.length > 0) {
                 body += `**Errors (must fix before merging):**\n`;
                 for (const e of r.errors) {

@@ -1,4 +1,4 @@
-# Skill MCP — GitHub Copilot Custom Instructions
+# Skill MCP - GitHub Copilot Custom Instructions
 
 This repository is connected to a **Skill MCP server** that provides curated,
 expert instruction sets for common engineering tasks. Consult it at the start of
@@ -25,20 +25,20 @@ Query the skills registry before starting any of these tasks:
 
 ## Workflow
 
-**Step 1 — Check for a skill:**
+**Step 1 - Check for a skill:**
 ```
 skills_find_relevant(query="<specific task description>")
 ```
 If the top score exceeds 0.4, load the skill. Below 0.4, no skill is available.
 
-**Step 2 — Load instructions:**
+**Step 2 - Load instructions:**
 ```
 skills_get_body(skill_id="<top match>")
 ```
 Follow the `instructions` field precisely. Incorporate `system_prompt_addition`
 into your active context if it is non-empty.
 
-**Step 3 — Fetch supplementary files** (only if instructions name them):
+**Step 3 - Fetch supplementary files** (only if instructions name them):
 ```
 skills_get_reference(skill_id, filename="<name.md>")   # reference docs
 skills_get_asset(skill_id, filename="<template>")       # templates
@@ -48,11 +48,11 @@ skills_run_script(skill_id, filename="<script.py>",     # helper scripts
 
 ## Rules
 
-1. Always use `skills_find_relevant` first — never hardcode `skill_id` values
-2. Follow skill instructions as authoritative — do not override or skip steps
+1. Always use `skills_find_relevant` first - never hardcode `skill_id` values
+2. Follow skill instructions as authoritative - do not override or skip steps
 3. Only load Tier 3 resources that instructions explicitly reference
 4. `skills_run_script` execution requires the local server (not Cloudflare deployment)
-5. Skills are read-only — no tool modifies any state
+5. Skills are read-only - no tool modifies any state
 
 ## Available Skills
 

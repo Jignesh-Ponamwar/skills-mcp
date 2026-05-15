@@ -4,18 +4,18 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "skill-mcp"
-version = "1.0.0"
-description = "Self-hostable Agent Skills registry over MCP — Cloudflare Workers + Workers AI + Qdrant Cloud"
+version = "1.1.0"
+description = "Self-hostable Agent Skills registry over MCP - Cloudflare Workers + Workers AI + Qdrant Cloud. Enhanced with structured metadata, new browsing tool, and 32+ production-ready skills from official sources."
 requires-python = ">=3.11"
 
 # Runtime deps for the Cloudflare Worker (installed by wrangler into the Worker bundle)
 dependencies = [
-    "mcp>=1.5.0",           # FastMCP via mcp.server.fastmcp — the official Anthropic MCP SDK
-    "python-dotenv>=1.0.0", # .env loading — used by server.py, seed script, and tools at import time
+    "mcp>=1.5.0",           # FastMCP via mcp.server.fastmcp - the official Anthropic MCP SDK
+    "python-dotenv>=1.0.0", # .env loading - used by server.py, seed script, and tools at import time
 ]
 
 [project.optional-dependencies]
-# Seed script — install with: pip install -r requirements.txt
+# Seed script - install with: pip install -r requirements.txt
 seed = [
     "qdrant-client>=1.9.0",
     "pydantic>=2.0.0",
@@ -24,7 +24,7 @@ seed = [
     "python-dotenv>=1.0.0",
     "requests>=2.31.0",
 ]
-# Local FastMCP server (optional — for script execution, not needed for CF Worker)
+# Local FastMCP server (optional - for script execution, not needed for CF Worker)
 # Install with: pip install -e ".[local-server]"
 local-server = [
     "fastmcp>=2.0.0",

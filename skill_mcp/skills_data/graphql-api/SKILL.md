@@ -1,7 +1,7 @@
 ---
 name: graphql-api
 description: >
-  Design and implement GraphQL APIs — schema definition, resolvers, mutations, subscriptions,
+  Design and implement GraphQL APIs - schema definition, resolvers, mutations, subscriptions,
   authentication, DataLoader for N+1 prevention, pagination (cursor and offset), error handling,
   and testing. Covers both server-side (GraphQL Yoga, Apollo Server, Strawberry for Python) and
   client-side (Apollo Client, urql, TanStack Query). Use when building a GraphQL API, adding
@@ -100,7 +100,7 @@ input UpdatePostInput {
   content: String
 }
 
-# Mutation return types — always return the mutated object
+# Mutation return types - always return the mutated object
 type CreatePostPayload {
   post: Post
   errors: [UserError!]!
@@ -444,10 +444,10 @@ function PostList() {
 
 ## Common Mistakes
 
-- **N+1 queries** — always use DataLoader for relationship resolvers
-- **Overfetching in resolvers** — fetch only the fields requested using projection/select
-- **Resolving errors with exceptions** — for business errors (validation), return `UserError` in payload; use exceptions only for system errors
-- **Forgetting to authenticate field resolvers** — apply `requireAuth` at the resolver level, not just the schema
-- **Global DataLoader instances** — DataLoaders must be created per-request to prevent cross-request data leaks
-- **No input validation** — validate IDs, string lengths, enums before DB calls
-- **Schema introspection in production** — disable `introspection: false` in production GraphQL servers to prevent schema leakage
+- **N+1 queries** - always use DataLoader for relationship resolvers
+- **Overfetching in resolvers** - fetch only the fields requested using projection/select
+- **Resolving errors with exceptions** - for business errors (validation), return `UserError` in payload; use exceptions only for system errors
+- **Forgetting to authenticate field resolvers** - apply `requireAuth` at the resolver level, not just the schema
+- **Global DataLoader instances** - DataLoaders must be created per-request to prevent cross-request data leaks
+- **No input validation** - validate IDs, string lengths, enums before DB calls
+- **Schema introspection in production** - disable `introspection: false` in production GraphQL servers to prevent schema leakage

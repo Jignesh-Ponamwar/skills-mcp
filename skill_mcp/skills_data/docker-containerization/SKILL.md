@@ -40,7 +40,7 @@ metadata:
 | Minimal static binary | `scratch` |
 
 **Rules:**
-- Never use `latest` tag — pin exact versions for reproducibility
+- Never use `latest` tag - pin exact versions for reproducibility
 - Prefer `-slim` or `-alpine` over full images to reduce attack surface and size
 - Use `distroless` or `scratch` for final stages of statically compiled languages
 
@@ -140,7 +140,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo \
     -ldflags="-w -s" -o server ./cmd/server
 
-# ─── Final Stage (distroless — no shell, minimal attack surface) ──────────────
+# ─── Final Stage (distroless - no shell, minimal attack surface) ──────────────
 FROM gcr.io/distroless/static:nonroot
 
 WORKDIR /
@@ -319,10 +319,10 @@ Order Dockerfile instructions from **least frequently changing** to **most frequ
 # ✅ Optimal order
 COPY package*.json ./     # changes infrequently → cache hit most of the time
 RUN npm ci                # only re-runs when package.json changes
-COPY . .                  # app code changes most often — put last
+COPY . .                  # app code changes most often - put last
 RUN npm run build
 
-# ❌ Wrong order — kills caching
+# ❌ Wrong order - kills caching
 COPY . .                  # app code changes → invalidates all subsequent layers
 RUN npm ci                # runs npm install on every code change!
 ```
@@ -331,10 +331,10 @@ RUN npm ci                # runs npm install on every code change!
 
 ## Common Mistakes
 
-- **Using `latest` tags** — pin exact versions: `node:20.12.0-alpine`
-- **Running as root** — always create and switch to a non-root user
-- **Copying everything into the image** — always have a comprehensive `.dockerignore`
-- **Installing dev dependencies in production** — use `--only=production` or multi-stage builds
-- **Secrets in Dockerfile** — never `ARG API_KEY` or `ENV SECRET=` in Dockerfile; use Docker secrets or runtime env vars
-- **Fat final images** — use multi-stage builds; copy only the compiled artifact
-- **Missing health checks** — define `HEALTHCHECK` so orchestrators know when to restart
+- **Using `latest` tags** - pin exact versions: `node:20.12.0-alpine`
+- **Running as root** - always create and switch to a non-root user
+- **Copying everything into the image** - always have a comprehensive `.dockerignore`
+- **Installing dev dependencies in production** - use `--only=production` or multi-stage builds
+- **Secrets in Dockerfile** - never `ARG API_KEY` or `ENV SECRET=` in Dockerfile; use Docker secrets or runtime env vars
+- **Fat final images** - use multi-stage builds; copy only the compiled artifact
+- **Missing health checks** - define `HEALTHCHECK` so orchestrators know when to restart

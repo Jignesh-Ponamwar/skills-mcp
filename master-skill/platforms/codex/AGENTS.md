@@ -1,6 +1,6 @@
-# Skill MCP — Agent Instructions for OpenAI Codex / Codex CLI
+# Skill MCP - Agent Instructions for OpenAI Codex / Codex CLI
 
-This repository is connected to a **Skill MCP server** — a curated registry of
+This repository is connected to a **Skill MCP server** - a curated registry of
 expert instruction sets for common AI engineering tasks.
 
 ## MCP Connection
@@ -36,7 +36,7 @@ Tasks that do NOT warrant a skill check:
 
 ### 2. Workflow
 
-#### Step 1 — Discover
+#### Step 1 - Discover
 
 ```python
 skills_find_relevant(
@@ -52,23 +52,23 @@ skills_find_relevant(
 | 0.4–0.6 | Possible match | Read `description`; proceed if relevant |
 | < 0.4 | No match | Continue without a skill |
 
-#### Step 2 — Load
+#### Step 2 - Load
 
 ```python
 skills_get_body(skill_id="test-writer")
 ```
 
 This returns:
-- `instructions` — expert step-by-step guidance. **Read and follow these exactly.**
-- `system_prompt_addition` — additional context for your persona (incorporate if non-empty)
-- `tier3_manifest` — lists supplementary files by category and filename
+- `instructions` - expert step-by-step guidance. **Read and follow these exactly.**
+- `system_prompt_addition` - additional context for your persona (incorporate if non-empty)
+- `tier3_manifest` - lists supplementary files by category and filename
 
 For configuration questions or customisation requests:
 ```python
 skills_get_options(skill_id="test-writer")
 ```
 
-#### Step 3 — Fetch supplementary resources
+#### Step 3 - Fetch supplementary resources
 
 Only fetch resources that the `instructions` explicitly reference.
 
@@ -120,4 +120,4 @@ skills_get_asset(skill_id="test-writer", filename="test-template.py")   # fetch 
 | `test-writer` | Unit, integration, E2E tests |
 | `web-scraper` | Web scraping and data extraction |
 
-*Use `skills_find_relevant` for semantic discovery — do not hardcode `skill_id` values.*
+*Use `skills_find_relevant` for semantic discovery - do not hardcode `skill_id` values.*

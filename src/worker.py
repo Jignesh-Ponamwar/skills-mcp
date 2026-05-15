@@ -1,32 +1,32 @@
 """
 Cloudflare Workers entry point for skill-mcp.
 
-Two MCP transports — both active simultaneously:
+Two MCP transports - both active simultaneously:
 
-  Legacy SSE (MCP spec 2024-11-05) — Claude Desktop, Claude.ai, Cursor, etc.
-    GET  /sse          — open SSE stream; server sends messages endpoint URL
-    POST /messages/    — receive JSON-RPC message; response sent via SSE stream
+  Legacy SSE (MCP spec 2024-11-05) - Claude Desktop, Claude.ai, Cursor, etc.
+    GET  /sse          - open SSE stream; server sends messages endpoint URL
+    POST /messages/    - receive JSON-RPC message; response sent via SSE stream
 
-  Streamable HTTP (MCP spec 2025-03-26) — Glama, new SDK clients
-    POST /mcp          — stateless JSON-RPC request→response
-    OPTIONS *          — CORS preflight (204 + CORS headers)
+  Streamable HTTP (MCP spec 2025-03-26) - Glama, new SDK clients
+    POST /mcp          - stateless JSON-RPC request→response
+    OPTIONS *          - CORS preflight (204 + CORS headers)
 
 CORS headers are included on every response so browser-based testers work.
 
 Bindings (wrangler.jsonc + `wrangler secret put`):
-  AI             — Workers AI (@cf/baai/bge-small-en-v1.5, 384-dim)
-  QDRANT_URL     — secret: Qdrant Cloud cluster URL
-  QDRANT_API_KEY — secret: Qdrant Cloud API key
-  MCP_OBJECT     — Durable Object (holds ASGI app + SSE session state)
+  AI             - Workers AI (@cf/baai/bge-small-en-v1.5, 384-dim)
+  QDRANT_URL     - secret: Qdrant Cloud cluster URL
+  QDRANT_API_KEY - secret: Qdrant Cloud API key
+  MCP_OBJECT     - Durable Object (holds ASGI app + SSE session state)
 
 Optional env vars:
-  RATE_LIMIT_RPM — per-IP rate limit in requests/min (default: 60)
+  RATE_LIMIT_RPM - per-IP rate limit in requests/min (default: 60)
 """
 
 from __future__ import annotations
 
 import asyncio
-import js  # Pyodide JS bridge — always available in Cloudflare Python Workers
+import js  # Pyodide JS bridge - always available in Cloudflare Python Workers
 import json
 import time
 import urllib.parse
@@ -34,6 +34,8 @@ import uuid
 from typing import Any
 
 from workers import DurableObject
+
+WORKER_VERSION = "1.1.0"
 
 
 # ── HTTP helpers via js.fetch (urllib TCP sockets are NOT supported in Workers) ─
@@ -64,7 +66,7 @@ async def _js_fetch(
         response = await js.fetch(url, js_init)
         text = await response.text()
     except Exception as exc:
-        # Don't include the URL — it may contain cluster-specific host info
+        # Don't include the URL - it may contain cluster-specific host info
         raise RuntimeError(f"Upstream request failed: {exc}") from exc
     if not response.ok:
         # Include only the HTTP status; omit URL and response body which may
@@ -141,13 +143,13 @@ _MCP_TOOLS: list[dict] = [
     {
         "name": "skills_find_relevant",
         "description": (
-            "STEP 1 — Discover relevant skills. Call this FIRST at the start of any task "
+            "STEP 1 - Discover relevant skills. Call this FIRST at the start of any task "
             "to check whether the registry contains a curated skill that matches. "
             "Performs semantic vector search and returns ranked results with similarity scores.\n\n"
             "Workflow after this call:\n"
-            "  • score > 0.6  → strong match — call skills_get_body with that skill_id\n"
-            "  • score 0.4–0.6 → possible match — inspect description before proceeding\n"
-            "  • score < 0.4  → no relevant skill — proceed without one\n\n"
+            "  • score > 0.6  → strong match - call skills_get_body with that skill_id\n"
+            "  • score 0.4–0.6 → possible match - inspect description before proceeding\n"
+            "  • score < 0.4  → no relevant skill - proceed without one\n\n"
             "Query tips: be task-specific, not generic. "
             "'write pytest unit tests for a Flask REST API' outperforms 'testing'. "
             "Describe what you are trying to accomplish, not what you want to find."
@@ -159,7 +161,7 @@ _MCP_TOOLS: list[dict] = [
                     "type": "string",
                     "description": (
                         "Natural-language description of the current task. "
-                        "Be specific — include language, framework, and goal."
+                        "Be specific - include language, framework, and goal."
                     ),
                 },
                 "top_k": {
@@ -174,16 +176,16 @@ _MCP_TOOLS: list[dict] = [
     {
         "name": "skills_get_body",
         "description": (
-            "STEP 2 — Load full skill instructions. Call after skills_find_relevant "
+            "STEP 2 - Load full skill instructions. Call after skills_find_relevant "
             "once you have identified the best-matching skill_id.\n\n"
             "Returns three fields:\n"
-            "  • instructions         — expert step-by-step guidance; read and follow these\n"
-            "  • system_prompt_addition — optional context to add to your persona (may be empty)\n"
-            "  • tier3_manifest       — lists available references, scripts, and assets by filename\n\n"
+            "  • instructions         - expert step-by-step guidance; read and follow these\n"
+            "  • system_prompt_addition - optional context to add to your persona (may be empty)\n"
+            "  • tier3_manifest       - lists available references, scripts, and assets by filename\n\n"
             "After loading: apply the instructions. "
             "If tier3_manifest lists files that the instructions explicitly reference, "
             "fetch them with skills_get_reference, skills_run_script, or skills_get_asset. "
-            "Most tasks are fully served by the instructions alone — do not load Tier 3 speculatively.\n\n"
+            "Most tasks are fully served by the instructions alone - do not load Tier 3 speculatively.\n\n"
             "Version pinning: pass version='1.2' to pin to a specific skill version, or use the "
             "inline form skill_id='stripe-integration@1.2'. If the requested version is not found, "
             "the latest version is returned with a version_note explaining the fallback. "
@@ -210,14 +212,14 @@ _MCP_TOOLS: list[dict] = [
     {
         "name": "skills_get_options",
         "description": (
-            "OPTIONAL STEP 2b — Load config schema, variants, and constraints for a skill. "
+            "OPTIONAL STEP 2b - Load config schema, variants, and constraints for a skill. "
             "Call only when: (a) the user asks to customize skill behaviour, or "
             "(b) skills_get_body instructions mention configurable options.\n\n"
             "Returns: config_schema (JSON Schema for parameters), "
             "variants (alternative skill modes), "
             "dependencies (required tools/packages), "
             "limitations (known constraints).\n\n"
-            "Do NOT call this by default — most tasks complete with skills_get_body alone."
+            "Do NOT call this by default - most tasks complete with skills_get_body alone."
         ),
         "inputSchema": {
             "type": "object",
@@ -230,7 +232,7 @@ _MCP_TOOLS: list[dict] = [
     {
         "name": "skills_get_reference",
         "description": (
-            "STEP 3a — Fetch a reference document bundled with a skill "
+            "STEP 3a - Fetch a reference document bundled with a skill "
             "(markdown files: checklists, policies, API specs, examples).\n\n"
             "Two-phase use:\n"
             "  1. Call with filename='list' (default) to see the full reference manifest\n"
@@ -255,15 +257,15 @@ _MCP_TOOLS: list[dict] = [
     {
         "name": "skills_run_script",
         "description": (
-            "STEP 3b — Execute a helper script bundled with a skill. "
-            "Script source is NEVER returned — only stdout, stderr, and exit_code.\n\n"
+            "STEP 3b - Execute a helper script bundled with a skill. "
+            "Script source is NEVER returned - only stdout, stderr, and exit_code.\n\n"
             "Two-phase use:\n"
             "  1. Call with filename='list' to see available scripts and their descriptions\n"
             "  2. Call with the specific filename (and optional input_data) to execute\n\n"
             "input_data: key-value pairs passed to the script as environment variables.\n\n"
             "Deployment note: script execution requires the local server "
             "(MCP_TRANSPORT=streamable-http python -m skill_mcp.server). "
-            "The Cloudflare Workers deployment returns the manifest only — "
+            "The Cloudflare Workers deployment returns the manifest only - "
             "Pyodide has no subprocess support.\n\n"
             "Only call when skill instructions direct you to run a specific script."
         ),
@@ -292,12 +294,12 @@ _MCP_TOOLS: list[dict] = [
     {
         "name": "skills_get_asset",
         "description": (
-            "STEP 3c — Fetch a template or static resource bundled with a skill "
+            "STEP 3c - Fetch a template or static resource bundled with a skill "
             "(markdown templates, config starters, example data files).\n\n"
             "Two-phase use:\n"
             "  1. Call with filename='list' (default) to see the full asset manifest\n"
             "  2. Call again with the specific filename to fetch its content\n\n"
-            "Use the returned content as a starting template — adapt it to the specific task. "
+            "Use the returned content as a starting template - adapt it to the specific task. "
             "Only call when skill instructions reference a specific asset file."
         ),
         "inputSchema": {
@@ -322,13 +324,13 @@ _MCP_TOOLS: list[dict] = [
 def _build_server(env: Any):
     """
     Return a bare ASGI callable implementing both MCP transports.
-    No third-party packages required — pure stdlib.
+    No third-party packages required - pure stdlib.
 
     Routes:
-      OPTIONS *        — CORS preflight (204)
-      GET  /sse        — legacy SSE transport: open stream, send endpoint event
-      POST /messages/  — legacy SSE transport: receive JSON-RPC, route to stream
-      POST /mcp        — Streamable HTTP: stateless JSON-RPC request→response
+      OPTIONS *        - CORS preflight (204)
+      GET  /sse        - legacy SSE transport: open stream, send endpoint event
+      POST /messages/  - legacy SSE transport: receive JSON-RPC, route to stream
+      POST /mcp        - Streamable HTTP: stateless JSON-RPC request→response
     """
 
     # Active SSE sessions: session_id → asyncio.Queue of outbound JSON-RPC dicts.
@@ -381,10 +383,10 @@ def _build_server(env: Any):
         """Return a 384-dim embedding vector for *query*.
 
         Strategy (tried in order):
-          1. Workers AI binding with js.JSON.parse() input — avoids the Python
+          1. Workers AI binding with js.JSON.parse() input - avoids the Python
              dict → JS Map conversion that causes AiError 5006.
-          2. Workers AI binding with js.eval() literal — alternative JS object form.
-          3. Workers AI REST API via urllib — works if WORKERS_AI_ACCOUNT_ID and
+          2. Workers AI binding with js.eval() literal - alternative JS object form.
+          3. Workers AI REST API via urllib - works if WORKERS_AI_ACCOUNT_ID and
              WORKERS_AI_API_TOKEN secrets are set; zero extra dependencies.
 
         Raises RuntimeError if all three strategies fail.
@@ -787,7 +789,7 @@ def _build_server(env: Any):
                 {
                     "protocolVersion": "2024-11-05",
                     "capabilities": {"tools": {}},
-                    "serverInfo": {"name": "skill-mcp-server", "version": "1.0.0"},
+                    "serverInfo": {"name": "skill-mcp-server", "version": WORKER_VERSION},
                 }
             )
 
@@ -814,7 +816,7 @@ def _build_server(env: Any):
                     }
                 )
             except ValueError as exc:
-                # ValueError is raised for unknown tool names — safe to surface
+                # ValueError is raised for unknown tool names - safe to surface
                 return ok(
                     {
                         "content": [{"type": "text", "text": str(exc)}],
@@ -838,7 +840,7 @@ def _build_server(env: Any):
             return err(-32601, f"Method not found: {method}")
 
         else:
-            return None  # Unknown notification — ignore
+            return None  # Unknown notification - ignore
 
     # ── Bare ASGI helpers ──────────────────────────────────────────────────────
 
@@ -850,7 +852,7 @@ def _build_server(env: Any):
         (b"referrer-policy", b"no-referrer"),
     ]
 
-    # CORS headers — required for browser-based MCP testers (Glama, etc.)
+    # CORS headers - required for browser-based MCP testers (Glama, etc.)
     _CORS_HEADERS: list[tuple[bytes, bytes]] = [
         (b"access-control-allow-origin", b"*"),
         (b"access-control-allow-methods", b"GET, POST, OPTIONS"),
@@ -875,7 +877,7 @@ def _build_server(env: Any):
         await send({"type": "http.response.start", "status": status, "headers": headers})
         await send({"type": "http.response.body", "body": body, "more_body": False})
 
-    _MAX_REQUEST_BODY = 1_048_576  # 1 MB — reject oversized payloads before parsing
+    _MAX_REQUEST_BODY = 1_048_576  # 1 MB - reject oversized payloads before parsing
 
     async def _read_body(receive: Any) -> bytes:
         body = b""
@@ -904,7 +906,7 @@ def _build_server(env: Any):
     # ── Route handlers ─────────────────────────────────────────────────────────
 
     async def _handle_sse(scope: dict, receive: Any, send: Any) -> None:
-        """GET /sse — open SSE stream, send endpoint event, relay responses."""
+        """GET /sse - open SSE stream, send endpoint event, relay responses."""
         # Rate limit
         ip = _client_ip(scope)
         if not _check_rate_limit(ip):
@@ -928,7 +930,7 @@ def _build_server(env: Any):
                     (b"cache-control", b"no-cache"),
                     (b"connection", b"keep-alive"),
                     (b"x-accel-buffering", b"no"),
-                    # CORS — needed for browser clients
+                    # CORS - needed for browser clients
                     *_CORS_HEADERS,
                 ],
             }
@@ -952,7 +954,7 @@ def _build_server(env: Any):
         await send({"type": "http.response.body", "body": b"", "more_body": False})
 
     async def _handle_mcp_post(scope: dict, receive: Any, send: Any) -> None:
-        """POST /mcp — stateless Streamable HTTP transport (MCP spec 2025-03-26).
+        """POST /mcp - stateless Streamable HTTP transport (MCP spec 2025-03-26).
 
         Parses a JSON-RPC request, dispatches it synchronously, and returns
         the response as application/json. This is the mode used by Glama's
@@ -980,14 +982,14 @@ def _build_server(env: Any):
 
         response = await _handle_message(message)
         if response is None:
-            # Notification — no body expected
+            # Notification - no body expected
             await _send_response(send, 204, b"", content_type=b"application/json")
             return
 
         await _send_response(send, 200, json.dumps(response).encode())
 
     async def _handle_messages(scope: dict, receive: Any, send: Any) -> None:
-        """POST /messages/ — receive JSON-RPC, route response to SSE stream."""
+        """POST /messages/ - receive JSON-RPC, route response to SSE stream."""
         ip = _client_ip(scope)
         if not _check_rate_limit(ip):
             body = json.dumps({"error": "Too Many Requests"}).encode()
@@ -1042,9 +1044,14 @@ def _build_server(env: Any):
             path = scope.get("path", "")
             method = scope.get("method", "").upper()
 
-            # ── CORS preflight — must be first so browsers can reach any route ──
+            # ── CORS preflight - must be first so browsers can reach any route ──
             if method == "OPTIONS":
                 await _send_response(send, 204, b"", content_type=b"text/plain")
+                return
+
+            if path in ("/", "/health") and method == "GET":
+                body = json.dumps({"status": "ok", "version": WORKER_VERSION}).encode()
+                await _send_response(send, 200, body)
                 return
 
             if path == "/sse" and method == "GET":
@@ -1059,7 +1066,7 @@ def _build_server(env: Any):
                 await _send_response(send, 404, body)
 
         else:
-            # Unrecognised ASGI scope type — ignore
+            # Unrecognised ASGI scope type - ignore
             pass
 
     return app

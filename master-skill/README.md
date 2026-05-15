@@ -1,4 +1,4 @@
-# Skill MCP — Master Skill
+# Skill MCP - Master Skill
 
 Drop the right file into your project so your AI agent or coding tool
 automatically knows how to discover and use the Skill MCP server.
@@ -12,25 +12,25 @@ master-skill/
 ├── SKILL.md                         Universal skill definition (MCP-aware agents)
 └── platforms/
     ├── antigravity/                 Google Antigravity IDE
-    │   ├── AGENTS.md                Secondary cross-tool rules — drop in project root
+    │   ├── AGENTS.md                Secondary cross-tool rules - drop in project root
     │   └── .agents/
     │       └── rules/
-    │           └── GEMINI.md        Primary rules (highest priority) — drop .agents/ in project root
+    │           └── GEMINI.md        Primary rules (highest priority) - drop .agents/ in project root
     ├── claude-code/
-    │   └── CLAUDE.md                Claude Code — drop in project root
+    │   └── CLAUDE.md                Claude Code - drop in project root
     ├── cursor/
-    │   └── .cursorrules             Cursor — drop in project root
+    │   └── .cursorrules             Cursor - drop in project root
     ├── windsurf/
-    │   └── .windsurfrules           Windsurf — drop in project root
+    │   └── .windsurfrules           Windsurf - drop in project root
     ├── codex/
-    │   └── AGENTS.md                OpenAI Codex CLI — drop in project root
+    │   └── AGENTS.md                OpenAI Codex CLI - drop in project root
     ├── cline/
-    │   └── .clinerules              Cline (VSCode) — drop in project root
+    │   └── .clinerules              Cline (VSCode) - drop in project root
     ├── copilot/
     │   └── .github/
-    │       └── copilot-instructions.md  GitHub Copilot — drop .github/ in project root
+    │       └── copilot-instructions.md  GitHub Copilot - drop .github/ in project root
     └── aider/
-        └── CONVENTIONS.md           Aider — drop in project root
+        └── CONVENTIONS.md           Aider - drop in project root
 ```
 
 ---
@@ -76,7 +76,7 @@ cp master-skill/platforms/aider/CONVENTIONS.md ./CONVENTIONS.md
 
 ### Antigravity (Google)
 ```bash
-# Primary rules file (highest priority — Antigravity reads this first)
+# Primary rules file (highest priority - Antigravity reads this first)
 cp -r master-skill/platforms/antigravity/.agents ./.agents
 
 # Secondary cross-tool file (also read by Antigravity and Codex-compatible tools)
@@ -99,9 +99,9 @@ with your actual deployed Worker URL (shown after `npx wrangler deploy`).
 
 Each file teaches the agent the **3-tier progressive disclosure workflow**:
 
-1. **Tier 1 — Discover** (`skills_find_relevant`) — semantic search over the registry
-2. **Tier 2 — Load** (`skills_get_body`, `skills_get_options`) — full instructions + manifest
-3. **Tier 3 — Supplement** (`skills_get_reference`, `skills_run_script`, `skills_get_asset`) — load only what instructions reference
+1. **Tier 1 - Discover** (`skills_find_relevant`) - semantic search over the registry
+2. **Tier 2 - Load** (`skills_get_body`, `skills_get_options`) - full instructions + manifest
+3. **Tier 3 - Supplement** (`skills_get_reference`, `skills_run_script`, `skills_get_asset`) - load only what instructions reference
 
 The agent learns when to check, how to interpret scores, and what to do with results.
 
@@ -115,7 +115,7 @@ for every session in that project.
 
 ---
 
-## SKILL.md — for MCP-aware agents
+## SKILL.md - for MCP-aware agents
 
 `SKILL.md` uses the same frontmatter format as the registry's own skills.
 If your agent platform supports adding skills to the local skill directory,

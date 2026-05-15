@@ -126,6 +126,29 @@ desktop.ini
 .claude/
 
 # =============================================================================
+# N8N AUTOMATION (INTERNAL ONLY - DO NOT COMMIT TO GIT)
+# =============================================================================
+# The entire n8n/ folder is for internal/personal use only.
+# It is not part of the production deployment.
+# Keep n8n/ local and never commit to version control.
+n8n/
+# Exception: These documentation files CAN be committed if shared internally
+# (but typically n8n/ stays completely local)
+# !n8n/README.md
+# !n8n/QUICKSTART.md
+# !n8n/WORKFLOW.json
+# !n8n/.env.example
+
+# Internal extras folder for agent-generated files and local automation assets.
+_extras/
+
+# =============================================================================
+# DOCKER
+# =============================================================================
+.dockerignore
+docker-compose.override.yml
+
+# =============================================================================
 # MISC
 # =============================================================================
 *.bak

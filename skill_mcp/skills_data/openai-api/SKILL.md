@@ -1,7 +1,7 @@
 ---
 name: openai-api
 description: >
-  Build applications using the OpenAI API — chat completions, function calling, streaming,
+  Build applications using the OpenAI API - chat completions, function calling, streaming,
   embeddings, image generation (DALL-E), vision (GPT-4 Vision), audio (Whisper, TTS), assistants,
   and structured outputs. Covers Python and TypeScript OpenAI SDK, model selection (GPT-4o, o3,
   o4-mini), cost optimization with prompt caching, and batch processing. Use when integrating OpenAI
@@ -37,11 +37,11 @@ metadata:
 | `gpt-4o-mini` | Fast, cheap, most tasks | 128K tokens |
 | `o3` | Complex multi-step reasoning | 200K tokens |
 | `o4-mini` | Efficient reasoning at low cost | 200K tokens |
-| `text-embedding-3-large` | High-quality embeddings (3072-dim) | — |
-| `text-embedding-3-small` | Affordable embeddings (1536-dim) | — |
-| `dall-e-3` | High-quality image generation | — |
-| `whisper-1` | Audio transcription | — |
-| `tts-1-hd` | High-quality text-to-speech | — |
+| `text-embedding-3-large` | High-quality embeddings (3072-dim) | - |
+| `text-embedding-3-small` | Affordable embeddings (1536-dim) | - |
+| `dall-e-3` | High-quality image generation | - |
+| `whisper-1` | Audio transcription | - |
+| `tts-1-hd` | High-quality text-to-speech | - |
 
 ---
 
@@ -112,7 +112,7 @@ with client.chat.completions.stream(
 ```
 
 ```typescript
-// TypeScript — Server-Sent Events for Next.js
+// TypeScript - Server-Sent Events for Next.js
 const stream = await client.chat.completions.create({
   model: 'gpt-4o',
   messages: [{ role: 'user', content: 'Write a poem about the sea' }],
@@ -345,10 +345,10 @@ results = client.files.content(batch.output_file_id)
 
 ## Common Mistakes
 
-- **Hardcoding API keys** — always use environment variables
-- **Not handling rate limits** — implement exponential backoff with `openai.RateLimitError`
-- **Ignoring token limits** — count tokens with `tiktoken` before sending long inputs
-- **Not streaming for long outputs** — use streaming for responses > 500 tokens
-- **Skipping error handling** — always catch `openai.APIError` and its subclasses
-- **Using deprecated `gpt-4-turbo`** — prefer `gpt-4o` for better performance and lower cost
-- **Missing tool_call loop exit condition** — the agent loop must check `finish_reason == "stop"` to exit
+- **Hardcoding API keys** - always use environment variables
+- **Not handling rate limits** - implement exponential backoff with `openai.RateLimitError`
+- **Ignoring token limits** - count tokens with `tiktoken` before sending long inputs
+- **Not streaming for long outputs** - use streaming for responses > 500 tokens
+- **Skipping error handling** - always catch `openai.APIError` and its subclasses
+- **Using deprecated `gpt-4-turbo`** - prefer `gpt-4o` for better performance and lower cost
+- **Missing tool_call loop exit condition** - the agent loop must check `finish_reason == "stop"` to exit

@@ -1,4 +1,4 @@
-"""Simple in-memory TTL cache — no external deps required."""
+"""Simple in-memory TTL cache - no external deps required."""
 
 from __future__ import annotations
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-SKILL.md validator — used by GitHub Actions CI on every PR.
+SKILL.md validator - used by GitHub Actions CI on every PR.
 
 Validates every SKILL.md file under skill_mcp/skills_data/ for:
   1. Parseable YAML frontmatter
@@ -36,7 +36,7 @@ sys.path.insert(0, str(_ROOT))
 try:
     import yaml
 except ImportError:
-    print("[validate] ERROR: PyYAML not installed — run: pip install PyYAML", file=sys.stderr)
+    print("[validate] ERROR: PyYAML not installed - run: pip install PyYAML", file=sys.stderr)
     sys.exit(2)
 
 try:
@@ -103,7 +103,7 @@ def _validate_schema(slug: str, fm: dict, body: str) -> list[str]:
     if desc and len(desc) > MAX_DESCRIPTION_CHARS:
         errors.append(
             f"'description' is {len(desc)} chars (max {MAX_DESCRIPTION_CHARS}). "
-            f"Write it from the agent's perspective — concise trigger sentences, not a manual."
+            f"Write it from the agent's perspective - concise trigger sentences, not a manual."
         )
 
     # license
@@ -131,7 +131,7 @@ def _validate_schema(slug: str, fm: dict, body: str) -> list[str]:
     else:
         if len(triggers) < MIN_TRIGGERS:
             errors.append(
-                f"'metadata.triggers' has {len(triggers)} item(s) — "
+                f"'metadata.triggers' has {len(triggers)} item(s) - "
                 f"minimum is {MIN_TRIGGERS}. Add natural-language trigger phrases."
             )
         if len(triggers) > MAX_TRIGGERS:
@@ -158,7 +158,7 @@ def _validate_schema(slug: str, fm: dict, body: str) -> list[str]:
 
     # body must exist
     if not body:
-        errors.append("SKILL.md body is empty — the body is what agents actually read")
+        errors.append("SKILL.md body is empty - the body is what agents actually read")
 
     return errors
 
@@ -181,7 +181,7 @@ def _check_tier3_references(slug: str, body: str, skill_folder: Path) -> list[st
         ref_path = skill_folder / Path(match.group(0))
         if not ref_path.exists():
             warnings.append(
-                f"Body references '{match.group(0)}' but file not found on disk — "
+                f"Body references '{match.group(0)}' but file not found on disk - "
                 f"agents will fail to load it"
             )
     return warnings
@@ -355,7 +355,7 @@ def main() -> int:
 
     if n_failed > 0:
         print(
-            f"[validate] FAILED — fix the {n_failed} error(s) above before merging.",
+            f"[validate] FAILED - fix the {n_failed} error(s) above before merging.",
             file=sys.stderr,
         )
         return 1

@@ -1,7 +1,7 @@
 ---
 name: typescript-patterns
 description: >
-  Apply advanced TypeScript patterns — strict type safety, utility types, generics, discriminated
+  Apply advanced TypeScript patterns - strict type safety, utility types, generics, discriminated
   unions, branded types, conditional types, template literal types, and declaration merging. Covers
   tsconfig best practices, type-safe API design, narrowing, and eliminating any/unknown. Use when
   writing TypeScript, reviewing TypeScript types, designing type-safe APIs, debugging type errors,
@@ -57,7 +57,7 @@ metadata:
 
 ---
 
-## 2. Utility Types — Essential Reference
+## 2. Utility Types - Essential Reference
 
 ```typescript
 interface User {
@@ -67,22 +67,22 @@ interface User {
   age?: number
 }
 
-// Partial — all properties optional
+// Partial - all properties optional
 type UpdateUser = Partial<User>
 
-// Required — all properties required
+// Required - all properties required
 type StrictUser = Required<User>
 
-// Pick — select specific properties
+// Pick - select specific properties
 type UserSummary = Pick<User, 'id' | 'name'>
 
-// Omit — exclude specific properties
+// Omit - exclude specific properties
 type PublicUser = Omit<User, 'email'>
 
-// Readonly — prevent mutation
+// Readonly - prevent mutation
 type ImmutableUser = Readonly<User>
 
-// Record — typed object with known key shape
+// Record - typed object with known key shape
 type UserById = Record<number, User>
 type RolePermissions = Record<'admin' | 'editor' | 'viewer', string[]>
 
@@ -103,7 +103,7 @@ type DefiniteUser = NonNullable<MaybeUser>                   // User
 
 ---
 
-## 3. Generics — Patterns
+## 3. Generics - Patterns
 
 ```typescript
 // Generic function
@@ -148,7 +148,7 @@ class Repository<T extends { id: number }> {
 
 ---
 
-## 4. Discriminated Unions — Type-Safe State Machines
+## 4. Discriminated Unions - Type-Safe State Machines
 
 ```typescript
 // Instead of flags (error-prone):
@@ -200,12 +200,12 @@ if (result.ok) {
 Prevent mixing up primitive values that have the same underlying type:
 
 ```typescript
-// Without brands — easy to mix up IDs:
+// Without brands - easy to mix up IDs:
 function getUser(id: number) { ... }
 function getOrder(id: number) { ... }
-getUser(orderId)  // TypeScript allows this — wrong!
+getUser(orderId)  // TypeScript allows this - wrong!
 
-// With brands — type-safe:
+// With brands - type-safe:
 type UserId = number & { readonly _brand: 'UserId' }
 type OrderId = number & { readonly _brand: 'OrderId' }
 
@@ -219,7 +219,7 @@ function getOrder(id: OrderId) { ... }
 const userId = createUserId(123)
 const orderId = 456 as OrderId
 getUser(userId)    // ✅
-getUser(orderId)   // ❌ TypeScript error — OrderId is not UserId
+getUser(orderId)   // ❌ TypeScript error - OrderId is not UserId
 ```
 
 ---
@@ -232,7 +232,7 @@ type IsArray<T> = T extends any[] ? true : false
 type Test1 = IsArray<string[]>  // true
 type Test2 = IsArray<string>    // false
 
-// Infer — extract inner types
+// Infer - extract inner types
 type UnwrapPromise<T> = T extends Promise<infer U> ? U : T
 type User = UnwrapPromise<Promise<{ name: string }>>  // { name: string }
 
@@ -314,12 +314,12 @@ function assertDefined<T>(value: T, name: string): asserts value is NonNullable<
 ## 9. Eliminating `any`
 
 ```typescript
-// ❌ any — unsafe
+// ❌ any - unsafe
 function parseData(raw: any) {
   return raw.user.name  // runtime error if shape wrong
 }
 
-// ✅ unknown + narrowing — safe
+// ✅ unknown + narrowing - safe
 function parseData(raw: unknown): string {
   if (
     typeof raw === 'object' && raw !== null &&
@@ -331,7 +331,7 @@ function parseData(raw: unknown): string {
   throw new Error('Unexpected data shape')
 }
 
-// ✅ Zod — best for runtime validation of external data
+// ✅ Zod - best for runtime validation of external data
 import { z } from 'zod'
 
 const UserSchema = z.object({
@@ -348,10 +348,10 @@ const user = UserSchema.parse(rawData)  // throws on invalid, returns User
 
 ## Common Mistakes
 
-- **Using `any` instead of `unknown`** — `unknown` forces narrowing before use
-- **`as` everywhere** — `as SomeType` suppresses errors; use type guards instead
-- **`!` non-null assertion without checking** — assert only when you've verified the value exists
-- **Loose `tsconfig`** — always start with `"strict": true`
-- **Interface vs type for objects** — prefer `interface` for public APIs (extensible), `type` for unions and computed types
-- **Forgetting `readonly`** — immutable arrays should use `readonly T[]` not `T[]`
-- **Implicit `any` in catch** — use `catch (err: unknown)` and narrow to `Error` before accessing `.message`
+- **Using `any` instead of `unknown`** - `unknown` forces narrowing before use
+- **`as` everywhere** - `as SomeType` suppresses errors; use type guards instead
+- **`!` non-null assertion without checking** - assert only when you've verified the value exists
+- **Loose `tsconfig`** - always start with `"strict": true`
+- **Interface vs type for objects** - prefer `interface` for public APIs (extensible), `type` for unions and computed types
+- **Forgetting `readonly`** - immutable arrays should use `readonly T[]` not `T[]`
+- **Implicit `any` in catch** - use `catch (err: unknown)` and narrow to `Error` before accessing `.message`

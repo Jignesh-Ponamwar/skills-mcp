@@ -6,9 +6,9 @@
 #   docker compose up
 #
 # What this does:
-#   1. qdrant   — starts a local Qdrant instance (no API key needed locally)
-#   2. seed     — runs the seed script once to populate Qdrant with all 30 skills
-#   3. server   — starts the FastMCP HTTP server on :8000
+#   1. qdrant   - starts a local Qdrant instance (no API key needed locally)
+#   2. seed     - runs the seed script once to populate Qdrant with all 30 skills
+#   3. server   - starts the FastMCP HTTP server on :8000
 #
 # Prerequisites:
 #   - Docker Desktop or Docker Engine + Compose plugin
@@ -41,7 +41,7 @@
 
 services:
 
-  # ── Qdrant — local vector database ─────────────────────────────────────────
+  # ── Qdrant - local vector database ─────────────────────────────────────────
   qdrant:
     image: qdrant/qdrant:v1.9.2
     container_name: skill-mcp-qdrant
@@ -54,7 +54,7 @@ services:
     environment:
       QDRANT__SERVICE__HTTP_PORT: 6333
       QDRANT__SERVICE__GRPC_PORT: 6334
-      # No API key for local development — easier to iterate
+      # No API key for local development - easier to iterate
       # For production, set: QDRANT__SERVICE__API_KEY=your-key
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:6333/healthz || exit 1"]
@@ -63,7 +63,7 @@ services:
       retries: 5
       start_period: 10s
 
-  # ── Seed — one-shot: populate Qdrant with all skills ───────────────────────
+  # ── Seed - one-shot: populate Qdrant with all skills ───────────────────────
   seed:
     build:
       context: .
@@ -74,10 +74,10 @@ services:
       qdrant:
         condition: service_healthy
     environment:
-      # Local Qdrant — no API key
+      # Local Qdrant - no API key
       QDRANT_URL: http://qdrant:6333
       QDRANT_API_KEY: ""
-      # Cloudflare Workers AI — required for embedding generation
+      # Cloudflare Workers AI - required for embedding generation
       # These come from your .env file (never commit .env)
       WORKERS_AI_ACCOUNT_ID: ${WORKERS_AI_ACCOUNT_ID}
       WORKERS_AI_API_TOKEN: ${WORKERS_AI_API_TOKEN}
@@ -85,10 +85,10 @@ services:
       # Mount skills_data read-only so seed sees local SKILL.md changes
       - ./skill_mcp/skills_data:/app/skill_mcp/skills_data:ro
     command: ["python", "-X", "utf8", "-m", "skill_mcp.seed.seed_skills"]
-    # Seed runs once and exits — compose won't restart it
+    # Seed runs once and exits - compose won't restart it
     restart: "no"
 
-  # ── Server — FastMCP HTTP server ────────────────────────────────────────────
+  # ── Server - FastMCP HTTP server ────────────────────────────────────────────
   server:
     build:
       context: .

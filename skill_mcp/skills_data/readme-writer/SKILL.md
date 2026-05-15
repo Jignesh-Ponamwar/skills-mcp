@@ -21,7 +21,7 @@ metadata:
 # README Writer Skill
 
 ## Overview
-Generate professional README.md files that give developers everything they need to understand, install, and contribute to a project — in under 5 minutes of reading.
+Generate professional README.md files that give developers everything they need to understand, install, and contribute to a project - in under 5 minutes of reading.
 
 ## Step-by-Step Process
 
@@ -38,10 +38,10 @@ Read the project's entry point, package file (package.json, pyproject.toml, go.m
 
 ### Step 2: Choose the Right README Template
 
-**Library/SDK** — emphasize the API, installation, and quick start code
-**CLI tool** — emphasize installation methods and command reference
-**Web app/service** — emphasize features, screenshots, and deployment
-**Data science / ML** — emphasize datasets, training steps, and results
+**Library/SDK** - emphasize the API, installation, and quick start code
+**CLI tool** - emphasize installation methods and command reference
+**Web app/service** - emphasize features, screenshots, and deployment
+**Data science / ML** - emphasize datasets, training steps, and results
 
 ### Step 3: Write the Header Section
 
@@ -98,7 +98,7 @@ If the project takes config (env vars, config files, CLI flags), include a table
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `API_KEY` | Yes | — | Your API key |
+| `API_KEY` | Yes | - | Your API key |
 | `PORT` | No | 8000 | Server port |
 
 ### Step 9: Write API Reference (for Libraries)
@@ -118,7 +118,7 @@ Run tests: `pytest` / `npm test` / `go test ./...`
 ### Step 11: Write License Section
 ```markdown
 ## License
-Apache 2.0 — see [LICENSE](LICENSE).
+Apache 2.0 - see [LICENSE](LICENSE).
 ```
 
 ## Quality Checklist
@@ -133,4 +133,4 @@ Apache 2.0 — see [LICENSE](LICENSE).
 - Use present tense: "This library **handles**..." not "This library **will handle**..."
 - Lead with value: what it does, not how it's built
 - No emoji unless the project's existing style uses them
-- Keep the Quick Start under 20 lines — link to docs for the rest
+- Keep the Quick Start under 20 lines - link to docs for the rest

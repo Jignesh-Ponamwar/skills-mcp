@@ -27,7 +27,7 @@ def _scan(body: str = "", description: str = "", triggers: list[str] | None = No
     )
 
 
-# ── Legitimate content — must NOT block ───────────────────────────────────────
+# ── Legitimate content - must NOT block ───────────────────────────────────────
 
 class TestLegitimateContent:
     def test_normal_skill_body(self):
@@ -59,7 +59,7 @@ class TestLegitimateContent:
         # The scanner uses word-boundary checks
         result = _scan(description="Use when the user wants you to act as a senior code reviewer.")
         # This SHOULD warn but not block (HIGH only in body, MEDIUM in description)
-        # Whether it triggers depends on regex specificity — document expected behavior
+        # Whether it triggers depends on regex specificity - document expected behavior
         # The key invariant: legitimate "act as an expert" phrasing should at most warn
 
     def test_long_code_example_not_flagged(self):
@@ -82,15 +82,15 @@ class TestLegitimateContent:
         ## Avoiding Prompt Injection in Your Applications
 
         When building LLM applications, be aware of injection attacks where user
-        input might contain phrases like "ignore previous" — always sanitise inputs.
+        input might contain phrases like "ignore previous" - always sanitise inputs.
 
         Use a separate system prompt that users cannot modify.
         """)
-        # This may warn but should not be blocked — context is educational
+        # This may warn but should not be blocked - context is educational
         assert not result.blocked or True  # Document: may be a known false positive
 
 
-# ── Instruction override — MUST block ─────────────────────────────────────────
+# ── Instruction override - MUST block ─────────────────────────────────────────
 
 class TestInstructionOverride:
     def test_ignore_previous_instructions(self):
@@ -119,7 +119,7 @@ class TestInstructionOverride:
         assert result.blocked
 
 
-# ── Role hijacking — MUST block ────────────────────────────────────────────────
+# ── Role hijacking - MUST block ────────────────────────────────────────────────
 
 class TestRoleHijack:
     def test_you_are_now(self):
@@ -144,7 +144,7 @@ class TestRoleHijack:
         assert result.blocked
 
 
-# ── Delimiter injection — MUST block ──────────────────────────────────────────
+# ── Delimiter injection - MUST block ──────────────────────────────────────────
 
 class TestDelimiterInjection:
     def test_system_tag(self):
@@ -165,7 +165,7 @@ class TestDelimiterInjection:
         assert result.blocked
 
 
-# ── Exfiltration — MUST block ─────────────────────────────────────────────────
+# ── Exfiltration - MUST block ─────────────────────────────────────────────────
 
 class TestExfiltration:
     def test_webhook_site(self):
@@ -186,7 +186,7 @@ class TestExfiltration:
         assert result.blocked
 
 
-# ── HTML/script injection — MUST block in body ────────────────────────────────
+# ── HTML/script injection - MUST block in body ────────────────────────────────
 
 class TestHtmlInjection:
     def test_script_tag(self):
@@ -203,11 +203,11 @@ class TestHtmlInjection:
         assert result.blocked
 
 
-# ── Unicode attacks — MUST block ──────────────────────────────────────────────
+# ── Unicode attacks - MUST block ──────────────────────────────────────────────
 
 class TestUnicodeAttacks:
     def test_bidi_override(self):
-        # U+202E RIGHT-TO-LEFT OVERRIDE — can reverse displayed text
+        # U+202E RIGHT-TO-LEFT OVERRIDE - can reverse displayed text
         result = _scan(body="Normal text ‮ reversed malicious text")
         assert result.blocked
         assert any(f.category == "unicode-attack" for f in result.findings)
@@ -232,7 +232,7 @@ class TestBase64Payloads:
         # A legitimate base64-encoded image data URL in documentation
         harmless = base64.b64encode(b"this is just normal encoded data").decode()
         result = _scan(body=f"Decode this: {harmless}")
-        # Should NOT be blocked — decodes to harmless content
+        # Should NOT be blocked - decodes to harmless content
         assert not result.blocked
 
 
@@ -240,9 +240,9 @@ class TestBase64Payloads:
 
 class TestContentDisplacement:
     def test_excessive_blank_lines(self):
-        # 25 blank lines — should warn (MEDIUM), not block
+        # 25 blank lines - should warn (MEDIUM), not block
         result = _scan(body="Step 1: do this\n\n" + "\n" * 25 + "Malicious instruction here")
-        # MEDIUM finding — warns but does not block
+        # MEDIUM finding - warns but does not block
         assert not result.blocked
         assert any(f.category == "content-displacement" for f in result.findings)
 
