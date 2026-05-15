@@ -15,6 +15,10 @@ Semantic discovery · Progressive loading · 32+ bundled skills · Self-hosted o
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020.svg)](https://workers.cloudflare.com)
 [![Skills](https://img.shields.io/badge/bundled%20skills-32+-brightgreen.svg)](skill_mcp/skills_data/)
 [![Tests](https://github.com/Jignesh-Ponamwar/skills-mcp/actions/workflows/tests.yml/badge.svg)](https://github.com/Jignesh-Ponamwar/skills-mcp/actions/workflows/tests.yml)
+[![skills-mcp MCP server](https://glama.ai/mcp/servers/Jignesh-Ponamwar/skills-mcp/badges/card.svg)](https://glama.ai/mcp/servers/Jignesh-Ponamwar/skills-mcp)
+[![skills-mcp MCP server](https://glama.ai/mcp/servers/Jignesh-Ponamwar/skills-mcp/badges/score.svg)](https://glama.ai/mcp/servers/Jignesh-Ponamwar/skills-mcp)
+
+[Learn about glama.json](https://glama.ai/blog/2025-07-08-what-is-glamajson)
 
 </div>
 
@@ -24,7 +28,6 @@ Semantic discovery · Progressive loading · 32+ bundled skills · Self-hosted o
 
 AI agents have broad knowledge, but narrow expertise.
 
-Ask Claude to "set up Stripe subscriptions with webhooks" and you get something that *works* — but does it verify webhook signatures correctly? Use the right idempotency headers? Handle the right edge cases? Same story with "containerize this app" — you get a Dockerfile that runs, but is it production-grade?
 
 The agent isn't making mistakes from lack of knowledge. It's missing **the procedural playbook**. It's like having a senior engineer who's never seen your company's runbooks.
 

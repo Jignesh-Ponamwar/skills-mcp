@@ -1,0 +1,15 @@
+{
+  "name": "skills-mcp",
+  "slug": "skills-mcp",
+  "description": "Self-hosted Cloudflare Workers MCP server for runtime skill discovery and progressive skill loading.",
+  "repository": "https://github.com/Jignesh-Ponamwar/skills-mcp",
+  "website": "https://skills-mcp-jignesh.vercel.app/",
+  "mcpServer": "https://glama.ai/mcp/servers/Jignesh-Ponamwar/skills-mcp",
+  "badges": {
+    "card": "https://glama.ai/mcp/servers/Jignesh-Ponamwar/skills-mcp/badges/card.svg",
+    "score": "https://glama.ai/mcp/servers/Jignesh-Ponamwar/skills-mcp/badges/score.svg"
+  },
+  "glamaJsonBlog": "https://glama.ai/blog/2025-07-08-what-is-glamajson",
+  "tags": ["MCP", "Cloudflare", "AI", "Skills", "Serverless", "Self-hosted"],
+  "platforms": ["Cloudflare Workers", "MCP", "Glama"]
+}
