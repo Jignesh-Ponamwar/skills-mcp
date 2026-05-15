@@ -6,7 +6,7 @@
   <img src="./Skills-MCP%20Minimal%20Logo.png" alt="Skills-MCP Logo" />
 </a>
 
-**Give AI agents access to a searchable library of expert procedures, at runtime, over MCP.**  
+**Give AI agents access to a searchable library of expert skills, at runtime, over MCP.**  
 Semantic discovery · Progressive loading · 32+ bundled skills · Self-hosted on Cloudflare
 
 [![Website](https://img.shields.io/badge/website-skills--mcp-black.svg)](https://skills-mcp-jignesh.vercel.app/)
@@ -14,11 +14,7 @@ Semantic discovery · Progressive loading · 32+ bundled skills · Self-hosted o
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020.svg)](https://workers.cloudflare.com)
 [![Skills](https://img.shields.io/badge/bundled%20skills-32+-brightgreen.svg)](skill_mcp/skills_data/)
-[![Tests](https://github.com/Jignesh-Ponamwar/skills-mcp/actions/workflows/tests.yml/badge.svg)](https://github.com/Jignesh-Ponamwar/skills-mcp/actions/workflows/tests.yml)
-[![skills-mcp MCP server](https://glama.ai/mcp/servers/Jignesh-Ponamwar/skills-mcp/badges/card.svg)](https://glama.ai/mcp/servers/Jignesh-Ponamwar/skills-mcp)
 [![skills-mcp MCP server](https://glama.ai/mcp/servers/Jignesh-Ponamwar/skills-mcp/badges/score.svg)](https://glama.ai/mcp/servers/Jignesh-Ponamwar/skills-mcp)
-
-[Learn about glama.json](https://glama.ai/blog/2025-07-08-what-is-glamajson)
 
 </div>
 
