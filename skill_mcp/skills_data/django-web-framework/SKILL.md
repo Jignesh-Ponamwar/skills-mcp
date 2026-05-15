@@ -1,5 +1,5 @@
 ---
-name: Django Web Framework
+name: django-web-framework
 description: Build web applications with Django - models, views, URL routing, middleware, Django ORM, authentication, testing, deployment, and best practices
 license: Apache-2.0
 metadata:

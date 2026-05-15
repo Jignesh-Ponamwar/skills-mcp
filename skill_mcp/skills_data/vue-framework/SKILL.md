@@ -1,5 +1,5 @@
 ---
-name: Vue.js Framework
+name: vue-framework
 description: Build interactive user interfaces with Vue.js - components, state management, templates, composition API, lifecycle hooks, and reactive data binding
 license: Apache-2.0
 metadata:

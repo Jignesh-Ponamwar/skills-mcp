@@ -1,5 +1,5 @@
 ---
-name: Flask Web Framework
+name: flask-web-framework
 description: Flask Web Framework Flask Web Framework reference covering python, web-framework, backend, lightweight
 author: Pallets
 version: '3.0'

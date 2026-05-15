@@ -174,6 +174,28 @@ _MCP_TOOLS: list[dict] = [
         },
     },
     {
+        "name": "skills_list_all",
+        "description": (
+            "BROWSE ALL SKILLS. Call this to list curated skills without semantic search. "
+            "Useful for discovery, catalog browsing, and offline skill inspection."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer",
+                    "description": "Maximum number of skills to return (default 50)",
+                    "default": 50,
+                },
+                "offset": {
+                    "type": "integer",
+                    "description": "Number of skills to skip before returning results (default 0)",
+                    "default": 0,
+                },
+            },
+        },
+    },
+    {
         "name": "skills_get_body",
         "description": (
             "STEP 2 - Load full skill instructions. Call after skills_find_relevant "
@@ -478,6 +500,30 @@ def _build_server(env: Any):
             {"query": query, "total_found": len(skills), "results": skills}, indent=2
         )
 
+    async def _skills_list_all(limit: int = 50, offset: int = 0) -> str:
+        QU, QK = _creds()
+        all_points = await _scroll(
+            QU,
+            QK,
+            C_FM,
+            {"must": []},
+            min(max(limit + offset, 1), 500),
+        )
+        payloads = all_points[offset : offset + limit]
+        skills = [
+            {
+                "skill_id": p.get("skill_id"),
+                "name": p.get("name"),
+                "description": p.get("description"),
+                "tags": p.get("tags", []),
+                "platforms": p.get("platforms", []),
+                "trigger_phrases": p.get("trigger_phrases", []),
+                "skill_uri": p.get("skill_uri"),
+            }
+            for p in payloads
+        ]
+        return json.dumps({"total": len(skills), "results": skills}, indent=2)
+
     async def _skills_get_body(skill_id: str, version: str | None = None) -> str:
         QU, QK = _creds()
 
@@ -738,6 +784,16 @@ def _build_server(env: Any):
                 query=str(args.get("query", "")),
                 top_k=top_k,
             )
+        elif name == "skills_list_all":
+            try:
+                limit = max(1, min(int(args.get("limit", 50)), 200))
+            except (TypeError, ValueError):
+                limit = 50
+            try:
+                offset = max(0, int(args.get("offset", 0)))
+            except (TypeError, ValueError):
+                offset = 0
+            return await _skills_list_all(limit=limit, offset=offset)
         elif name == "skills_get_body":
             return await _skills_get_body(
                 skill_id=str(args.get("skill_id", "")),
