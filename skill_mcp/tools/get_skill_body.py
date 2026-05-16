@@ -78,7 +78,14 @@ def get_skill_body(skill_id: str, version: Optional[str] = None) -> str:
 
     if body is None:
         return json.dumps(
-            {"error": f"skill_id '{skill_id}' not found in body collection"}
+            {
+                "error": f"skill_id '{skill_id}' not found.",
+                "hint": (
+                    "Do not guess skill IDs. Call skills_find_relevant(query) first "
+                    "to discover available skills and their exact skill_ids. "
+                    "Use the skill_id from the search results."
+                ),
+            }
         )
 
     body_dict = body.model_dump()

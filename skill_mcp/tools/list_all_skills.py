@@ -55,6 +55,14 @@ def list_all_skills(limit: int = 100, offset: int = 0) -> str:
         )
 
     response = {
+        "workflow_warning": (
+            "These skill_ids are for BROWSING ONLY and have NOT been scored for "
+            "relevance to your current task. "
+            "NEXT STEP: call skills_find_relevant(query='<your specific task>') to "
+            "find the most relevant skill and get a similarity score. "
+            "Do NOT pass any skill_id from this list directly to skills_get_body "
+            "without first running skills_find_relevant (score > 0.6 required)."
+        ),
         "total": total_count,
         "skills": [fm.model_dump() for fm in all_frontmatters],
         "count": len(all_frontmatters),

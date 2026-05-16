@@ -36,9 +36,15 @@ def get_skill_options(skill_id: str) -> str:
 
     options = qdrant_manager.get_options(skill_id)
     if options is None:
-        return json.dumps(
-            {"error": f"skill_id '{skill_id}' not found in options collection"}
-        )
+        return json.dumps({
+            "error": f"skill_id '{skill_id}' not found in options collection.",
+            "hint": (
+                "This skill_id may not exist or may not have configuration options. "
+                "Verify: 1) Call skills_find_relevant(query) first to discover valid skill_ids. "
+                "2) Only use skill_ids that appeared in those results with score > 0.6. "
+                "3) Not all skills have options — most tasks complete with skills_get_body alone."
+            ),
+        })
 
     result = options.model_dump_json(indent=2)
     _options_cache.set(cache_key, result)

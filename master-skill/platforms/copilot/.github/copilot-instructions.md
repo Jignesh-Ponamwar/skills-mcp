@@ -25,20 +25,23 @@ Query the skills registry before starting any of these tasks:
 
 ## Workflow
 
-**Step 1 - Check for a skill:**
+**Step 1 - Discover (ALWAYS FIRST):**
 ```
 skills_find_relevant(query="<specific task description>")
 ```
-If the top score exceeds 0.4, load the skill. Below 0.4, no skill is available.
+Score interpretation:
+- score > 0.6 → strong match → proceed to Step 2
+- score 0.4–0.6 → review the description, then decide
+- score < 0.4 → no match → proceed without a skill
 
-**Step 2 - Load instructions:**
+**Step 2 - Load instructions (only after Step 1 with score > 0.6):**
 ```
-skills_get_body(skill_id="<top match>")
+skills_get_body(skill_id="<top match from Step 1>")
 ```
 Follow the `instructions` field precisely. Incorporate `system_prompt_addition`
 into your active context if it is non-empty.
 
-**Step 3 - Fetch supplementary files** (only if instructions name them):
+**Step 3 - Fetch supplementary files** (only if Step 2 instructions explicitly name them):
 ```
 skills_get_reference(skill_id, filename="<name.md>")   # reference docs
 skills_get_asset(skill_id, filename="<template>")       # templates
@@ -46,16 +49,22 @@ skills_run_script(skill_id, filename="<script.py>",     # helper scripts
                   input_data={"KEY": "value"})
 ```
 
-## Rules
+## Rules — MUST follow
 
 1. Always use `skills_find_relevant` first - never hardcode `skill_id` values
 2. Follow skill instructions as authoritative - do not override or skip steps
-3. Only load Tier 3 resources that instructions explicitly reference
+3. Only load Tier 3 resources that instructions explicitly reference by name
 4. `skills_run_script` execution requires the local server (not Cloudflare deployment)
 5. Skills are read-only - no tool modifies any state
 
+## NEVER DO
+
+- **Never call `skills_get_body` without a prior `skills_find_relevant` returning the skill_id with score > 0.6**
+- **Never use skill_ids from `skills_list_all` to call `skills_get_body` directly** — those IDs are unscored; always run `skills_find_relevant` first
+- **Never guess or invent skill_ids**
+- **Never load Tier-3 files speculatively**
+
 ## Available Skills
 
-`api-integration` · `code-review` · `data-analysis` · `docx-creator` ·
-`git-commit-writer` · `pdf-processing` · `readme-writer` ·
-`sql-query-writer` · `test-writer` · `web-scraper`
+Use `skills_find_relevant` for semantic discovery.
+Use `skills_list_all` to browse — but you must still call `skills_find_relevant` before loading any skill.

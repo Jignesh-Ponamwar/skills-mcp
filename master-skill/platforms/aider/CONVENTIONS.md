@@ -23,7 +23,12 @@ At the start of any coding session involving non-trivial tasks, run:
 /ask skills_find_relevant query="<specific description of the current task>"
 ```
 
-If a skill matches (score > 0.4), load it before writing any code:
+Score thresholds:
+- score > 0.6 → strong match → load it (Step 2)
+- score 0.4–0.6 → review description, then decide
+- score < 0.4 → no match → proceed without a skill
+
+If score > 0.6, load the skill before writing any code:
 
 ```
 /ask skills_get_body skill_id="<matched skill_id>"
@@ -31,13 +36,20 @@ If a skill matches (score > 0.4), load it before writing any code:
 
 ### Skill-driven development workflow
 
-1. **Discover** - `skills_find_relevant` with a specific query
-2. **Load** - `skills_get_body` for the best match
+1. **Discover** - `skills_find_relevant` with a specific query — ALWAYS FIRST
+2. **Load** - `skills_get_body` for the best match (score > 0.6 only)
 3. **Apply** - follow the `instructions` field exactly
-4. **Supplement** - only if instructions reference specific files:
+4. **Supplement** - ONLY if instructions explicitly reference specific files:
    - `skills_get_reference` for reference docs
    - `skills_run_script` for helper scripts (local server only)
    - `skills_get_asset` for templates
+
+### NEVER DO
+
+- NEVER call `skills_get_body` without a prior `skills_find_relevant` returning the skill_id with score > 0.6
+- NEVER use skill_ids from `skills_list_all` directly in `skills_get_body` — always run `skills_find_relevant` first to verify relevance
+- NEVER guess or invent skill_ids
+- NEVER load Tier-3 files speculatively
 
 ### Query examples
 
@@ -62,7 +74,7 @@ When no skill matches:
 
 ### Available skills
 
-api-integration, code-review, data-analysis, docx-creator, git-commit-writer,
-pdf-processing, readme-writer, sql-query-writer, test-writer, web-scraper
+Use `skills_find_relevant` for discovery. Use `skills_list_all` to browse the full catalogue —
+but after browsing you MUST still call `skills_find_relevant` before loading any skill.
 
-*Use `skills_find_relevant` for discovery - do not hardcode skill_ids.*
+*Do not hardcode skill_ids.*

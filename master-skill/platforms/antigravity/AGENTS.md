@@ -16,11 +16,14 @@ For Antigravity-specific configuration (higher priority), see:
 
 ## Skill Workflow (summary)
 
-1. `skills_find_relevant(query="<specific task>")` - check for a matching skill first
-2. `skills_get_body(skill_id="<top match>")` - load and follow instructions
-3. Tier 3 only if instructions name a file:
+1. `skills_find_relevant(query="<specific task>")` — ALWAYS FIRST, no exceptions
+2. `skills_get_body(skill_id="<top match>")` — ONLY if score > 0.6 from Step 1
+3. Tier 3 ONLY if body instructions explicitly name a file:
    - `skills_get_reference` / `skills_run_script` / `skills_get_asset`
 
-Score thresholds: `> 0.6` strong · `0.4–0.6` review · `< 0.4` no match
+Score thresholds: `> 0.6` strong → load · `0.4–0.6` review description · `< 0.4` no match
+
+**NEVER** call `skills_get_body` with a skill_id not returned by `skills_find_relevant` with score > 0.6.
+**NEVER** use skill_ids from `skills_list_all` directly — always run `skills_find_relevant` first.
 
 Full workflow details are in `.agents/rules/GEMINI.md`.

@@ -83,21 +83,28 @@ Call `filename="list"` on any Tier 3 tool to get its manifest first.
 
 | Signal | Action |
 |--------|--------|
-| New task, non-trivial | `skills_find_relevant` first |
+| New task, non-trivial | `skills_find_relevant` FIRST — no exceptions |
 | All scores < 0.4 | Proceed without skill |
-| Score ≥ 0.4 | `skills_get_body` → apply instructions |
-| `tier3_manifest` lists a file the instructions reference | Fetch that file |
+| Score 0.4–0.6 | Read the description, then decide whether to load |
+| Score > 0.6 | `skills_get_body` → apply instructions |
+| `tier3_manifest` lists a file the instructions **explicitly** reference | Fetch that file |
 | User asks to customise | `skills_get_options` |
+
+---
+
+## NEVER DO
+
+- **Never call `skills_get_body` without a prior `skills_find_relevant` call** that returned this skill_id with score > 0.6. Calling it with an unverified ID loads an irrelevant skill.
+- **Never use skill_ids from `skills_list_all` to call `skills_get_body` directly.** `skills_list_all` is for browsing only — those IDs are unscored for your task. Always run `skills_find_relevant` first.
+- **Never guess or invent a skill_id.** Only use skill_ids that appeared in `skills_find_relevant` results.
+- **Never load Tier-3 files speculatively.** Only fetch what the instructions explicitly name.
 
 ---
 
 ## Available Skills (quick reference)
 
-`api-integration` · `code-review` · `data-analysis` · `docx-creator` ·
-`git-commit-writer` · `pdf-processing` · `readme-writer` ·
-`sql-query-writer` · `test-writer` · `web-scraper`
-
-*Use `skills_find_relevant` for semantic discovery - do not guess skill_ids.*
+Use `skills_find_relevant` for semantic discovery — do not hardcode skill_ids.
+Use `skills_list_all` to browse the full catalogue (but always search before loading).
 
 ---
 

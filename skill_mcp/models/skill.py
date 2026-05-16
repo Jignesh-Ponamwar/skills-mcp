@@ -193,3 +193,4 @@ class SearchResponse(BaseModel):
     query: str
     results: list[SkillFrontMatter]
     total_found: int
+    usage_hint: str = ""

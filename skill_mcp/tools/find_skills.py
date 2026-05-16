@@ -38,11 +38,19 @@ def find_relevant_skills(query: str, top_k: int = _DEFAULT_TOP_K) -> str:
 
     query = str(query).strip()
     if not query:
-        return _json.dumps({"error": "query must not be empty"})
+        return _json.dumps({
+            "error": "query must not be empty.",
+            "hint": (
+                "Provide a specific natural-language description of your task. "
+                "Example: 'write pytest integration tests for a FastAPI endpoint with JWT auth'. "
+                "Vague queries like 'testing' or 'code' produce poor matches."
+            ),
+        })
     if len(query) > _MAX_QUERY_LEN:
-        return _json.dumps(
-            {"error": f"query exceeds maximum length of {_MAX_QUERY_LEN} characters"}
-        )
+        return _json.dumps({
+            "error": f"query exceeds maximum length of {_MAX_QUERY_LEN} characters.",
+            "hint": "Shorten your query to a concise task description (1-2 sentences).",
+        })
 
     top_k = max(1, min(top_k, _MAX_TOP_K))
     # Use only the first 200 chars of the query in the cache key to bound key size;
@@ -56,10 +64,33 @@ def find_relevant_skills(query: str, top_k: int = _DEFAULT_TOP_K) -> str:
     vector = embedder.embed(query)
     frontmatters = qdrant_manager.search_frontmatter(vector, top_k=top_k)
 
+    # Generate usage hint based on top result score
+    usage_hint = ""
+    if frontmatters:
+        top = frontmatters[0]
+        top_score = top.score if hasattr(top, "score") else 0.0
+        if top_score > 0.6:
+            usage_hint = (
+                f"Strong match found. Next step: call skills_get_body('{top.skill_id}') "
+                f"to load full instructions."
+            )
+        elif top_score > 0.4:
+            usage_hint = (
+                f"Possible match. Review the description of '{top.skill_id}' above. "
+                f"If relevant, call skills_get_body('{top.skill_id}')."
+            )
+        else:
+            usage_hint = (
+                "No strong matches found. Proceed with the task without loading a skill."
+            )
+    else:
+        usage_hint = "No skills found for this query. Proceed without a skill."
+
     response = SearchResponse(
         query=query,
         results=frontmatters,
         total_found=len(frontmatters),
+        usage_hint=usage_hint,
     )
     result = response.model_dump_json(indent=2)
     _search_cache.set(cache_key, result)

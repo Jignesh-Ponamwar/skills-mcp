@@ -86,29 +86,24 @@ skills_get_asset(skill_id="<id>", filename="<template>")
 
 ---
 
-## Rules
+## Rules — MUST follow
 
 1. **Always discover first** - never hardcode `skill_id` values; always use `skills_find_relevant`
 2. **Follow instructions as authoritative** - skill instructions encode expert knowledge; do not skip or override steps
-3. **Load Tier 3 conditionally** - only fetch files that the instructions explicitly reference
+3. **Load Tier 3 conditionally** - only fetch files that the instructions explicitly reference by name
 4. **Script execution** requires the local server (`MCP_TRANSPORT=streamable-http python -m skill_mcp.server`); the Cloudflare Workers deployment returns manifests only
 5. **Skills are read-only** - no tool modifies any registry state
+
+## NEVER DO — these break the workflow
+
+- **NEVER call `skills_get_body` without a prior `skills_find_relevant` call** that returned this skill_id with score > 0.6
+- **NEVER use skill_ids from `skills_list_all` to call `skills_get_body` directly** — those IDs are unscored for your task; you MUST still run `skills_find_relevant` to verify relevance
+- **NEVER guess or invent skill_ids**
+- **NEVER load Tier-3 files speculatively**
 
 ---
 
 ## Available Skills
 
-| skill_id | Domain |
-|----------|--------|
-| `api-integration` | REST / GraphQL API integration |
-| `code-review` | Security, quality, and bug review |
-| `data-analysis` | CSV / tabular data, EDA, statistics |
-| `docx-creator` | Word document generation |
-| `git-commit-writer` | Conventional commit messages |
-| `pdf-processing` | PDF extraction and form filling |
-| `readme-writer` | Project README creation |
-| `sql-query-writer` | SQL authoring and validation |
-| `test-writer` | Unit, integration, and E2E tests |
-| `web-scraper` | Web scraping and data extraction |
-
-*Use `skills_find_relevant` for semantic discovery - the table above is a reference snapshot.*
+Use `skills_find_relevant` for semantic discovery.
+Use `skills_list_all` to browse the full catalogue — but after browsing you MUST still call `skills_find_relevant` before loading any skill with `skills_get_body`.

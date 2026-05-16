@@ -35,7 +35,7 @@ from typing import Any
 
 from workers import DurableObject
 
-WORKER_VERSION = "1.1.0"
+WORKER_VERSION = "1.2.0"
 
 
 # ── HTTP helpers via js.fetch (urllib TCP sockets are NOT supported in Workers) ─
@@ -143,16 +143,16 @@ _MCP_TOOLS: list[dict] = [
     {
         "name": "skills_find_relevant",
         "description": (
-            "STEP 1 - Discover relevant skills. Call this FIRST at the start of any task "
-            "to check whether the registry contains a curated skill that matches. "
-            "Performs semantic vector search and returns ranked results with similarity scores.\n\n"
-            "Workflow after this call:\n"
-            "  • score > 0.6  → strong match - call skills_get_body with that skill_id\n"
-            "  • score 0.4–0.6 → possible match - inspect description before proceeding\n"
-            "  • score < 0.4  → no relevant skill - proceed without one\n\n"
-            "Query tips: be task-specific, not generic. "
-            "'write pytest unit tests for a Flask REST API' outperforms 'testing'. "
-            "Describe what you are trying to accomplish, not what you want to find."
+            "ALWAYS CALL THIS FIRST — before any other skills_ tool, no exceptions.\n\n"
+            "This is the ONLY valid source of skill_ids. Do NOT use skill_ids from\n"
+            "skills_list_all without first running this search to verify relevance.\n\n"
+            "Returns ranked results with similarity scores. Required next actions:\n"
+            "  score > 0.6  → call skills_get_body with that skill_id\n"
+            "  score 0.4–0.6 → read the description, then decide whether to load\n"
+            "  score < 0.4  → no match, proceed without a skill\n\n"
+            "Query tips: be specific about the task.\n"
+            "  GOOD: 'implement Stripe webhook signature verification in Python'\n"
+            "  BAD:  'stripe' — too vague, produces poor matches."
         ),
         "inputSchema": {
             "type": "object",
@@ -160,14 +160,17 @@ _MCP_TOOLS: list[dict] = [
                 "query": {
                     "type": "string",
                     "description": (
-                        "Natural-language description of the current task. "
-                        "Be specific - include language, framework, and goal."
+                        "Natural language description of the task you need help with. "
+                        "Be specific: 'write pytest integration tests for a FastAPI async endpoint' "
+                        "not just 'testing'. Describe what you need to accomplish, not the category."
                     ),
                 },
                 "top_k": {
                     "type": "integer",
-                    "description": "Number of ranked results to return (1–20, default 5)",
+                    "description": "Number of results to return (1-20). Default 5 is usually sufficient.",
                     "default": 5,
+                    "minimum": 1,
+                    "maximum": 20,
                 },
             },
             "required": ["query"],
@@ -176,21 +179,31 @@ _MCP_TOOLS: list[dict] = [
     {
         "name": "skills_list_all",
         "description": (
-            "BROWSE ALL SKILLS. Call this to list curated skills without semantic search. "
-            "Useful for discovery, catalog browsing, and offline skill inspection."
+            "BROWSING — See all available skills without semantic search.\n\n"
+            "Use when you want to explore the full registry by category or tag.\n\n"
+            "WARNING: skill_ids returned here have NOT been scored for relevance to your\n"
+            "current task. After browsing, you MUST still call skills_find_relevant to\n"
+            "verify relevance before loading any skill with skills_get_body.\n"
+            "Do NOT pass skill_ids from this listing directly to skills_get_body.\n\n"
+            "Returns lightweight frontmatter (skill_id, name, tags, complexity_level,\n"
+            "has_tier3) to keep token usage reasonable.\n\n"
+            "Supports pagination: use offset to skip results, limit to control batch size."
         ),
         "inputSchema": {
             "type": "object",
             "properties": {
                 "limit": {
                     "type": "integer",
-                    "description": "Maximum number of skills to return (default 50)",
+                    "description": "Number of skills to return per page (1-100). Default 50.",
                     "default": 50,
+                    "minimum": 1,
+                    "maximum": 100,
                 },
                 "offset": {
                     "type": "integer",
-                    "description": "Number of skills to skip before returning results (default 0)",
+                    "description": "Number of skills to skip (for pagination). Default 0.",
                     "default": 0,
+                    "minimum": 0,
                 },
             },
         },
@@ -198,20 +211,20 @@ _MCP_TOOLS: list[dict] = [
     {
         "name": "skills_get_body",
         "description": (
-            "STEP 2 - Load full skill instructions. Call after skills_find_relevant "
-            "once you have identified the best-matching skill_id.\n\n"
-            "Returns three fields:\n"
-            "  • instructions         - expert step-by-step guidance; read and follow these\n"
-            "  • system_prompt_addition - optional context to add to your persona (may be empty)\n"
-            "  • tier3_manifest       - lists available references, scripts, and assets by filename\n\n"
-            "After loading: apply the instructions. "
-            "If tier3_manifest lists files that the instructions explicitly reference, "
-            "fetch them with skills_get_reference, skills_run_script, or skills_get_asset. "
-            "Most tasks are fully served by the instructions alone - do not load Tier 3 speculatively.\n\n"
-            "Version pinning: pass version='1.2' to pin to a specific skill version, or use the "
-            "inline form skill_id='stripe-integration@1.2'. If the requested version is not found, "
-            "the latest version is returned with a version_note explaining the fallback. "
-            "Deprecated skills include a deprecation_notice field naming the replacement."
+            "Load full skill instructions. Call ONLY after skills_find_relevant returns\n"
+            "this skill_id with score > 0.6.\n\n"
+            "REQUIRED PREREQUISITES — both must be true before calling this tool:\n"
+            "  1. You called skills_find_relevant with a specific query\n"
+            "  2. This skill_id appeared in those results with score > 0.6\n\n"
+            "If either prerequisite is missing, STOP and call skills_find_relevant first.\n"
+            "Calling this tool with an unverified skill_id (e.g. one from skills_list_all\n"
+            "or a guessed ID) will load a skill that may be completely irrelevant to your\n"
+            "task, wasting tokens and producing wrong output.\n\n"
+            "Returns:\n"
+            "  - instructions: step-by-step expert guidance — read and follow entirely\n"
+            "  - tier3_manifest: available reference files, scripts, assets\n\n"
+            "After loading: follow the instructions precisely. Call Tier-3 tools ONLY\n"
+            "when the instructions explicitly name a specific file."
         ),
         "inputSchema": {
             "type": "object",
@@ -219,13 +232,18 @@ _MCP_TOOLS: list[dict] = [
                 "skill_id": {
                     "type": "string",
                     "description": (
-                        "skill_id from skills_find_relevant. "
-                        "May include an inline version suffix: 'stripe-integration@1.2'"
+                        "The exact skill_id string returned by skills_find_relevant. "
+                        "Must come from search results with score > 0.6. "
+                        "Format: lowercase-kebab-case (e.g. 'api-integration', 'test-writer'). "
+                        "Do NOT guess or use IDs from skills_list_all without prior search."
                     ),
                 },
                 "version": {
                     "type": "string",
-                    "description": "Optional version string (e.g. '1.2') to pin to a specific skill version.",
+                    "description": (
+                        "Optional version pin (e.g. '1.2'). If omitted, returns latest. "
+                        "Can also be specified inline: 'skill-id@1.2'."
+                    ),
                 },
             },
             "required": ["skill_id"],
@@ -234,19 +252,20 @@ _MCP_TOOLS: list[dict] = [
     {
         "name": "skills_get_options",
         "description": (
-            "OPTIONAL STEP 2b - Load config schema, variants, and constraints for a skill. "
-            "Call only when: (a) the user asks to customize skill behaviour, or "
-            "(b) skills_get_body instructions mention configurable options.\n\n"
-            "Returns: config_schema (JSON Schema for parameters), "
-            "variants (alternative skill modes), "
-            "dependencies (required tools/packages), "
-            "limitations (known constraints).\n\n"
-            "Do NOT call this by default - most tasks complete with skills_get_body alone."
+            "OPTIONAL — Load config variants and constraints for a skill.\n\n"
+            "REQUIRED PREREQUISITES — all must be true before calling this tool:\n"
+            "  1. You called skills_find_relevant and got a score > 0.6\n"
+            "  2. The skill_id came from those search results\n"
+            "  3. The user asked about configuration, or skills_get_body mentioned options\n\n"
+            "Do NOT call by default. Most tasks complete with skills_get_body alone."
         ),
         "inputSchema": {
             "type": "object",
             "properties": {
-                "skill_id": {"type": "string"},
+                "skill_id": {
+                    "type": "string",
+                    "description": "The skill_id from skills_find_relevant results. Format: lowercase-kebab-case.",
+                },
             },
             "required": ["skill_id"],
         },
@@ -254,22 +273,28 @@ _MCP_TOOLS: list[dict] = [
     {
         "name": "skills_get_reference",
         "description": (
-            "STEP 3a - Fetch a reference document bundled with a skill "
-            "(markdown files: checklists, policies, API specs, examples).\n\n"
-            "Two-phase use:\n"
-            "  1. Call with filename='list' (default) to see the full reference manifest\n"
-            "  2. Call again with the specific filename to fetch its content\n\n"
-            "Only call when: tier3_manifest from skills_get_body lists reference files "
-            "AND the skill instructions explicitly name one. "
-            "Do not load references speculatively."
+            "Fetch a reference document bundled with a skill.\n\n"
+            "STRICT PREREQUISITES — ALL THREE must be true before calling this tool:\n"
+            "  1. You called skills_find_relevant and received a score > 0.6\n"
+            "  2. You called skills_get_body and read the full instructions\n"
+            "  3. Those instructions explicitly say 'see FILENAME.md' or 'refer to FILENAME'\n\n"
+            "If any prerequisite is missing, do NOT call this tool.\n"
+            "Speculative loading wastes tokens and does not improve task quality.\n\n"
+            "Pass filename='list' to see available reference files for a skill."
         ),
         "inputSchema": {
             "type": "object",
             "properties": {
-                "skill_id": {"type": "string"},
+                "skill_id": {
+                    "type": "string",
+                    "description": "The skill_id from skills_find_relevant results.",
+                },
                 "filename": {
                     "type": "string",
-                    "description": "Exact filename to fetch (e.g. 'CHECKLIST.md'), or 'list' for manifest",
+                    "description": (
+                        "The reference filename to fetch (e.g. 'PAGINATION.md'). "
+                        "Pass 'list' to see all available reference files for this skill."
+                    ),
                     "default": "list",
                 },
             },
@@ -279,34 +304,45 @@ _MCP_TOOLS: list[dict] = [
     {
         "name": "skills_run_script",
         "description": (
-            "STEP 3b - Execute a helper script bundled with a skill. "
-            "Script source is NEVER returned - only stdout, stderr, and exit_code.\n\n"
+            "Execute a helper script bundled with a skill.\n\n"
+            "STRICT PREREQUISITES — ALL THREE must be true before calling this tool:\n"
+            "  1. You called skills_find_relevant and received a score > 0.6\n"
+            "  2. You called skills_get_body and read the full instructions\n"
+            "  3. Those instructions explicitly direct you to run a specific script file\n\n"
+            "If any prerequisite is missing, do NOT call this tool.\n\n"
+            "Script source is NEVER returned — only stdout, stderr, and exit_code.\n"
+            "Scripts run sandboxed in an isolated temp directory with a 30-second timeout.\n\n"
+            "Deployment note: script execution requires the local server. "
+            "The Cloudflare Workers deployment returns the manifest only.\n\n"
             "Two-phase use:\n"
-            "  1. Call with filename='list' to see available scripts and their descriptions\n"
-            "  2. Call with the specific filename (and optional input_data) to execute\n\n"
-            "input_data: key-value pairs passed to the script as environment variables.\n\n"
-            "Deployment note: script execution requires the local server "
-            "(MCP_TRANSPORT=streamable-http python -m skill_mcp.server). "
-            "The Cloudflare Workers deployment returns the manifest only - "
-            "Pyodide has no subprocess support.\n\n"
-            "Only call when skill instructions direct you to run a specific script."
+            "  1. filename='list' → see available scripts and descriptions\n"
+            "  2. filename='<script.py>' + optional input_data → execute"
         ),
         "inputSchema": {
             "type": "object",
             "properties": {
-                "skill_id": {"type": "string"},
+                "skill_id": {
+                    "type": "string",
+                    "description": "The skill_id from skills_find_relevant results.",
+                },
                 "filename": {
                     "type": "string",
-                    "description": "Script filename, or 'list' for manifest (default)",
+                    "description": (
+                        "The script filename to execute (e.g. 'extract.py', 'validate.js'). "
+                        "Pass 'list' to see available scripts and their descriptions."
+                    ),
                     "default": "list",
                 },
                 "input_data": {
                     "type": "object",
-                    "description": "Input values (not used in Workers deployment)",
+                    "description": (
+                        "Key-value pairs passed to the script as environment variables. "
+                        "Example: {'PDF_PATH': '/tmp/report.pdf', 'OUTPUT_FORMAT': 'csv'}."
+                    ),
                 },
                 "list_only": {
                     "type": "boolean",
-                    "description": "Always return the script manifest",
+                    "description": "If true, return the script manifest without executing.",
                     "default": False,
                 },
             },
@@ -316,21 +352,30 @@ _MCP_TOOLS: list[dict] = [
     {
         "name": "skills_get_asset",
         "description": (
-            "STEP 3c - Fetch a template or static resource bundled with a skill "
+            "Fetch a template or static resource bundled with a skill\n"
             "(markdown templates, config starters, example data files).\n\n"
+            "STRICT PREREQUISITES — ALL THREE must be true before calling this tool:\n"
+            "  1. You called skills_find_relevant and received a score > 0.6\n"
+            "  2. You called skills_get_body and read the full instructions\n"
+            "  3. Those instructions explicitly reference a specific asset file\n\n"
+            "If any prerequisite is missing, do NOT call this tool.\n\n"
             "Two-phase use:\n"
-            "  1. Call with filename='list' (default) to see the full asset manifest\n"
-            "  2. Call again with the specific filename to fetch its content\n\n"
-            "Use the returned content as a starting template - adapt it to the specific task. "
-            "Only call when skill instructions reference a specific asset file."
+            "  1. filename='list' → see the full asset manifest\n"
+            "  2. filename='<file>' → fetch content (use as a starting template, adapt to task)"
         ),
         "inputSchema": {
             "type": "object",
             "properties": {
-                "skill_id": {"type": "string"},
+                "skill_id": {
+                    "type": "string",
+                    "description": "The skill_id from skills_find_relevant results.",
+                },
                 "filename": {
                     "type": "string",
-                    "description": "Exact asset filename to fetch (e.g. 'report-template.md'), or 'list' for manifest",
+                    "description": (
+                        "The asset filename to fetch (e.g. 'report-template.md'). "
+                        "Pass 'list' to see all available assets for this skill."
+                    ),
                     "default": "list",
                 },
             },
@@ -338,6 +383,86 @@ _MCP_TOOLS: list[dict] = [
         },
     },
 ]
+
+
+# ── MCP prompts (returned by prompts/list) ────────────────────────────────────
+
+_MCP_PROMPTS: list[dict] = [
+    {
+        "name": "skill_workflow",
+        "description": (
+            "How to use the Skills MCP server. Call this prompt when you need to "
+            "understand the correct tool-calling workflow for finding and loading skills."
+        ),
+    },
+]
+
+_SKILL_WORKFLOW_PROMPT_MESSAGES: list[dict] = [
+    {
+        "role": "user",
+        "content": {
+            "type": "text",
+            "text": (
+                "You are about to use the Skills MCP server. Follow this EXACT sequence:\n\n"
+                "STEP 1 — DISCOVER (mandatory, always first):\n"
+                "  Call: skills_find_relevant(query='<specific task description>')\n"
+                "  Example: skills_find_relevant(query='write pytest integration tests for FastAPI')\n"
+                "  Check the score of the top result:\n"
+                "    - score > 0.6  → proceed to Step 2 with that skill_id\n"
+                "    - score 0.4–0.6 → read the description, decide if relevant\n"
+                "    - score < 0.4  → no matching skill exists, proceed without one\n\n"
+                "STEP 2 — LOAD (only if Step 1 returned score > 0.6):\n"
+                "  Call: skills_get_body(skill_id='<skill_id from Step 1>')\n"
+                "  Read the 'instructions' field entirely and follow it precisely.\n"
+                "  Note the 'tier3_manifest' field — it lists supplementary files.\n\n"
+                "STEP 3 — SUPPLEMENT (only if Step 2 instructions name a specific file):\n"
+                "  - Reference docs: skills_get_reference(skill_id, filename='<file.md>')\n"
+                "  - Run scripts: skills_run_script(skill_id, filename='<script.py>', input_data={})\n"
+                "  - Templates: skills_get_asset(skill_id, filename='<template.md>')\n"
+                "  Only call these if the body instructions explicitly say 'see FILE' or 'run FILE'.\n\n"
+                "CRITICAL RULES:\n"
+                "  - NEVER skip Step 1 — even if you think you know the skill_id\n"
+                "  - NEVER use skill_ids from skills_list_all without running Step 1 first\n"
+                "  - NEVER call Tier-3 tools without completing Steps 1 and 2\n"
+                "  - NEVER guess or invent skill_ids\n"
+            ),
+        },
+    },
+]
+
+# ── Server instructions (returned in initialize response) ─────────────────────
+
+_SERVER_INSTRUCTIONS: str = (
+    "SKILLS REGISTRY — Expert procedures for engineering tasks.\n\n"
+    "TOOL CALL ORDER IS MANDATORY. Skipping steps causes irrelevant skills to load,\n"
+    "wasting tokens and degrading task quality. Follow the workflow exactly.\n\n"
+    "═══ STEP 1 — ALWAYS FIRST: skills_find_relevant ═════════════════════════\n"
+    "  Call before ANY other skills_ tool — no exceptions.\n"
+    "  This is the ONLY valid source of skill_ids. Skill_ids from skills_list_all\n"
+    "  are NOT verified for relevance and MUST NOT be passed to skills_get_body.\n"
+    "  After getting results, check the score:\n"
+    "    score > 0.6  → strong match → proceed to Step 2\n"
+    "    score 0.4–0.6 → read description, then decide\n"
+    "    score < 0.4  → no match → proceed without a skill\n\n"
+    "═══ STEP 2 — only after Step 1 score > 0.6: skills_get_body ═════════════\n"
+    "  Load full instructions using ONLY a skill_id returned by Step 1.\n"
+    "  Read the entire instructions field and follow it precisely.\n\n"
+    "═══ STEP 3 — only if body names a file: Tier-3 tools ════════════════════\n"
+    "  skills_get_reference / skills_run_script / skills_get_asset\n"
+    "  Call ONLY when Step 2 instructions explicitly say 'see FILE.md' or\n"
+    "  'run FILE.py'. Do NOT load Tier-3 files speculatively.\n\n"
+    "BROWSING (optional): skills_list_all() shows the full catalogue.\n"
+    "  After browsing, you MUST still call skills_find_relevant to get a\n"
+    "  relevance score before loading anything with skills_get_body.\n\n"
+    "FORBIDDEN ACTIONS:\n"
+    "  - Calling skills_get_body without a prior skills_find_relevant score > 0.6\n"
+    "  - Passing skill_ids from skills_list_all directly to skills_get_body\n"
+    "  - Guessing or inventing skill_ids\n"
+    "  - Loading Tier-3 files unless body instructions explicitly name them\n"
+    "  - Skipping skills_find_relevant even if you think you know the skill_id\n\n"
+    "QUERY TIPS: Be specific. 'pytest tests for FastAPI with JWT auth' works.\n"
+    "  'testing' does not. Describe the task, not the category."
+)
 
 
 # ── ASGI app factory ───────────────────────────────────────────────────────────
@@ -478,7 +603,14 @@ def _build_server(env: Any):
 
     async def _skills_find_relevant(query: str, top_k: int = 5) -> str:
         if not str(query).strip():
-            return json.dumps({"error": "query is required"})
+            return json.dumps({
+                "error": "query must not be empty.",
+                "hint": (
+                    "Provide a specific natural-language description of your task. "
+                    "Example: 'write pytest integration tests for a FastAPI endpoint with JWT auth'. "
+                    "Vague queries like 'testing' or 'code' produce poor matches."
+                ),
+            })
         QU, QK = _creds()
 
         vector: list[float] = await _embed(query)
@@ -496,8 +628,32 @@ def _build_server(env: Any):
             }
             for h in hits
         ]
+        usage_hint = ""
+        if skills:
+            top_score = skills[0].get("score") or 0.0
+            if top_score > 0.6:
+                usage_hint = (
+                    f"Strong match found. Next step: call skills_get_body('{skills[0]['skill_id']}') "
+                    f"to load full instructions."
+                )
+            elif top_score > 0.4:
+                usage_hint = (
+                    f"Possible match. Review the description of '{skills[0]['skill_id']}' above. "
+                    f"If relevant, call skills_get_body('{skills[0]['skill_id']}')."
+                )
+            else:
+                usage_hint = "No strong matches found. Proceed with the task without loading a skill."
+        else:
+            usage_hint = "No skills found for this query. Proceed without a skill."
+
         return json.dumps(
-            {"query": query, "total_found": len(skills), "results": skills}, indent=2
+            {
+                "query": query,
+                "total_found": len(skills),
+                "results": skills,
+                "usage_hint": usage_hint,
+            },
+            indent=2,
         )
 
     async def _skills_list_all(limit: int = 50, offset: int = 0) -> str:
@@ -522,7 +678,21 @@ def _build_server(env: Any):
             }
             for p in payloads
         ]
-        return json.dumps({"total": len(skills), "results": skills}, indent=2)
+        return json.dumps(
+            {
+                "workflow_warning": (
+                    "These skill_ids are for BROWSING ONLY and have NOT been scored for "
+                    "relevance to your current task. "
+                    "NEXT STEP: call skills_find_relevant(query='<your specific task>') to "
+                    "find the most relevant skill and get a similarity score. "
+                    "Do NOT pass any skill_id from this list directly to skills_get_body "
+                    "without first running skills_find_relevant (score > 0.6 required)."
+                ),
+                "total": len(skills),
+                "results": skills,
+            },
+            indent=2,
+        )
 
     async def _skills_get_body(skill_id: str, version: str | None = None) -> str:
         QU, QK = _creds()
@@ -550,7 +720,14 @@ def _build_server(env: Any):
 
         if not payloads:
             return json.dumps(
-                {"error": f"skill_id '{skill_id}' not found in body collection"}
+                {
+                    "error": f"skill_id '{skill_id}' not found.",
+                    "hint": (
+                        "Do not guess skill IDs. Call skills_find_relevant(query) first "
+                        "to discover available skills and their exact skill_ids. "
+                        "Use the skill_id from the search results."
+                    ),
+                }
             )
         body = payloads[0]
 
@@ -597,9 +774,15 @@ def _build_server(env: Any):
         QU, QK = _creds()
         payloads = await _scroll(QU, QK, C_OPTS, _by_skill(skill_id), 1)
         if not payloads:
-            return json.dumps(
-                {"error": f"skill_id '{skill_id}' not found in options collection"}
-            )
+            return json.dumps({
+                "error": f"skill_id '{skill_id}' not found in options collection.",
+                "hint": (
+                    "This skill_id may not exist or may not have configuration options. "
+                    "Verify: 1) Call skills_find_relevant(query) first to discover valid skill_ids. "
+                    "2) Only use skill_ids that appeared in those results with score > 0.6. "
+                    "3) Not all skills have options — most tasks complete with skills_get_body alone."
+                ),
+            })
         return json.dumps(payloads[0], indent=2)
 
     async def _skills_get_reference(skill_id: str, filename: str = "list") -> str:
@@ -844,8 +1027,9 @@ def _build_server(env: Any):
             return ok(
                 {
                     "protocolVersion": "2024-11-05",
-                    "capabilities": {"tools": {}},
+                    "capabilities": {"tools": {}, "prompts": {}},
                     "serverInfo": {"name": "skill-mcp-server", "version": WORKER_VERSION},
+                    "instructions": _SERVER_INSTRUCTIONS,
                 }
             )
 
@@ -854,6 +1038,18 @@ def _build_server(env: Any):
 
         elif method == "ping":
             return ok({})
+
+        elif method == "prompts/list":
+            return ok({"prompts": _MCP_PROMPTS})
+
+        elif method == "prompts/get":
+            prompt_name = params.get("name", "")
+            if prompt_name == "skill_workflow":
+                return ok({
+                    "description": _MCP_PROMPTS[0]["description"],
+                    "messages": _SKILL_WORKFLOW_PROMPT_MESSAGES,
+                })
+            return err(-32602, f"Prompt not found: {prompt_name!r}")
 
         elif method == "tools/list":
             return ok({"tools": _MCP_TOOLS})

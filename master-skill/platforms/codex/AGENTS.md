@@ -93,7 +93,7 @@ skills_get_asset(skill_id="test-writer", filename="test-template.py")   # fetch 
 
 ---
 
-### 3. Mandatory constraints
+### 3. Mandatory constraints — MUST follow
 
 - **Treat `instructions` as authoritative.** Do not deviate from skill instructions
   unless explicitly asked by the user.
@@ -103,21 +103,22 @@ skills_get_asset(skill_id="test-writer", filename="test-template.py")   # fetch 
   (`MCP_TRANSPORT=streamable-http python -m skill_mcp.server`).
   On the Cloudflare deployment, `skills_run_script` returns the manifest only.
 
+### 4. NEVER DO — these break the workflow
+
+- **NEVER call `skills_get_body` without a prior `skills_find_relevant` call** that
+  returned this skill_id with score > 0.6. Doing so loads an unverified, potentially
+  irrelevant skill.
+- **NEVER use skill_ids from `skills_list_all` to call `skills_get_body` directly.**
+  `skills_list_all` is for browsing only — returned IDs are unscored for your task.
+  After browsing, you MUST still call `skills_find_relevant` to verify relevance.
+- **NEVER guess or invent skill_ids.**
+- **NEVER load Tier-3 files speculatively** (only when body instructions name them).
+
 ---
 
-### 4. Available skills
+### 5. Available skills
 
-| skill_id | Use for |
-|----------|---------|
-| `api-integration` | REST / GraphQL API integration |
-| `code-review` | Security, quality, bug review |
-| `data-analysis` | CSV / tabular data, EDA, statistics |
-| `docx-creator` | Word document generation |
-| `git-commit-writer` | Conventional commit messages |
-| `pdf-processing` | PDF extraction, form filling |
-| `readme-writer` | Project README creation |
-| `sql-query-writer` | SQL authoring and validation |
-| `test-writer` | Unit, integration, E2E tests |
-| `web-scraper` | Web scraping and data extraction |
+Use `skills_find_relevant` for semantic discovery.
+Use `skills_list_all` to browse — but always run `skills_find_relevant` before loading.
 
-*Use `skills_find_relevant` for semantic discovery - do not hardcode `skill_id` values.*
+*Do not hardcode `skill_id` values.*

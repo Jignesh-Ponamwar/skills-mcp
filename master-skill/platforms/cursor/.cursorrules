@@ -37,18 +37,24 @@ STEP 3 — Supplementary resources (ONLY if instructions explicitly reference a 
   Templates/assets:  skills_get_asset(skill_id, filename="<template.md>")
   Manifest first:    pass filename="list" to any Tier 3 tool to see what's available
 
-### Rules
+### Rules — MUST follow
 - DO check skills at the start of non-trivial tasks
 - DO write specific queries: "write pytest tests for Flask REST API" not "testing"
 - DO follow skill instructions precisely — they encode expert knowledge
 - DO incorporate system_prompt_addition from skills_get_body into your context
-- DO NOT load Tier 3 resources unless instructions explicitly reference them
+- DO NOT load Tier 3 resources unless instructions explicitly reference them by name
 - DO NOT guess skill_ids — always use skills_find_relevant first
 - DO NOT skip Step 1 even if you think you know what skill to use
 
-### Available skills (reference snapshot — use skills_find_relevant for discovery)
-api-integration, code-review, data-analysis, docx-creator, git-commit-writer,
-pdf-processing, readme-writer, sql-query-writer, test-writer, web-scraper
+### NEVER DO — these break the workflow
+- NEVER call skills_get_body without a prior skills_find_relevant that returned the skill_id with score > 0.6
+- NEVER pass skill_ids from skills_list_all directly to skills_get_body — those IDs are unscored for your task
+- NEVER invent or guess skill_ids
+- NEVER load Tier-3 files speculatively (without explicit mention in body instructions)
+
+### Available skills
+Use skills_find_relevant for discovery. Use skills_list_all to browse the catalogue.
+After browsing with skills_list_all, you MUST still call skills_find_relevant before loading any skill.
 
 ### Notes
 - Script execution requires the local server (not Cloudflare Worker deployment)

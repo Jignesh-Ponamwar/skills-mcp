@@ -34,17 +34,23 @@ skills_get_asset(skill_id, filename="<template>")       # templates / assets
 ```
 Call with `filename="list"` first to see the manifest.
 
-### Behaviour rules
+### Behaviour rules — MUST follow
 - Always check skills before starting non-trivial tasks
 - Write specific, task-focused queries for skills_find_relevant
 - Follow skill instructions as authoritative guidance — do not improvise around them
 - Add `system_prompt_addition` (if non-empty) to your active context
-- Never load Tier 3 resources unless instructions name them
+- Never load Tier 3 resources unless instructions name them by filename
 - Never guess skill_ids — always discover with skills_find_relevant
+- Never skip Step 1 even if you believe you know which skill applies
 
-### Skill registry snapshot
-api-integration | code-review | data-analysis | docx-creator | git-commit-writer |
-pdf-processing | readme-writer | sql-query-writer | test-writer | web-scraper
+### NEVER DO — these break the workflow
+- NEVER call skills_get_body without a prior skills_find_relevant returning this skill_id with score > 0.6
+- NEVER use skill_ids from skills_list_all to call skills_get_body — those IDs are unscored for your task; you MUST still run skills_find_relevant first
+- NEVER guess or invent skill_ids
+- NEVER load Tier-3 files speculatively
+
+### Skill registry
+Use skills_find_relevant for discovery. Use skills_list_all to browse — but after browsing you MUST run skills_find_relevant before loading any skill.
 
 ### Script execution note
 skills_run_script execution requires the local FastMCP server.
