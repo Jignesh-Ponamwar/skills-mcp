@@ -7,7 +7,7 @@
 #
 # What this does:
 #   1. qdrant   - starts a local Qdrant instance (no API key needed locally)
-#   2. seed     - runs the seed script once to populate Qdrant with all 30 skills
+#   2. seed     - runs the seed script once to populate Qdrant with all 33 skills
 #   3. server   - starts the FastMCP HTTP server on :8000
 #
 # Prerequisites:

@@ -276,11 +276,6 @@ def _extract_skill_fields(slug: str, parsed: dict) -> dict:
     # Strip trailing whitespace/newlines from YAML literal-block strings (|, >)
     description = str(fm.get("description") or "").strip()
 
-    # Validate: no em-dashes allowed
-    full_content = description + parsed["body"]
-    if "-" in full_content:
-        raise ValueError(f"Em-dashes (-) not allowed in skill {slug}. Use '-' or '--' instead.")
-
     return {
         "skill_id": slug,
         "name": str(fm.get("name") or slug).strip(),

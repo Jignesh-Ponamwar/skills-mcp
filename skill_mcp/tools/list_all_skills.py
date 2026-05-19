@@ -10,7 +10,7 @@ from ..db.qdrant_manager import qdrant_manager
 
 _list_cache: TTLCache = TTLCache(
     ttl=float(os.getenv("CACHE_TTL_SECONDS", "300")),
-    max_size=1,  # Only cache one list result
+    max_size=10,  # Cache a few pages of paginated results
 )
 
 

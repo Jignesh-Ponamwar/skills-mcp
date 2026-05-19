@@ -7,13 +7,13 @@
 </a>
 
 **Give AI agents access to a searchable library of expert skills, at runtime, over MCP.**  
-Semantic discovery · Progressive loading · 32+ bundled skills · Self-hosted on Cloudflare
+Semantic discovery · Progressive loading · 33 bundled skills · Self-hosted on Cloudflare
 
 [![Website](https://img.shields.io/badge/website-skills--mcp-black.svg)](https://skills-mcp-jignesh.vercel.app/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020.svg)](https://workers.cloudflare.com)
-[![Skills](https://img.shields.io/badge/bundled%20skills-32+-brightgreen.svg)](skill_mcp/skills_data/)
+[![Skills](https://img.shields.io/badge/bundled%20skills-33-brightgreen.svg)](skill_mcp/skills_data/)
 [![skills-mcp MCP server](https://glama.ai/mcp/servers/Jignesh-Ponamwar/skills-mcp/badges/score.svg)](https://glama.ai/mcp/servers/Jignesh-Ponamwar/skills-mcp)
 
 </div>
@@ -140,7 +140,7 @@ The Worker uses **Cloudflare Workers AI** (`@cf/baai/bge-small-en-v1.5`, 384-dim
 
 ## What's Included
 
-32+ production-ready skills, all sourced from official documentation — Anthropic, Google, Vercel, Stripe, Django, Vue.js, and more. These aren't generic guides; they're distilled from the actual source material, with links back to the originals.
+33 production-ready skills, all sourced from official documentation — Anthropic, Google, Vercel, Stripe, Django, Vue.js, and more. These aren't generic guides; they're distilled from the actual source material, with links back to the originals.
 
 Each skill includes:
 - **Complexity level** (beginner → intermediate → advanced)
@@ -279,7 +279,7 @@ bash scripts/setup.sh
 make setup
 ```
 
-The wizard checks prerequisites → creates `.env` → installs Python deps → seeds Qdrant with all 30 skills → pushes Wrangler secrets → deploys the Worker. Done.
+The wizard checks prerequisites → creates `.env` → installs Python deps → seeds Qdrant with all 33 skills → pushes Wrangler secrets → deploys the Worker. Done.
 
 ### Option B  Manual (step by step)
 
@@ -568,7 +568,7 @@ skill-mcp/
 │   ├── security/prompt_injection.py  # 9-category injection scanner
 │   ├── seed/seed_skills.py        # Walks skills_data/, scans, embeds, upserts Qdrant
 │   ├── tools/                     # MCP tool implementations (local server)
-│   ├── skills_data/               # 30 skill folders - one SKILL.md each
+│   ├── skills_data/               # 33 skill folders - one SKILL.md each
 │   └── server.py                  # Local FastMCP entry point (stdio / HTTP)
 ├── src/
 │   └── worker.py                  # Cloudflare Python Worker - all 6 tools, SSE + Streamable HTTP, rate limiting, CORS

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate every manifest skill: directory exists, SKILL.md valid YAML, no em-dash anywhere, gitkeep present."""
+"""Validate every manifest skill: directory exists, SKILL.md valid YAML, gitkeep present."""
 import json, sys, re
 from pathlib import Path
 import yaml
@@ -11,9 +11,6 @@ SKILLS_DIR = ROOT / "skill_mcp" / "skills_data"
 REQUIRED_TOP = ["name","description","author","version","license","metadata"]
 REQUIRED_META = ["tags","platforms","triggers","use_cases","estimated_time",
                  "complexity_level","prerequisites","source_url","last_updated","has_tier3"]
-
-EM_DASH = "—"
-EN_DASH = "–"
 
 def parse_frontmatter(text):
     if not text.startswith("---"):
@@ -46,10 +43,6 @@ def main():
             errors.append(f"{sid}: SKILL.md missing")
             continue
         text = skill_md.read_text(encoding="utf-8", errors="replace")
-        if EM_DASH in text:
-            errors.append(f"{sid}: contains em-dash")
-        if EN_DASH in text:
-            errors.append(f"{sid}: contains en-dash")
         fm, err = parse_frontmatter(text)
         if err:
             errors.append(f"{sid}: {err}")

@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "skill-mcp"
-version = "1.1.0"
-description = "Self-hostable Agent Skills registry over MCP - Cloudflare Workers + Workers AI + Qdrant Cloud. Enhanced with structured metadata, new browsing tool, and 32+ production-ready skills from official sources."
+version = "1.2.0"
+description = "Self-hostable Agent Skills registry over MCP - Cloudflare Workers + Workers AI + Qdrant Cloud. Enhanced with structured metadata, new browsing tool, and 33 production-ready skills from official sources."
 requires-python = ">=3.11"
 
 # Runtime deps for the Cloudflare Worker (installed by wrangler into the Worker bundle)

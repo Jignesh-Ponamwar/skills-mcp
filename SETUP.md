@@ -117,7 +117,7 @@ pip install -r requirements.txt
 cp .env.example .env
 # Edit .env: QDRANT_URL, QDRANT_API_KEY, WORKERS_AI_ACCOUNT_ID, WORKERS_AI_API_TOKEN
 
-# Seed all 30 bundled skills into Qdrant (idempotent - safe to re-run)
+# Seed all 33 bundled skills into Qdrant (idempotent - safe to re-run)
 python -X utf8 -m skill_mcp.seed.seed_skills
 # or: make seed
 ```
@@ -126,19 +126,19 @@ The seed script runs a **prompt-injection scan** on every skill before ingesting
 
 Expected output:
 ```
-[seed] Found 30 SKILL.md files
+[seed] Found 33 SKILL.md files
   [parsed] api-integration: API Integration
   [parsed] claude-api: Claude API
   ...
 [seed] Connecting to Qdrant…
 [seed] Collections ready (6 total - tiers 1, 2, and 3)
 
-[seed] Embedding 30 skill descriptors via Cloudflare Workers AI…
-  [embed] sending 30 texts to Workers AI…
-  [embed] 30/30 done
-[seed] Upserted 30 frontmatter points (with vectors)
-[seed] Upserted 30 body points
-[seed] Upserted 30 options points
+[seed] Embedding 33 skill descriptors via Cloudflare Workers AI…
+  [embed] sending 33 texts to Workers AI…
+  [embed] 33/33 done
+[seed] Upserted 33 frontmatter points (with vectors)
+[seed] Upserted 33 body points
+[seed] Upserted 33 options points
 
 [seed] Seeding tier-3 assets (references, scripts, assets)…
   ↳ reference: pdf-processing/FORMS.md

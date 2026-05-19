@@ -1,9 +1,9 @@
-# Skills-MCP Expansion Roadmap: 32 → 100+ Skills
+# Skills-MCP Expansion Roadmap: 33 → 100+ Skills
 
-## Current State (v1.1.0)
+## Current State (v1.2.0)
 
 ✅ **Completed:**
-- 32 bundled skills with enhanced metadata
+- 33 bundled skills with enhanced metadata
 - 7 MCP tools (added `skills_list_all()`)
 - Comprehensive MCP prompt guidance
 - Structured output with use_cases, complexity_level, prerequisites, estimated_time, source_url, has_tier3
@@ -292,5 +292,5 @@ By completing this roadmap:
 ---
 
 **Last Updated:** 2025-01-15  
-**Status:** In Progress (32/100 skills completed)  
+**Status:** In Progress (33/100 skills completed)  
 **Next Step:** Begin Phase 1 - Backend Frameworks expansion

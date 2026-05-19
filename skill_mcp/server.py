@@ -8,8 +8,9 @@ Use this local server when you need script execution support: the Worker
 runs on Cloudflare's Python (Pyodide) runtime which cannot spawn subprocesses,
 so `skills_run_script` execution mode requires running locally.
 
-Six MCP tools:
+Seven MCP tools:
   skills_find_relevant  - semantic search (via Cloudflare Workers AI REST API)
+  skills_list_all       - browse full catalogue without search
   skills_get_body       - full instructions + tier3_manifest
   skills_get_options    - config variants, dependencies, limitations
   skills_get_reference  - fetch a reference markdown file
