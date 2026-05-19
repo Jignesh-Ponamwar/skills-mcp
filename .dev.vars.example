@@ -1,0 +1,5 @@
+# Secrets for Cloudflare Deploy Button flow.
+# The deploy UI prompts for these values automatically.
+# Get them from: https://cloud.qdrant.io (free cluster)
+QDRANT_URL=
+QDRANT_API_KEY=

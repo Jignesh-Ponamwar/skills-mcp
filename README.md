@@ -15,6 +15,7 @@ Semantic discovery · Progressive loading · 33 bundled skills · Self-hosted on
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020.svg)](https://workers.cloudflare.com)
 [![Skills](https://img.shields.io/badge/bundled%20skills-33-brightgreen.svg)](skill_mcp/skills_data/)
 [![skills-mcp MCP server](https://glama.ai/mcp/servers/Jignesh-Ponamwar/skills-mcp/badges/score.svg)](https://glama.ai/mcp/servers/Jignesh-Ponamwar/skills-mcp)
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/Jignesh-Ponamwar/skills-mcp)
 
 </div>
 
@@ -261,6 +262,22 @@ Each skill includes:
 | Node.js 18+ | Free | For the `wrangler` CLI |
 
 > **Cloudflare is free.** skill-mcp uses SQLite-backed Durable Objects (`new_sqlite_classes` in `wrangler.jsonc`), which are available on the Cloudflare Workers **Free** plan (100k requests/day). You only need the $5/mo paid plan if you outgrow that limit or need KV-backed Durable Objects.
+
+### Quick Deploy (one click)
+
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/Jignesh-Ponamwar/skills-mcp)
+
+Click the button above to deploy the Worker to your Cloudflare account. The deploy flow will prompt you for your **Qdrant Cloud URL** and **API key** (get both free at [cloud.qdrant.io](https://cloud.qdrant.io)). After the Worker is live, seed Qdrant with the bundled skills:
+
+```bash
+git clone https://github.com/Jignesh-Ponamwar/skills-mcp && cd skills-mcp
+pip install -r requirements.txt
+cp .env.example .env
+# Fill in: QDRANT_URL, QDRANT_API_KEY, WORKERS_AI_ACCOUNT_ID, WORKERS_AI_API_TOKEN
+python -X utf8 -m skill_mcp.seed.seed_skills
+```
+
+Your server is ready at `https://skill-mcp.<your-subdomain>.workers.dev/sse`. Full walkthrough: [SETUP.md](SETUP.md)
 
 ### Option A  One Command (recommended)
 

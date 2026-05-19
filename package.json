@@ -1,0 +1,23 @@
+{
+  "name": "skill-mcp",
+  "version": "1.2.0",
+  "description": "Self-hostable Agent Skills registry over MCP - Cloudflare Workers + Workers AI + Qdrant Cloud",
+  "cloudflare": {
+    "bindings": {
+      "vars": {
+        "QDRANT_URL": {
+          "description": "Your Qdrant Cloud cluster URL (e.g. https://xxx.aws.cloud.qdrant.io:6333)"
+        },
+        "QDRANT_API_KEY": {
+          "description": "Qdrant Cloud API key (from cluster > API Keys)"
+        }
+      },
+      "ai": {
+        "description": "Workers AI binding for embedding generation (@cf/baai/bge-small-en-v1.5)"
+      },
+      "durable_objects": {
+        "description": "SQLite-backed Durable Object for MCP server state"
+      }
+    }
+  }
+}

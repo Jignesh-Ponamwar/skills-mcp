@@ -38,6 +38,44 @@ The wizard will prompt you for credentials at the right moment and explain where
 
 ---
 
+## Option D - One-Click Deploy (Cloudflare)
+
+Deploy the Worker with a single click. No local tooling required for the Worker itself.
+
+**Prerequisites:** A [Qdrant Cloud](https://cloud.qdrant.io) account (free) and a [Cloudflare](https://cloudflare.com) account (free).
+
+### Step 1 - Click the deploy button
+
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/Jignesh-Ponamwar/skills-mcp)
+
+The deploy flow will:
+- Fork the repository to your GitHub account
+- Provision Workers AI and SQLite-backed Durable Objects automatically
+- Prompt you for **QDRANT_URL** and **QDRANT_API_KEY** (your Qdrant Cloud credentials)
+- Deploy the Worker
+
+Your Worker is now live at `https://skill-mcp.<your-subdomain>.workers.dev/sse`, but Qdrant is empty until you seed it.
+
+> **Important:** The deploy button only deploys the Worker. Qdrant must be seeded separately because the deploy flow cannot run arbitrary Python. Without seeding, all skill queries will return empty results.
+
+### Step 2 - Seed Qdrant with skills
+
+Clone your forked repo and run the seed script locally:
+
+```bash
+git clone https://github.com/<your-username>/skills-mcp && cd skills-mcp
+pip install -r requirements.txt
+cp .env.example .env
+# Fill in: QDRANT_URL, QDRANT_API_KEY, WORKERS_AI_ACCOUNT_ID, WORKERS_AI_API_TOKEN
+python -X utf8 -m skill_mcp.seed.seed_skills
+```
+
+### Step 3 - Connect your MCP client
+
+Your server is ready. Skip to [Step 4](#step-4--connect-your-mcp-client) to configure your AI agent.
+
+---
+
 ## Option C - Docker (fully local)
 
 No Cloudflare account required. Runs Qdrant in a container alongside the MCP server. Useful for local-only use, air-gapped environments, or testing before deploying to Cloudflare.
